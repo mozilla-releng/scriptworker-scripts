@@ -61,7 +61,9 @@ def create_new_release_action(context):
         log.info(f"Last shipped revision is {last_shipped_revision}")
 
         log.info("Determining most recent shippable revision")
-        repository_url = f"https://hg.mozilla.org/{source_url.repo}"
+
+        if source_url is not None:
+            repository_url = f"https://hg.mozilla.org/{source_url.repo}"
 
         shippable_revision = ship_actions.get_shippable_revision(branch, last_shipped_revision, cron_revision, source_url)
     elif source_url.platform == "github":

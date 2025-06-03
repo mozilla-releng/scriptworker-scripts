@@ -7,7 +7,17 @@ import shipitscript.script
 import shipitscript.ship_actions
 
 
-def test_create_new_release_hg(context, monkeypatch):
+@pytest.mark.parametrize(
+    "task_source,repository_url",
+    (
+        pytest.param(None, None),
+        pytest.param(
+            "https://hg.mozilla.org/releases/mozilla-beta/file/8a2c52b9488e5ae5a8dc8500d3430d5ebe3d9a85/taskcluster/kinds/maybe-release",
+            "https://hg.mozilla.org/releases/mozilla-beta",
+        ),
+    ),
+)
+def test_create_new_release_hg(context, monkeypatch, task_source, repository_url):
     payload = {
         "product": "firefox",
         "branch": "release",
@@ -17,11 +27,13 @@ def test_create_new_release_hg(context, monkeypatch):
     }
 
     task = {
-        "metadata": {
-            "source": "https://hg.mozilla.org/releases/mozilla-beta/file/8a2c52b9488e5ae5a8dc8500d3430d5ebe3d9a85/taskcluster/kinds/maybe-release",
-        },
+        "metadata": {},
         "payload": payload,
     }
+
+    if task_source is not None:
+        task["metadata"]["source"] = task_source
+        task_source = mozilla_repo_urls.parse(task_source)
 
     context.task = task
     ship_it_instance_config = {"taskcluster_client_id": "some-id", "taskcluster_access_token": "some-token", "api_root_v2": "http://some.ship-it.tld/api/root"}
@@ -48,11 +60,10 @@ def test_create_new_release_hg(context, monkeypatch):
         "release",
         "12345",
         "5e37f358c4cc77de5e140b82e89e2f0c7be5c2a4",
-        mozilla_repo_urls.parse("https://hg.mozilla.org/releases/mozilla-beta/file/8a2c52b9488e5ae5a8dc8500d3430d5ebe3d9a85/taskcluster/kinds/maybe-release"),
+        task_source,
     )
-    release_instance_mock.create_new_release.assert_called_with(
-        "firefox", "release", "59.0", 1, "7891011", "https://hg.mozilla.org/releases/mozilla-beta", headers=headers
-    )
+
+    release_instance_mock.create_new_release.assert_called_with("firefox", "release", "59.0", 1, "7891011", repository_url, headers=headers)
     release_instance_mock.trigger_release_phase.assert_called_with("Firefox-59.0-build1", "push", headers=headers)
 
 
