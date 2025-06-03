@@ -5,7 +5,7 @@ import time
 from uuid import uuid4
 
 from async_timeout import timeout
-from jose import jws
+import jwt
 
 from addonscript.task import get_amo_instance_config_from_scope
 
@@ -25,7 +25,7 @@ def generate_JWT(context):
     iat = int(time.time())
     exp = iat + 60 * 4  # AMO has a 5 minute max, so set this to 4 minutes after issued
     payload = {"iss": user, "jti": jti, "iat": iat, "exp": exp}
-    token_str = jws.sign(payload, secret, algorithm="HS256")
+    token_str = jwt.encode(payload, secret, algorithm="HS256")
     return token_str
 
 
