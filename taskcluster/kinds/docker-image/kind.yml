@@ -20,7 +20,7 @@ tasks:
     python38:
         definition: python
         args:
-            PYTHON_VERSION: "3.8"
+            PYTHON_VERSION: "3.8.3"
             PYTHON_REQ_SUFFIX: ".py38"
 
     # Used by push-image kind
