@@ -83,11 +83,11 @@ if [ ${#PY38_DIRS} -gt 0 ]; then
     # Make sure python 3.8 is installed
     # This is the version used in the old mac signers, once the new signers are in place, we can remove this
     # and just use python 3.11 for everything
-    check_python_version 3.8
-    PYTHON_VERSION=3.8 SUFFIX=py38.txt maintenance/pin-helper.sh "${PY38_DIRS[@]}"
+    check_python_version 3.8.3
+    PYTHON_VERSION=3.8.3 SUFFIX=py38.txt maintenance/pin-helper.sh "${PY38_DIRS[@]}"
 fi
 if [ ${#PY311_DIRS} -gt 0 ]; then
     # Make sure python 3.11 is installed
-    check_python_version 3.11
-    PYTHON_VERSION=3.11 SUFFIX=txt maintenance/pin-helper.sh "${PY311_DIRS[@]}"
+    check_python_version 3.11.9
+    PYTHON_VERSION=3.11.9 SUFFIX=txt maintenance/pin-helper.sh "${PY311_DIRS[@]}"
 fi
