@@ -412,7 +412,7 @@ def get_concrete_artifact_map_from_globbed(work_dir, upstreamArtifactPaths, arti
                 if not artifact.startswith(leading_dir):
                     raise ScriptWorkerTaskException(f"cannot determine relative artifact path for {artifact}")
 
-                relative_artifact = artifact[len(leading_dir):]
+                relative_artifact = artifact[len(leading_dir) :]
 
                 destinations = []
                 # We need to look at non-'*' paths separate from '*' paths.
@@ -470,7 +470,7 @@ def get_concrete_artifact_map_from_globbed(work_dir, upstreamArtifactPaths, arti
 def remove_prefixes(string, prefixes):
     for p in prefixes:
         if string.startswith(p):
-            string = string[len(p):]
+            string = string[len(p) :]
             return string
 
     return string
@@ -497,7 +497,9 @@ async def upload_translations_artifacts(context):
 
     # Ignore any failed artifacts; we'll take whatever we can get. All artifacts are considered optional.
     upstreamArtifactPaths = scriptworker_artifacts.get_upstream_artifacts_full_paths_per_task_id(context)[0]
-    concreteArtifactMap = get_concrete_artifact_map_from_globbed(context.config["work_dir"], upstreamArtifactPaths, artifactMap, strip_prefixes=("public/build/", "public/logs/"))
+    concreteArtifactMap = get_concrete_artifact_map_from_globbed(
+        context.config["work_dir"], upstreamArtifactPaths, artifactMap, strip_prefixes=("public/build/", "public/logs/")
+    )
 
     for map_ in concreteArtifactMap:
         for input_path, outputs in map_["paths"].items():
