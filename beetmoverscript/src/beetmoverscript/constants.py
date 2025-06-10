@@ -89,6 +89,8 @@ ARTIFACT_REGISTRY_ACTIONS = ("import-from-gcs-to-artifact-registry",)
 
 UPLOAD_DATA_ACTIONS = ("upload-data",)
 
+TRANSLATIONS_ACTIONS = ("upload-translations-artifacts",)
+
 # XXX this is a fairly clunky way of specifying which files to copy from
 # candidates to releases -- let's find a nicer way of doing this.
 # XXX if we keep this, let's make it configurable? overridable in config?

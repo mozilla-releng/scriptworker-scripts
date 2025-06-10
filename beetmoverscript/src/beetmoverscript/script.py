@@ -3,11 +3,16 @@
 
 import asyncio
 import base64
+import copy
+import fnmatch
+import json
 import logging
 import mimetypes
 import os
+import os.path
 import re
 import sys
+from collections import defaultdict
 from io import BytesIO
 from multiprocessing.pool import ThreadPool
 
@@ -15,6 +20,7 @@ import aiohttp
 import boto3
 from botocore.exceptions import ClientError
 from redo import retry
+from scriptworker import artifacts as scriptworker_artifacts
 from scriptworker import client
 from scriptworker.exceptions import (
     ScriptWorkerRetryException,
@@ -285,6 +291,222 @@ async def upload_data(context):
         await retry_data_upload(context, dataUpload["destinations"], data, dataUpload["contentType"])
 
 
+def get_concrete_artifact_map_from_globbed(work_dir, upstreamArtifactPaths, artifactMap, strip_prefixes=None):
+    """Given a list of artifacts from tasks (`upstreamArtifactPaths`) and a
+     mapping of names and/or patterns to destinations (`artifactMap`), return a
+     mapping that maps all of the specific artifacts from tasks int
+     destinations. Artifacts will have `strip_prefixes` removed from them before
+     being used in destinations.
+
+    `upstreamArtifactPaths` takes the form of:
+     {
+       "taskId1": [
+         "/path/to/public/build/file",
+         "/path/to/public/build/file2",
+         "/path/to/public/logs.live.log",
+       ],
+       "taskId2": [
+         "/path/to/public/build/file3",
+         "/path/to/public/logs.live.log",
+       ],
+     }
+
+     `artifactMap` takes the form of:
+     [
+       {
+         "taskId": "taskId1",
+         "paths": {
+           "*": {
+             "destinations": [
+               "dest1",
+             ]
+           }
+         },
+       },
+       {
+         "taskId": "taskId2",
+         "paths": {
+           "*.log": {
+             "destinations": [
+               "logdest",
+             ]
+           },
+           "*": {
+             "destinations": [
+               "dest1",
+             ]
+           }
+         },
+       }
+     ]
+
+     The return value takes the form of:
+     [
+         {
+             "taskId": "taskId1",
+             "paths": {
+                 "/path/to/public/build/file": {
+                     "destinations": [
+                         "dest1/file",
+                     ]
+                 },
+                 "/path/to/public/build/file2": {
+                     "destinations": [
+                         "dest1/file2",
+                     ]
+                 },
+                 "/path/to/public/logs/live.log": {
+                     "destinations": [
+                         "dest1/live.log",
+                     ]
+                 },
+             }
+         },
+         {
+             "taskId": "taskId2",
+             "paths": {
+                 "/path/to/public/build/file3": {
+                     "destinations": [
+                         "dest1/file3",
+                     ]
+                 },
+                 "/path/to/public/logs/live.log": {
+                     "destinations": [
+                         "logdest/live.log",
+                     ]
+                 },
+             }
+         }
+     ]
+
+     Each artifact may match up to two `paths` in the `artifactMap`: a `*` path
+     and one other path. If an artifact matches both of these, the non-`*` one
+     takes precedence, and it will _not_ be written to the `*` path destinations.
+     This allows us to have specific filenames (or extensions, prefixes, etc.)
+     grouped together, and to have a "catch-all" for any unmatched artifacts.
+
+     Sanity checking is done to ensure that no destination files would overwrite
+     each other.
+    """
+
+    concreteArtifactMap = []
+    errors = []
+
+    for map_ in artifactMap:
+        concretePaths = {}
+
+        full_glob_destinations = map_["paths"].get("*", {}).get("destinations")
+        other_paths = copy.deepcopy(map_["paths"])
+        if "*" in other_paths:
+            del other_paths["*"]
+
+        for taskId, artifacts in upstreamArtifactPaths.items():
+            if map_["taskId"] != taskId:
+                continue
+
+            for artifact in artifacts:
+                # the artifact path with the scriptworker-specific leading
+                # directories removed. ie: in the same form it is in the task
+                # it was pulled from
+                leading_dir = os.path.join(work_dir, "cot", taskId) + "/"
+                if not artifact.startswith(leading_dir):
+                    raise ScriptWorkerTaskException(f"cannot determine relative artifact path for {artifact}")
+
+                relative_artifact = artifact[len(leading_dir) :]
+
+                destinations = []
+                # We need to look at non-'*' paths separate from '*' paths.
+
+                for input_path, output in other_paths.items():
+                    # Skip any input paths that don't match the artifact name.
+                    if not fnmatch.fnmatch(relative_artifact, input_path):
+                        continue
+
+                    # If there's already destinations, we've already seen this artifact,
+                    # and we have a clash.
+                    if destinations:
+                        errors.append(f"'{relative_artifact}' matched multiple concrete paths")
+                    else:
+                        destinations.extend(output["destinations"])
+
+                # If we didn't find any destinations for the artifact above, and
+                # there are full glob destinations, it should go there.
+                if full_glob_destinations and not destinations:
+                    destinations.extend(full_glob_destinations)
+
+                # If there are destinations, create a fully concrete entry,
+                # mapping the full path to the file on disk to destinations
+                # it belongs, with any requested prefixes removed.
+                if destinations:
+                    if strip_prefixes:
+                        dest_artifact = remove_prefixes(relative_artifact, strip_prefixes)
+                    else:
+                        dest_artifact = relative_artifact
+
+                    concretePaths[artifact] = {"destinations": []}
+                    for d in destinations:
+                        if d.endswith("/"):
+                            d = os.path.join(d, dest_artifact)
+                        concretePaths[artifact]["destinations"].append(d)
+
+        concreteArtifactMap.append(
+            {
+                "paths": concretePaths,
+                "taskId": map_["taskId"],
+            }
+        )
+
+    log.info("Found concrete artifact map:")
+    log.info(json.dumps(concreteArtifactMap, indent=2))
+
+    ensure_no_overwrites_in_artifact_map(concreteArtifactMap)
+
+    if errors:
+        raise ScriptWorkerTaskException(*errors)
+
+    return concreteArtifactMap
+
+
+def remove_prefixes(string, prefixes):
+    for p in prefixes:
+        if string.startswith(p):
+            string = string[len(p) :]
+            return string
+
+    return string
+
+
+def ensure_no_overwrites_in_artifact_map(artifactMap):
+    dest_counts = defaultdict(int)
+    for map_ in artifactMap:
+        for output_path in map_["paths"].values():
+            for dest in output_path["destinations"]:
+                dest_counts[dest] += 1
+
+    errors = []
+    for dest, count in dest_counts.items():
+        if count > 1:
+            errors.append(f"'{dest}' would be written to more than once")
+
+    if errors:
+        raise ScriptWorkerTaskException(*errors)
+
+
+async def upload_translations_artifacts(context):
+    artifactMap = context.task["payload"]["artifactMap"]
+
+    # Ignore any failed artifacts; we'll take whatever we can get. All artifacts are considered optional.
+    upstreamArtifactPaths = scriptworker_artifacts.get_upstream_artifacts_full_paths_per_task_id(context)[0]
+    concreteArtifactMap = get_concrete_artifact_map_from_globbed(
+        context.config["work_dir"], upstreamArtifactPaths, artifactMap, strip_prefixes=("public/build/", "public/logs/")
+    )
+
+    for map_ in concreteArtifactMap:
+        for input_path, outputs in map_["paths"].items():
+            log.info(f"Uploading {input_path} to {outputs['destinations']}")
+            await retry_upload(context, outputs["destinations"], input_path, fail_on_unknown_mimetype=False)
+
+
 # copy_beets {{{1
 def copy_beets(context, from_keys_checksums, to_keys_checksums):
     creds = get_credentials(context, "aws")
@@ -347,6 +569,7 @@ action_map = {
     "push-to-maven": push_to_maven,
     "import-from-gcs-to-artifact-registry": import_from_gcs_to_artifact_registry,
     "upload-data": upload_data,
+    "upload-translations-artifacts": upload_translations_artifacts,
 }
 
 
@@ -804,6 +1027,7 @@ def main(config_path=None):
         "artifactMap_schema_file": os.path.join(data_dir, "artifactMap_beetmover_task_schema.json"),
         "import_from_gcs_to_artifact_registry_schema_file": os.path.join(data_dir, "import_from_gcs_to_artifact_registry_task_schema.json"),
         "upload_data_schema_file": os.path.join(data_dir, "upload_data_task_schema.json"),
+        "upload_translations_artifacts": os.path.join(data_dir, "upload_translations_artifacts_task_schema.json"),
     }
 
     # There are several task schema. Validation occurs in async_main
