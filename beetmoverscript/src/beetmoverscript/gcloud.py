@@ -117,7 +117,7 @@ async def upload_data_to_gcs(context, target_path, data, contentType):
     return blob.upload_from_string(data, content_type=contentType)
 
 
-async def upload_to_gcs(context, target_path, path, expiry=None, fail_on_unknown_mimetype=True):
+async def upload_to_gcs(context, target_path, path, expiry=None, fail_on_unknown_mimetype=True, allow_overwrites=True):
     product = get_product_name(context.task, context.config)
     mime_type = mimetypes.guess_type(path)[0]
     if not mime_type:
@@ -135,7 +135,10 @@ async def upload_to_gcs(context, target_path, path, expiry=None, fail_on_unknown
         blob.custom_time = datetime.fromisoformat(expiry)
 
     if blob.exists():
-        log.warning("upload_to_gcs: Overriding file: %s", target_path)
+        if allow_overwrites:
+            log.warning("upload_to_gcs: Overriding file: %s", target_path)
+        else:
+            raise ScriptWorkerTaskException(f"Would've overwritten {target_path} without being configured to allow it!")
     log.info("upload_to_gcs: %s -> Bucket: gs://%s/%s  (custom_time: %s)", path, bucket_name, target_path, expiry)
     """
     In certain cases, such as when handling *-latest directories, we need to overwrite existing file blobs.
@@ -147,7 +150,19 @@ async def upload_to_gcs(context, target_path, path, expiry=None, fail_on_unknown
     [1] https://cloud.google.com/storage/docs/request-preconditions#multiple_request_retries
     [2] https://cloud.google.com/storage/docs/xml-api/reference-headers#xgoogifgenerationmatch
     """
-    return blob.upload_from_filename(path, content_type=mime_type, retry=DEFAULT_RETRY)
+
+    kwargs = {}
+    if not allow_overwrites:
+        # We do our own check for this above, but as a safeguard we also
+        # have GCS do it. This ensures that multiple beetmover tasks running in
+        # parallel don't overwrite one another.
+        # From https://cloud.google.com/python/docs/reference/storage/latest/generation_metageneration#using-ifgenerationmatch:
+        # As a special case, passing 0 as the value for if_generation_match
+        # makes the operation succeed only if there are no live versions of
+        # the blob.
+        kwargs["if_generation_match"] = 0
+
+    return blob.upload_from_filename(path, content_type=mime_type, retry=DEFAULT_RETRY, **kwargs)
 
 
 async def import_from_gcs_to_artifact_registry(context):
