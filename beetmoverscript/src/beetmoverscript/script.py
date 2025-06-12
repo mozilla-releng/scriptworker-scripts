@@ -927,7 +927,14 @@ async def retry_upload(context, destinations, path, expiry=None, fail_on_unknown
         if is_cloud_enabled(context.config, "gcloud", context.resource):
             cloud_uploads["gcloud"].append(
                 asyncio.ensure_future(
-                    upload_to_gcs(context=context, target_path=dest, path=path, expiry=expiry, fail_on_unknown_mimetype=fail_on_unknown_mimetype, allow_overwrites=allow_overwrites)
+                    upload_to_gcs(
+                        context=context,
+                        target_path=dest,
+                        path=path,
+                        expiry=expiry,
+                        fail_on_unknown_mimetype=fail_on_unknown_mimetype,
+                        allow_overwrites=allow_overwrites,
+                    )
                 )
             )
 

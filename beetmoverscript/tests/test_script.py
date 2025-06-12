@@ -1401,38 +1401,38 @@ async def test_upload_translations_artifacts(aioresponses, monkeypatch, context,
 @pytest.mark.asyncio
 async def test_upload_translations_artifacts_overwrites(aioresponses, monkeypatch, context, exists_upfront, upload_from_filename_err, expected_err):
     upstream_artifacts = [
-                {
-                    "paths": [
-                        "public/build/*",
-                        "public/logs/*",
-                    ],
-                    "taskId": "dep1",
-                },
-            ]
+        {
+            "paths": [
+                "public/build/*",
+                "public/logs/*",
+            ],
+            "taskId": "dep1",
+        },
+    ]
     artifact_map = [
-                {
-                    "paths": {
-                        "*.log": {
-                            "destinations": [
-                                "some/dir/",
-                                "some/log/",
-                            ]
-                        },
-                        "*": {
-                            "destinations": [
-                                "some/dir/",
-                                "some/other/",
-                            ]
-                        },
-                    },
-                    "taskId": "dep1",
+        {
+            "paths": {
+                "*.log": {
+                    "destinations": [
+                        "some/dir/",
+                        "some/log/",
+                    ]
                 },
-            ]
+                "*": {
+                    "destinations": [
+                        "some/dir/",
+                        "some/other/",
+                    ]
+                },
+            },
+            "taskId": "dep1",
+        },
+    ]
     expected_uploads = {
-                "public/build/foo": ["some/dir/foo", "some/other/foo"],
-                "public/build/bar": ["some/dir/bar", "some/other/bar"],
-                "public/logs/live.log": ["some/dir/live.log", "some/log/live.log"],
-            }
+        "public/build/foo": ["some/dir/foo", "some/other/foo"],
+        "public/build/bar": ["some/dir/bar", "some/other/bar"],
+        "public/logs/live.log": ["some/dir/live.log", "some/log/live.log"],
+    }
     with tempfile.TemporaryDirectory() as tmp:
         context.config["work_dir"] = tmp
         for artifact in expected_uploads.keys():
