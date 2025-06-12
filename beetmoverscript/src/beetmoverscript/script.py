@@ -504,7 +504,7 @@ async def upload_translations_artifacts(context):
     for map_ in concreteArtifactMap:
         for input_path, outputs in map_["paths"].items():
             log.info(f"Uploading {input_path} to {outputs['destinations']}")
-            await retry_upload(context, outputs["destinations"], input_path, fail_on_unknown_mimetype=False)
+            await retry_upload(context, outputs["destinations"], input_path, fail_on_unknown_mimetype=False, allow_overwrites=False)
 
 
 # copy_beets {{{1
@@ -907,7 +907,7 @@ async def retry_data_upload(context, destinations, data, contentType):
 
 
 # retry_upload {{{1
-async def retry_upload(context, destinations, path, expiry=None, fail_on_unknown_mimetype=True):
+async def retry_upload(context, destinations, path, expiry=None, fail_on_unknown_mimetype=True, allow_overwrites=True):
     """Manage upload of `path` to `destinations`."""
     cloud_uploads = {key: [] for key in context.config["clouds"]}
 
@@ -918,6 +918,7 @@ async def retry_upload(context, destinations, path, expiry=None, fail_on_unknown
         # S3 upload
         enabled = is_cloud_enabled(context.config, "aws", context.resource)
         if enabled is True or (enabled == "buildhub-only" and path.endswith("buildhub.json")):
+            # aws is legacy; `new_only` is not supported here
             cloud_uploads["aws"].append(
                 asyncio.ensure_future(upload_to_s3(context=context, s3_key=dest, path=path, fail_on_unknown_mimetype=fail_on_unknown_mimetype))
             )
@@ -926,7 +927,14 @@ async def retry_upload(context, destinations, path, expiry=None, fail_on_unknown
         if is_cloud_enabled(context.config, "gcloud", context.resource):
             cloud_uploads["gcloud"].append(
                 asyncio.ensure_future(
-                    upload_to_gcs(context=context, target_path=dest, path=path, expiry=expiry, fail_on_unknown_mimetype=fail_on_unknown_mimetype)
+                    upload_to_gcs(
+                        context=context,
+                        target_path=dest,
+                        path=path,
+                        expiry=expiry,
+                        fail_on_unknown_mimetype=fail_on_unknown_mimetype,
+                        allow_overwrites=allow_overwrites,
+                    )
                 )
             )
 

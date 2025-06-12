@@ -9,6 +9,7 @@ from io import BytesIO
 
 import aiohttp
 import boto3
+from google.cloud.exceptions import GoogleCloudError
 import mock
 import pytest
 from scriptworker.context import Context
@@ -1378,6 +1379,97 @@ async def test_upload_translations_artifacts(aioresponses, monkeypatch, context,
             # verify GCS expectations
             expected_call_count = sum([len(uploads) for uploads in expected_uploads.values()])
             assert blob.upload_from_filename.call_count == expected_call_count
+
+
+@pytest.mark.parametrize(
+    "exists_upfront,upload_from_filename_err,expected_err",
+    (
+        pytest.param(
+            True,
+            None,
+            ScriptWorkerTaskException,
+            id="exists_upfront",
+        ),
+        pytest.param(
+            False,
+            GoogleCloudError("exists"),
+            GoogleCloudError,
+            id="exists_at_upload_time",
+        ),
+    ),
+)
+@pytest.mark.asyncio
+async def test_upload_translations_artifacts_overwrites(aioresponses, monkeypatch, context, exists_upfront, upload_from_filename_err, expected_err):
+    upstream_artifacts = [
+        {
+            "paths": [
+                "public/build/*",
+                "public/logs/*",
+            ],
+            "taskId": "dep1",
+        },
+    ]
+    artifact_map = [
+        {
+            "paths": {
+                "*.log": {
+                    "destinations": [
+                        "some/dir/",
+                        "some/log/",
+                    ]
+                },
+                "*": {
+                    "destinations": [
+                        "some/dir/",
+                        "some/other/",
+                    ]
+                },
+            },
+            "taskId": "dep1",
+        },
+    ]
+    expected_uploads = {
+        "public/build/foo": ["some/dir/foo", "some/other/foo"],
+        "public/build/bar": ["some/dir/bar", "some/other/bar"],
+        "public/logs/live.log": ["some/dir/live.log", "some/log/live.log"],
+    }
+    with tempfile.TemporaryDirectory() as tmp:
+        context.config["work_dir"] = tmp
+        for artifact in expected_uploads.keys():
+            artifact_path = os.path.join(tmp, "cot", "dep1", artifact)
+            artifact_dir = os.path.dirname(artifact_path)
+            os.makedirs(artifact_dir, exist_ok=True)
+            pathlib.Path(artifact_path).touch()
+
+        async with aiohttp.ClientSession() as session:
+            # needed for mocking AWS uploads
+            context.session = session
+            for uploads in expected_uploads.values():
+                for upload in uploads:
+                    aioresponses.put(re.compile(f"https://dummy.s3.amazonaws.com/{upload}?.*"), status=200)
+
+            # needed for mocking GCS uploads
+            context.gcs_client = FakeClient()
+            blob = FakeClient.FakeBlob()
+            blob._exists = exists_upfront
+            blob.upload_from_filename = mock.MagicMock(side_effect=upload_from_filename_err)
+            bucket = FakeClient.FakeBucket(FakeClient, "foobucket")
+            bucket.blob = mock.MagicMock()
+            bucket.blob.return_value = blob
+            monkeypatch.setattr(beetmoverscript.gcloud, "Bucket", lambda client, name: bucket)
+
+            context.action = "upload-translations-artifacts"
+            context.task = {
+                "payload": {"releaseProperties": {"appName": "fake"}, "upstreamArtifacts": upstream_artifacts, "artifactMap": artifact_map},
+                "scopes": ["project:releng:beetmover:action:upload-translations-artifacts"],
+            }
+            with pytest.raises(expected_err):
+                await upload_translations_artifacts(context)
+
+            if exists_upfront:
+                assert blob.upload_from_filename.call_count == 0
+            else:
+                assert blob.upload_from_filename.call_args[1]["if_generation_match"] == 0
 
 
 # async_main {{{1

@@ -147,23 +147,27 @@ def test_setup_gcs_credentials(monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "path,expiry,exists,expected_mimetype,raise_class,fail_on_unknown_mimetype",
+    "path,expiry,exists,expected_mimetype,raise_class,fail_on_unknown_mimetype,allow_overwrites",
     (
         # Raise when can't find a mimetype
-        ("foo/nomimetype", None, False, None, ScriptWorkerTaskException, True),
+        ("foo/nomimetype", None, False, None, ScriptWorkerTaskException, True, False),
         # Don't raise when can't find a mimetype
-        ("foo/nomimetype", None, False, "application/octet-stream", None, False),
+        ("foo/nomimetype", None, False, "application/octet-stream", None, False, False),
         # No expiration given
-        ("foo/target.zip", None, False, "application/zip", None, True),
+        ("foo/target.zip", None, False, "application/zip", None, True, False),
         # With expiration
-        ("foo/target.zip", datetime.now().isoformat(), False, "application/zip", None, True),
+        ("foo/target.zip", datetime.now().isoformat(), False, "application/zip", None, True, False),
         # With existing file
-        ("foo/target.zip", None, True, "application/zip", None, True),
+        ("foo/target.zip", None, True, "application/zip", None, True, True),
+        # don't allow overwrites
+        ("foo/target.zip", None, True, "application/zip", ScriptWorkerTaskException, True, False),
+        # don't allow overwrites, doesn't exist yet
+        ("foo/target.zip", None, False, "application/zip", None, True, False),
     ),
-    ids=["no mimetype", "no mimetype no fail", "no expiry", "with expiry", "with existing file"],
+    ids=["no mimetype", "no mimetype no fail", "no expiry", "with expiry", "with existing file", "no_overwrites", "no_overwrites_doesnt_exist"],
 )
 @pytest.mark.asyncio
-async def test_upload_to_gcs(context, monkeypatch, path, expiry, exists, expected_mimetype, raise_class, fail_on_unknown_mimetype):
+async def test_upload_to_gcs(context, monkeypatch, path, expiry, exists, expected_mimetype, raise_class, fail_on_unknown_mimetype, allow_overwrites):
     context.gcs_client = FakeClient()
     blob = FakeClient.FakeBlob()
     blob._exists = exists
@@ -184,6 +188,7 @@ async def test_upload_to_gcs(context, monkeypatch, path, expiry, exists, expecte
                 path=path,
                 expiry=expiry,
                 fail_on_unknown_mimetype=fail_on_unknown_mimetype,
+                allow_overwrites=allow_overwrites,
             )
     else:
         await beetmoverscript.gcloud.upload_to_gcs(
@@ -192,6 +197,7 @@ async def test_upload_to_gcs(context, monkeypatch, path, expiry, exists, expecte
             path=path,
             expiry=expiry,
             fail_on_unknown_mimetype=fail_on_unknown_mimetype,
+            allow_overwrites=allow_overwrites,
         )
 
         if expiry:
@@ -202,6 +208,10 @@ async def test_upload_to_gcs(context, monkeypatch, path, expiry, exists, expecte
             log_warn.assert_called()
         else:
             log_warn.assert_not_called()
+        if allow_overwrites:
+            assert "if_generation_match" not in blob.upload_from_filename.call_args[1]
+        else:
+            assert blob.upload_from_filename.call_args[1]["if_generation_match"] == 0
 
         assert blob.upload_from_filename.call_args[1].get("content_type") == expected_mimetype
 
