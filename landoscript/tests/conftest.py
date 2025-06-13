@@ -215,7 +215,7 @@ def assert_add_commit_response(action, commit_msg_strings, initial_values, expec
     for msg in commit_msg_strings:
         assert msg in action["commitmsg"]
 
-    diffs = action["diff"].split("diff\n")
+    diffs = action["diff"].split("\ndiff")
 
     # ensure expected bumps are present to a reasonable degree of certainty
     for file, after in expected_bumps.items():
@@ -244,7 +244,7 @@ def assert_add_commit_response(action, commit_msg_strings, initial_values, expec
                     if "\n" in before or "\n" in after:
                         break
 
-                    if f"-{before}" in diff and f"+{after}":
+                    if f"-{before}" in diff and f"+{after}" in diff:
                         break
         else:
             assert False, f"no bump found for {file}: {diffs}"
