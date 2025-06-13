@@ -216,7 +216,7 @@ def assert_add_commit_response(action, commit_msg_strings, initial_values, expec
         assert msg in action["commitmsg"]
 
     diffs = action["diff"].split("\ndiff")
-    
+
     # Extract file paths from diffs and verify they are sorted
     file_paths = []
     for diff in diffs:
