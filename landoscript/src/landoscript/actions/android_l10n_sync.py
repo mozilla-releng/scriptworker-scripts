@@ -82,7 +82,7 @@ async def run(github_client: GithubClient, public_artifact_dir: str, android_l10
     log.info(f"fetching original files from l10n repository: {dst_files}")
     orig_files = await github_client.get_files(dst_files, branch=to_branch)
 
-    diff = ""
+    diffs = []
     for l10n_file in l10n_files:
         if l10n_file.dst_name not in orig_files:
             log.warning(f"WEIRD: {l10n_file.dst_name} not in orig_files, continuing anyways...")
@@ -98,7 +98,7 @@ async def run(github_client: GithubClient, public_artifact_dir: str, android_l10
             log.warning(f"old and new contents of {l10n_file.dst_name} are the same, skipping bump...")
             continue
 
-        diff += diff_contents(orig_file, new_file, l10n_file.dst_name)
+        diffs.append(diff_contents(orig_file, new_file, l10n_file.dst_name))
 
     for toml_info in android_l10n_sync_info.toml_info:
         if toml_info.toml_path not in new_files or toml_info.toml_path not in orig_files:
@@ -111,10 +111,12 @@ async def run(github_client: GithubClient, public_artifact_dir: str, android_l10
             log.warning(f"old and new contents of {toml_info.toml_path} are the same, skipping bump...")
             continue
 
-        diff += diff_contents(orig_file, new_file, toml_info.toml_path)
+        diffs.append(diff_contents(orig_file, new_file, toml_info.toml_path))
 
-    if not diff:
+    if not diffs:
         return []
+
+    diff = "\n".join(diffs)
 
     with open(os.path.join(public_artifact_dir, "android-sync.diff"), "w+") as f:
         f.write(diff)
