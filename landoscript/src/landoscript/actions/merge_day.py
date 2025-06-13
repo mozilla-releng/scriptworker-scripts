@@ -150,7 +150,7 @@ async def run(
     # process replacements, regex-replacements, and update clobber file
     replacements = merge_info.replacements
     regex_replacements = merge_info.regex_replacements
-    diff = ""
+    diffs = []
     if replacements or regex_replacements:
         log.info("Performing replacements and regex_replacements")
         needed_files = []
@@ -167,7 +167,7 @@ async def run(
             if orig_contents[fn] is None:
                 raise LandoscriptError(f"Couldn't find file '{fn}' in repository!")
 
-            diff += diff_contents(str(orig_contents[fn]), new_contents[fn], fn)
+            diffs.append(diff_contents(str(orig_contents[fn]), new_contents[fn], fn))
 
     log.info("Touching clobber file")
     orig_clobber_file = (await github_client.get_files("CLOBBER", bump_branch))["CLOBBER"]
@@ -175,7 +175,9 @@ async def run(
         raise LandoscriptError("Couldn't find CLOBBER file in repository!")
 
     new_clobber_file = get_new_clobber_file(orig_clobber_file)
-    diff += diff_contents(orig_clobber_file, new_clobber_file, "CLOBBER")
+    diffs.append(diff_contents(orig_clobber_file, new_clobber_file, "CLOBBER"))
+
+    diff = "\n".join(diffs)
 
     log.info("replacements and clobber diff is:")
     log_file_contents(diff)
