@@ -216,6 +216,19 @@ def assert_add_commit_response(action, commit_msg_strings, initial_values, expec
         assert msg in action["commitmsg"]
 
     diffs = action["diff"].split("\ndiff")
+    
+    # Extract file paths from diffs and verify they are sorted
+    file_paths = []
+    for diff in diffs:
+        if not diff:
+            continue
+
+        path_line = diff.split("\n")[0]
+        if path_line.startswith("diff --git"):
+            file_path = path_line.split(" ")[2][2:]
+            file_paths.append(file_path)
+
+    assert file_paths == sorted(file_paths), f"Files in diff are not sorted. Got: {file_paths}"
 
     # ensure expected bumps are present to a reasonable degree of certainty
     for file, after in expected_bumps.items():
