@@ -90,7 +90,7 @@ async def run(
         log.info(f"fetching original files from l10n repository: {dst_files}")
         orig_files = await github_client.get_files(dst_files, branch=to_branch)
 
-        diffs = []
+        files_to_diff = []
         for l10n_file in l10n_files:
             if l10n_file.dst_name not in orig_files:
                 log.warning(f"WEIRD: {l10n_file.dst_name} not in orig_files, continuing anyways...")
@@ -106,7 +106,7 @@ async def run(
                 log.warning(f"old and new contents of {l10n_file.dst_name} are the same, skipping bump...")
                 continue
 
-            diffs.append(diff_contents(orig_file, new_file, l10n_file.dst_name))
+            files_to_diff.append((l10n_file.dst_name, orig_file, new_file))
 
         for toml_info in android_l10n_import_info.toml_info:
             src_path = toml_info.toml_path
@@ -122,10 +122,17 @@ async def run(
                 log.warning(f"old and new contents of {dst_path} are the same, skipping bump...")
                 continue
 
-            diffs.append(diff_contents(orig_file, new_file, dst_path))
+            files_to_diff.append((dst_path, orig_file, new_file))
 
-        if not diffs:
+        if not files_to_diff:
             return []
+
+        # Sort files by path
+        files_to_diff.sort(key=lambda x: x[0])
+
+        diffs = []
+        for file_path, orig_file, new_file in files_to_diff:
+            diffs.append(diff_contents(orig_file, new_file, file_path))
 
         diff = "\n".join(diffs)
 

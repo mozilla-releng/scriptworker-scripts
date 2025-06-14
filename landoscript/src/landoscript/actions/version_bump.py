@@ -69,7 +69,10 @@ async def run(
             log.info(f"{file} contents:")
             log_file_contents(str(contents))
 
-        for file, orig in orig_files.items():
+        # Sort files by path to ensure consistent diff ordering
+        sorted_files = sorted(orig_files.keys())
+        for file in sorted_files:
+            orig = orig_files[file]
             if not orig:
                 raise LandoscriptError(f"{file} does not exist!")
 
