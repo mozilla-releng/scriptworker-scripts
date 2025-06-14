@@ -178,9 +178,6 @@ async def run(
     new_clobber_file = get_new_clobber_file(orig_clobber_file)
     files_to_diff.append(("CLOBBER", orig_clobber_file, new_clobber_file))
 
-    if not files_to_diff:
-        return []
-
     files_to_diff.sort(key=lambda x: x[0])
 
     # Generate diffs in sorted order
