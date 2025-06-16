@@ -49,7 +49,7 @@ async def run(
     the time of writing is when running the `release-to-esr` merge automation. Future uses
     are discouraged, and should be avoided if at all possible."""
 
-    diff = ""
+    diffs = []
 
     for version_bump_info in version_bump_infos:
         next_version = version_bump_info.next_version
@@ -89,11 +89,13 @@ async def run(
             log.info(f"{file}: successfully bumped! new contents are:")
             log_file_contents(modified)
 
-            diff += diff_contents(orig, modified, file)
+            diffs.append(diff_contents(orig, modified, file))
 
-    if not diff:
+    if not diffs:
         log.info("no files to bump")
         return []
+
+    diff = "\n".join(diffs)
 
     with open(os.path.join(public_artifact_dir, "version-bump.diff"), "w+") as f:
         f.write(diff)
