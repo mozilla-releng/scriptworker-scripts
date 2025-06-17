@@ -1,7 +1,7 @@
 import os
 import pytest
 
-from androguard.core.bytecodes import apk as androguard
+import pyaxmlparser
 from configparser import ConfigParser
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 from unittest.mock import MagicMock
@@ -85,11 +85,11 @@ def _create_apk_with_all_metadata(temp_dir):
 
 
 def test_extract_metadata(monkeypatch):
-    androguard_mock = MagicMock()
-    androguard_mock.get_package = lambda: 'org.mozilla.firefox'
-    androguard_mock.get_min_sdk_version = lambda: 16
-    androguard_mock.get_androidversion_code = lambda: '2015523300'
-    monkeypatch.setattr(androguard, 'APK', lambda _: androguard_mock)
+    pyaxmlparser_mock = MagicMock()
+    pyaxmlparser_mock.get_package = lambda: 'org.mozilla.firefox'
+    pyaxmlparser_mock.get_min_sdk_version = lambda: 16
+    pyaxmlparser_mock.get_androidversion_code = lambda: '2015523300'
+    monkeypatch.setattr(pyaxmlparser, 'APK', lambda _: pyaxmlparser_mock)
 
     with TemporaryDirectory() as temp_dir:
         apk_file = _create_apk_with_all_metadata(temp_dir)

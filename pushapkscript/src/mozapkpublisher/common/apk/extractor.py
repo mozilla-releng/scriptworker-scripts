@@ -1,10 +1,10 @@
 import codecs
 import logging
+import pyaxmlparser
 import re
 import shutil
 import tempfile
 
-from androguard.core.bytecodes import apk as androguard
 from io import BytesIO
 from zipfile import ZipFile
 
@@ -36,11 +36,11 @@ def extract_metadata(original_apk_path, extract_architecture_metadata, extract_l
         shutil.copy(original_apk_path, apk_copy.name)
         apk_copy.seek(0)
 
-        androguard_apk = androguard.APK(apk_copy.name)
-        package_name = androguard_apk.get_package()
+        parsed_apk = pyaxmlparser.APK(apk_copy.name)
+        package_name = parsed_apk.get_package()
         metadata['package_name'] = package_name
-        metadata['api_level'] = int(androguard_apk.get_min_sdk_version())
-        metadata['version_code'] = androguard_apk.get_androidversion_code()
+        metadata['api_level'] = int(parsed_apk.get_min_sdk_version())
+        metadata['version_code'] = parsed_apk.get_androidversion_code()
 
         with ZipFile(apk_copy.name) as apk_zip:
             if extract_architecture_metadata:
