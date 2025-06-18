@@ -25,6 +25,8 @@ async def publish(product_config, publish_config, apk_files, contact_server):
             skip_checks_fennec=bool(product_config.get("skip_checks_fennec")),
             sgs_service_account_id=publish_config.get("sgs_service_account_id"),
             sgs_access_token=publish_config.get("sgs_access_token"),
+            # Note that this only has an effect on SGS submissions, not google play.
+            submit=publish_config.get("submit", False),
         )
 
 

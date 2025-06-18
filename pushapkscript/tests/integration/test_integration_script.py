@@ -5,6 +5,7 @@ import shutil
 import subprocess
 import tempfile
 import unittest
+import pytest
 
 import pushapkscript
 from pushapkscript.script import main
@@ -237,6 +238,7 @@ class MainTest(unittest.TestCase):
             skip_checks_fennec=False,
             sgs_service_account_id=None,
             sgs_access_token=None,
+            submit=False,
         )
 
     @unittest.mock.patch("pushapkscript.publish.push_apk")
@@ -266,6 +268,7 @@ class MainTest(unittest.TestCase):
             skip_checks_fennec=True,
             sgs_service_account_id=None,
             sgs_access_token=None,
+            submit=False,
         )
 
     @unittest.mock.patch("pushapkscript.publish.push_apk")
@@ -295,6 +298,7 @@ class MainTest(unittest.TestCase):
             skip_checks_fennec=True,
             sgs_service_account_id=None,
             sgs_access_token=None,
+            submit=False,
         )
 
     @unittest.mock.patch("pushapkscript.publish.push_apk")
@@ -324,6 +328,7 @@ class MainTest(unittest.TestCase):
             skip_checks_fennec=False,
             sgs_service_account_id=None,
             sgs_access_token=None,
+            submit=False,
         )
 
     @unittest.mock.patch("pushapkscript.publish.push_apk")
@@ -353,6 +358,7 @@ class MainTest(unittest.TestCase):
             skip_checks_fennec=False,
             sgs_service_account_id=None,
             sgs_access_token=None,
+            submit=False,
         )
 
     @unittest.mock.patch("pushapkscript.publish.push_apk")
@@ -383,6 +389,7 @@ class MainTest(unittest.TestCase):
             skip_checks_fennec=False,
             sgs_service_account_id=None,
             sgs_access_token=None,
+            submit=False,
         )
 
     @unittest.mock.patch("pushapkscript.publish.push_apk")
@@ -413,4 +420,5 @@ class MainTest(unittest.TestCase):
             skip_checks_fennec=True,
             sgs_service_account_id="123",
             sgs_access_token="456",
+            submit=False,
         )
