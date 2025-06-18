@@ -1,11 +1,10 @@
-import pytest
 import requests
 import tempfile
 
 from tempfile import NamedTemporaryFile
 from unittest.mock import MagicMock
 
-from mozapkpublisher.common.utils import load_json_url, file_sha512sum, is_firefox_version_nightly, metadata_by_package_name
+from mozapkpublisher.common.utils import load_json_url, file_sha512sum, metadata_by_package_name
 
 apk_x86 = NamedTemporaryFile()
 apk_arm = NamedTemporaryFile()
@@ -26,20 +25,6 @@ def test_file_sha512sum():
 
         assert file_sha512sum(temp_file.name) == '0b1622c08ae1fcffe9f0d1dd17fe273d7e8c96668981c8a38f6bbfa4f757b30af0\
 ed2aabf90f1f8a5983082a0b88194fe81bc850d3019fd9eca9328584227c84'
-
-
-@pytest.mark.parametrize('version, expected', (
-    ('66.0a1', True),
-    ('66.0b2', False),
-    ('66.0', False),
-))
-def test_is_firefox_version_nightly(version, expected):
-    assert is_firefox_version_nightly(version) == expected
-
-
-def test_bad_is_firefox_version_nightly():
-    with pytest.raises(ValueError):
-        is_firefox_version_nightly('66.0esr')
 
 
 def test_metadata_by_package_name():

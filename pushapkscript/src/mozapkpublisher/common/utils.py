@@ -2,8 +2,6 @@ import hashlib
 import logging
 import requests
 
-from mozilla_version.gecko import FennecVersion
-
 logger = logging.getLogger(__name__)
 
 
@@ -24,14 +22,6 @@ def file_sha512sum(file_path):
 
 def filter_out_identical_values(list_):
     return list(set(list_))
-
-
-def is_firefox_version_nightly(firefox_version):
-    version = FennecVersion.parse(firefox_version)
-    if not (version.is_nightly or version.is_beta or version.is_release):
-        raise ValueError('Unsupported version: {}'.format(firefox_version))
-
-    return version.is_nightly
 
 
 def add_push_arguments(parser):
