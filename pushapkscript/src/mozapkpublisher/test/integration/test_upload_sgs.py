@@ -293,7 +293,7 @@ class ExpectedFormData:
         return self
 
 
-async def run_push_apk(monkeypatch, rollout_rate=None):
+async def run_push_apk(monkeypatch, rollout_rate=None, submit=False):
     file = os.path.join(os.path.dirname(__file__), "../", "data", "blob")
     monkeypatch.setattr(
         mozapkpublisher.push_apk, "extract_and_check_apks_metadata", fake_apk_metadata
@@ -312,16 +312,18 @@ async def run_push_apk(monkeypatch, rollout_rate=None):
         skip_check_multiple_locales=False,
         skip_check_same_locales=False,
         skip_checks_fennec=True,
+        submit=submit,
         sgs_service_account_id="service_account_id",
         sgs_access_token="access_token",
     )
 
 
 @pytest.mark.parametrize("rollout_rate", (25, None))
+@pytest.mark.parametrize("submit", (True, False))
 @pytest.mark.asyncio
-async def test_update_ok(responses, monkeypatch, rollout_rate):
+async def test_update_ok(responses, monkeypatch, rollout_rate, submit):
     setup_default_sgs_api(responses)
-    await run_push_apk(monkeypatch, rollout_rate)
+    await run_push_apk(monkeypatch, rollout_rate, submit)
 
     expected_file_upload = (
         ExpectedFormData()
@@ -468,12 +470,13 @@ async def test_update_ok(responses, monkeypatch, rollout_rate):
             },
         )
 
-    responses.assert_called_with(
-        url="https://devapi.samsungapps.com/seller/contentSubmit",
-        method="POST",
-        headers=basic_auth_headers(),
-        json={"contentId": "000003397900"},
-    )
+    if submit:
+        responses.assert_called_with(
+            url="https://devapi.samsungapps.com/seller/contentSubmit",
+            method="POST",
+            headers=basic_auth_headers(),
+            json={"contentId": "000003397900"},
+        )
 
 
 @pytest.mark.asyncio

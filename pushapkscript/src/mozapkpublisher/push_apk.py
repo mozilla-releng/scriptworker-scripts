@@ -28,6 +28,7 @@ async def push_apk(
     skip_check_same_locales=False,
     skip_checks_fennec=False,
     *,
+    submit=False,
     sgs_service_account_id=None,
     sgs_access_token=None,
 ):
@@ -85,7 +86,7 @@ async def push_apk(
 
         async with SamsungGalaxyStore(sgs_service_account_id, sgs_access_token, dry_run=dry_run) as sgs:
             for package_name, apks in apks_by_package_name.items():
-                await sgs.upload_apks(package_name, apks, rollout_percentage)
+                await sgs.upload_apks(package_name, apks, rollout_percentage, submit=submit)
     else:
         raise WrongArgumentGiven("Unkown target store: {}".format(store))
 
@@ -110,6 +111,7 @@ def main():
         config.skip_check_multiple_locales,
         config.skip_check_same_locales,
         config.skip_checks_fennec,
+        submit=config.submit,
         sgs_service_account_id=config.sgs_service_account_id,
         sgs_access_token=config.sgs_access_token,
     ))

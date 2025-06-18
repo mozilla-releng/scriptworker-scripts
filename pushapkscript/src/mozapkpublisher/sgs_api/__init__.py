@@ -29,7 +29,7 @@ class SamsungGalaxyStore:
     async def __aexit__(self, *args: Any) -> None:
         await self.api.__aexit__(*args)
 
-    async def upload_apks(self, package_name, apks, rollout_rate):
+    async def upload_apks(self, package_name, apks, rollout_rate, submit=False):
         """
         Upload the APKs passed as arguments. The app to be updated will be infered from the package name.
         If the rollout_rate is not None, all new apks will be added to a staged rollout with that rate.
@@ -94,7 +94,8 @@ class SamsungGalaxyStore:
 
             await self.api.enable_staged_rollout(content_id, rollout_rate)
 
-        await self.api.submit_app(content_id)
+        if submit:
+            await self.api.submit_app(content_id)
 
     async def upload_file(self, file):
         """

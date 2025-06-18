@@ -141,6 +141,7 @@ def test_main_google(monkeypatch):
             False,
             False,
             False,
+            submit=False,
             sgs_service_account_id=None,
             sgs_access_token=None
         )
@@ -153,6 +154,7 @@ def test_main_samsung(monkeypatch):
         '--store', 'samsung',
         '--sgs-service-account-id', '123',
         '--sgs-access-token', '456',
+        '--submit',
         'alpha',
         file,
         '--expected-package-name=org.mozilla.fennec_aurora',
@@ -175,6 +177,7 @@ def test_main_samsung(monkeypatch):
             False,
             False,
             False,
+            submit=True,
             sgs_service_account_id='123',
             sgs_access_token='456'
         )
