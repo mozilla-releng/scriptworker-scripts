@@ -154,6 +154,7 @@ def test_target_samsung():
         "sgs_access_token": "abcdef",
         "package_names": ["org.mozilla.fenix"],
         "rollout_percentage": None,
+        "submit": False,
     }
 
 
@@ -167,6 +168,7 @@ def test_target_samsung_with_commit():
         "sgs_access_token": "abcdef",
         "package_names": ["org.mozilla.fenix"],
         "rollout_percentage": None,
+        "submit": False,
     }
 
 
@@ -180,6 +182,21 @@ def test_target_samsung_rollout():
         "sgs_access_token": "abcdef",
         "package_names": ["org.mozilla.fenix"],
         "rollout_percentage": 50,
+        "submit": False,
+    }
+
+
+def test_target_samsung_submit():
+    payload = {"channel": "production", "target_store": "samsung", "submit": True}
+
+    assert get_publish_config(FENIX_CONFIG, payload, "fenix") == {
+        "target_store": "samsung",
+        "dry_run": True,
+        "sgs_service_account_id": "123456",
+        "sgs_access_token": "abcdef",
+        "package_names": ["org.mozilla.fenix"],
+        "rollout_percentage": None,
+        "submit": True,
     }
 
 
