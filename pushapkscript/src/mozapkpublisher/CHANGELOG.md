@@ -2,6 +2,17 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [10.0.0] - 2025-06-18
+
+### Changed
+
+* `push_apk` no longers submits the samsung udpates automatically. Use `--submit` to keep the old behavior.
+* The androguard dependency has been replaced with pyaxmlparser to reduce the number of transitive dependencies pulled by mozapkpublisher
+
+### Removed
+
+* `mozapkpublisher.common.utils.is_firefox_version_nightly` is no more. It was using some very out of date way of checking for that and wasn't used anywhere.
+
 ## [9.0.1] - 2025-06-02
 
 ### Fixed
