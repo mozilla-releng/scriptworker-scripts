@@ -98,6 +98,10 @@ async def run(
         log.info("no files to bump")
         return []
 
+    def extract_path(diff_text):
+        return diff_text.split("\n", 1)[0].split(" ")[2][2:]
+
+    diffs = sorted(diffs, key=extract_path)
     diff = "\n".join(diffs)
 
     with open(os.path.join(public_artifact_dir, "version-bump.diff"), "w+") as f:

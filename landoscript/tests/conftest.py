@@ -219,14 +219,17 @@ def assert_add_commit_response(action, commit_msg_strings, initial_values, expec
 
     # Extract file paths from diffs and verify they are sorted
     file_paths = []
-    for diff in diffs:
+    for i, diff in enumerate(diffs):
         if not diff:
             continue
 
-        path_line = diff.split("\n")[0]
-        if path_line.startswith("diff --git"):
-            file_path = path_line.split(" ")[2][2:]
-            file_paths.append(file_path)
+        if i == 0:
+            path_line = diff.split("\n")[0]
+        else:
+            path_line = "diff" + diff.split("\n")[0]
+
+        file_path = path_line.split(" ")[2][2:]
+        file_paths.append(file_path)
 
     assert file_paths == sorted(file_paths), f"Files in diff are not sorted. Got: {file_paths}"
 
