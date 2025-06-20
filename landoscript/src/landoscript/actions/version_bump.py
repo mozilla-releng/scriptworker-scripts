@@ -69,7 +69,10 @@ async def run(
             log.info(f"{file} contents:")
             log_file_contents(str(contents))
 
-        for file, orig in orig_files.items():
+        # Sort files by path to ensure consistent diff ordering
+        sorted_files = sorted(orig_files.keys())
+        for file in sorted_files:
+            orig = orig_files[file]
             if not orig:
                 raise LandoscriptError(f"{file} does not exist!")
 
@@ -95,6 +98,10 @@ async def run(
         log.info("no files to bump")
         return []
 
+    def extract_path(diff_text):
+        return diff_text.split("\n", 1)[0].split(" ")[2][2:]
+
+    diffs = sorted(diffs, key=extract_path)
     diff = "\n".join(diffs)
 
     with open(os.path.join(public_artifact_dir, "version-bump.diff"), "w+") as f:
