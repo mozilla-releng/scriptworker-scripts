@@ -1,3 +1,4 @@
+import datetime
 import json
 from pathlib import Path
 from yarl import URL
@@ -41,6 +42,19 @@ def datadir():
 @pytest.fixture(scope="session")
 def privkey_file(datadir):
     return datadir / "test_private_key.pem"
+
+
+@pytest.fixture(scope="function")
+def patch_date(monkeypatch):
+    def inner(location, year, month, day):
+        class mydate(datetime.date):
+            @classmethod
+            def today(cls):
+                return datetime.date(year, month, day)
+
+        monkeypatch.setattr(location, "date", mydate)
+
+    return inner
 
 
 def setup_treestatus_response(aioresponses, context, tree="repo_name", status="approval required", has_err=False):
