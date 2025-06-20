@@ -3,6 +3,7 @@ import pytest
 from pytest_scriptworker_client import get_files_payload
 from simple_github.client import GITHUB_GRAPHQL_ENDPOINT
 
+from landoscript.actions import merge_day
 from landoscript.script import async_main
 
 from .conftest import (
@@ -142,6 +143,7 @@ from .conftest import (
     ),
 )
 async def test_success_bump_main(
+    patch_date,
     aioresponses,
     github_installation_responses,
     context,
@@ -177,7 +179,11 @@ async def test_success_bump_main(
         get_files_payload({"CLOBBER": "# Modifying this file will automatically clobber\nMerge day clobber 2025-03-03"}),
     )
 
+    patch_date(merge_day, 2025, 6, 10)
+
     def assert_func(req):
+        initial_replacement_values["CLOBBER"] = "Merge day clobber 2025-03-03\n\\No newline at end of file"
+        expected_replacement_bumps["CLOBBER"] = "Merge day clobber 2025-06-10\n\\No newline at end of file"
         assert_merge_response(
             context.config["artifact_dir"],
             req,
@@ -194,7 +200,7 @@ async def test_success_bump_main(
 
 
 @pytest.mark.asyncio
-async def test_success_bump_esr(aioresponses, github_installation_responses, context):
+async def test_success_bump_esr(patch_date, aioresponses, github_installation_responses, context):
     merge_info = {
         "to_branch": "esr128",
         "version_files": [
@@ -238,6 +244,8 @@ async def test_success_bump_esr(aioresponses, github_installation_responses, con
         get_files_payload({"CLOBBER": "# Modifying this file will automatically clobber\nMerge day clobber 2025-03-03"}),
     )
 
+    patch_date(merge_day, 2025, 6, 10)
+
     def assert_func(req):
         assert_merge_response(
             context.config["artifact_dir"],
@@ -245,13 +253,15 @@ async def test_success_bump_esr(aioresponses, github_installation_responses, con
             expected_actions,
             initial_values,
             expected_bumps,
+            {"CLOBBER": "Merge day clobber 2025-03-03\n\\No newline at end of file"},
+            {"CLOBBER": "Merge day clobber 2025-06-10\n\\No newline at end of file"},
         )
 
     await run_test(aioresponses, github_installation_responses, context, payload, ["merge_day"], True, assert_func=assert_func)
 
 
 @pytest.mark.asyncio
-async def test_success_early_to_late_beta(aioresponses, github_installation_responses, context):
+async def test_success_early_to_late_beta(patch_date, aioresponses, github_installation_responses, context):
     merge_info = {
         "to_branch": "beta",
         "replacements": [
@@ -285,7 +295,11 @@ async def test_success_early_to_late_beta(aioresponses, github_installation_resp
         get_files_payload({"CLOBBER": "# Modifying this file will automatically clobber\nMerge day clobber 2025-03-03"}),
     )
 
+    patch_date(merge_day, 2025, 6, 10)
+
     def assert_func(req):
+        initial_replacement_values["CLOBBER"] = "Merge day clobber 2025-03-03\n\\No newline at end of file"
+        expected_replacement_bumps["CLOBBER"] = "Merge day clobber 2025-06-10\n\\No newline at end of file"
         assert_merge_response(
             context.config["artifact_dir"],
             req,
@@ -300,7 +314,7 @@ async def test_success_early_to_late_beta(aioresponses, github_installation_resp
 
 
 @pytest.mark.asyncio
-async def test_success_main_to_beta_merge_day(aioresponses, github_installation_responses, context):
+async def test_success_main_to_beta_merge_day(patch_date, aioresponses, github_installation_responses, context):
     # despite it looking weird, these beta looking versions _are_ the correct
     # "before" versions after we've "merged" the main into beta
     initial_values = {
@@ -472,6 +486,8 @@ async def test_success_main_to_beta_merge_day(aioresponses, github_installation_
         get_files_payload({"CLOBBER": "# Modifying this file will automatically clobber\nMerge day clobber 2025-03-03"}),
     )
 
+    patch_date(merge_day, 2025, 6, 10)
+
     aioresponses.post(submit_uri, status=202, payload={"job_id": job_id, "status_url": str(status_uri), "message": "foo", "started_at": "2025-03-08T12:25:00Z"})
 
     aioresponses.get(
@@ -487,6 +503,8 @@ async def test_success_main_to_beta_merge_day(aioresponses, github_installation_
     context.task = {"payload": payload, "scopes": scopes}
     await async_main(context)
 
+    initial_replacement_values["CLOBBER"] = "Merge day clobber 2025-03-03\n\\No newline at end of file"
+    expected_replacement_values["CLOBBER"] = "Merge day clobber 2025-06-10\n\\No newline at end of file"
     req = assert_lando_submission_response(aioresponses.requests, submit_uri)
     assert_merge_response(
         context.config["artifact_dir"],
@@ -514,7 +532,7 @@ async def test_success_main_to_beta_merge_day(aioresponses, github_installation_
 
 
 @pytest.mark.asyncio
-async def test_success_beta_to_release(aioresponses, github_installation_responses, context):
+async def test_success_beta_to_release(patch_date, aioresponses, github_installation_responses, context):
     merge_info = {
         "end_tag": "FIREFOX_RELEASE_{major_version}_END",
         "base_tag": "FIREFOX_RELEASE_{major_version}_BASE",
@@ -574,7 +592,11 @@ async def test_success_beta_to_release(aioresponses, github_installation_respons
         get_files_payload({"CLOBBER": "# Modifying this file will automatically clobber\nMerge day clobber 2025-03-03"}),
     )
 
+    patch_date(merge_day, 2025, 6, 10)
+
     def assert_func(req):
+        initial_replacement_values["CLOBBER"] = "Merge day clobber 2025-03-03\n\\No newline at end of file"
+        expected_replacement_values["CLOBBER"] = "Merge day clobber 2025-06-10\n\\No newline at end of file"
         assert_merge_response(
             context.config["artifact_dir"],
             req,
@@ -594,7 +616,7 @@ async def test_success_beta_to_release(aioresponses, github_installation_respons
 
 
 @pytest.mark.asyncio
-async def test_success_release_to_esr(aioresponses, github_installation_responses, context):
+async def test_success_release_to_esr(patch_date, aioresponses, github_installation_responses, context):
     merge_info = {
         # yep...we use `BASE` on the `end_tag` for release-to-esr merges
         "end_tag": "FIREFOX_ESR_{major_version}_BASE",
@@ -642,7 +664,11 @@ async def test_success_release_to_esr(aioresponses, github_installation_response
         get_files_payload({"CLOBBER": "# Modifying this file will automatically clobber\nMerge day clobber 2025-03-03"}),
     )
 
+    patch_date(merge_day, 2025, 6, 10)
+
     def assert_func(req):
+        initial_replacement_values["CLOBBER"] = "Merge day clobber 2025-03-03\n\\No newline at end of file"
+        expected_replacement_bumps["CLOBBER"] = "Merge day clobber 2025-06-10\n\\No newline at end of file"
         assert_merge_response(
             context.config["artifact_dir"],
             req,
