@@ -81,6 +81,7 @@ def _get_channel_publish_config(product_config, task):
             "rollout_percentage": rollout_percentage,
             "sgs_service_account_id": store_config["service_account_id"],
             "sgs_access_token": store_config["access_token"],
+            "submit": task.get("submit", False),
         }
 
     google_track = task.get("google_play_track", store_config["default_track"])

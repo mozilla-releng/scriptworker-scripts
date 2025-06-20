@@ -69,6 +69,10 @@
                 },
                 "commit": {
                   "type": "boolean"
+                },
+                "submit": {
+                    "type": "boolean",
+                    "default": false
                 }
             },
             "required": ["upstreamArtifacts"],
