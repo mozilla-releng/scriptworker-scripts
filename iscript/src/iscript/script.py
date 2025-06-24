@@ -10,12 +10,12 @@ from iscript.mac import (
     notarize_1_behavior,
     notarize_3_behavior,
     notarize_behavior,
-    resign_pkg_behavior,
     sign_and_pkg_behavior,
     sign_behavior,
     single_file_behavior,
 )
 from iscript.macvpn import vpn_behavior
+from iscript.pkg import sign_pkg_behavior
 from iscript.util import get_sign_config
 from scriptworker_client.client import sync_main
 from scriptworker_client.utils import run_command
@@ -82,7 +82,7 @@ def get_behavior_function(behavior):
         # For staging releases; or should we mac_notarize but skip notarization
         # for dep?
         "mac_sign_and_pkg": (sign_and_pkg_behavior, {}),
-        "mac_resign_pkg": (resign_pkg_behavior, {}),
+        "mac_sign_pkg": (sign_pkg_behavior, {}),
     }
     if behavior not in functions:
         raise IScriptError("iscript behavior {} not implemented!".format(behavior))
