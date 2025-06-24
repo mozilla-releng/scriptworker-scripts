@@ -132,6 +132,7 @@ async def test_vpn_behavior(mocker):
     await macvpn.vpn_behavior(config, task, notarize=True)
     await macvpn.vpn_behavior(config, task, notarize=False)
 
+
 @pytest.mark.asyncio
 async def test_vpn_hardened(mocker):
     def get_app_paths(config, task):
@@ -139,7 +140,7 @@ async def test_vpn_hardened(mocker):
 
     def get_sign_config(*args, **kwargs):
         return {"signing_keychain": None, "keychain_password": None, "pkg_cert_id": "123"}
-    
+
     async def mock_sign_app(config, task, create_pkg):
         return get_app_paths(config, task)
 
@@ -158,17 +159,13 @@ async def test_vpn_hardened(mocker):
     task = {
         "payload": {
             "behavior": "mac_sign_and_pkg_vpn",
-            "hardened-sign-config":[{
-                "deep": False,
-                "entitlements": "http://localhost/notarealurl",
-                "force": False,
-                "globs": "/",
-                "runtime": True
-            }],
-            "provisioning-profile-config": [{
-                "profile_name": "comexamplemacosFirefoxVPN.provisionprofile",
-                "target_path": "/Contents/embedded.provisionprofile",
-            }],
+            "hardened-sign-config": [{"deep": False, "entitlements": "http://localhost/notarealurl", "force": False, "globs": "/", "runtime": True}],
+            "provisioning-profile-config": [
+                {
+                    "profile_name": "comexamplemacosFirefoxVPN.provisionprofile",
+                    "target_path": "/Contents/embedded.provisionprofile",
+                }
+            ],
             "upstreamArtifacts": [{"formats": ["macapp"]}],
         }
     }
