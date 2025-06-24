@@ -98,7 +98,6 @@ async def test_vpn_behavior(mocker):
         return {"signing_keychain": None, "keychain_password": None, "pkg_cert_id": "123"}
 
     mocker.patch.object(macvpn, "_sign_app", new=noop_async)
-    mocker.patch.object(macvpn, "_create_notarization_zipfile", new=noop_async)
     mocker.patch.object(macvpn, "get_app_paths", new=get_app_paths)
     mocker.patch.object(macvpn, "extract_all_apps", new=noop_async)
     mocker.patch.object(macvpn, "run_command", new=noop_async)
@@ -107,12 +106,8 @@ async def test_vpn_behavior(mocker):
     mocker.patch.object(macvpn, "unlock_keychain", new=noop_async)
     mocker.patch.object(macvpn, "update_keychain_search_path", new=noop_async)
     mocker.patch.object(macvpn, "_sign_app", new=noop_async)
-    mocker.patch.object(macvpn, "_create_notarization_zipfile", new=noop_async)
     mocker.patch.object(macvpn, "_create_pkg_files", new=noop_async)
     mocker.patch.object(macvpn, "_codesign", new=noop_async)
-    mocker.patch.object(macvpn, "notarize_no_sudo", new=noop_async)
-    mocker.patch.object(macvpn, "poll_all_notarization_status", new=noop_async)
-    mocker.patch.object(macvpn, "staple_notarization", new=noop_async)
     mocker.patch.object(macvpn, "copy_pkgs_to_artifact_dir", new=noop_async)
     # We should call the legacy signer if no config was provided.
     mocker.patch.object(macvpn, "sign_hardened_behavior", new=fail_async)
@@ -129,8 +124,7 @@ async def test_vpn_behavior(mocker):
         }
     }
     config = {"work_dir": ""}
-    await macvpn.vpn_behavior(config, task, notarize=True)
-    await macvpn.vpn_behavior(config, task, notarize=False)
+    await macvpn.vpn_behavior(config, task)
 
 
 @pytest.mark.asyncio
@@ -147,10 +141,6 @@ async def test_vpn_hardened(mocker):
     mocker.patch.object(macvpn, "get_app_paths", new=get_app_paths)
     mocker.patch.object(macvpn, "get_sign_config", new=get_sign_config)
     mocker.patch.object(macvpn, "_create_pkg_files", new=noop_async)
-    mocker.patch.object(macvpn, "_create_notarization_zipfile", new=noop_async)
-    mocker.patch.object(macvpn, "notarize_no_sudo", new=noop_async)
-    mocker.patch.object(macvpn, "poll_all_notarization_status", new=noop_async)
-    mocker.patch.object(macvpn, "staple_notarization", new=noop_async)
     mocker.patch.object(macvpn, "copy_pkgs_to_artifact_dir", new=noop_async)
     # We should call the hardened signer if config was provided.
     mocker.patch.object(macvpn, "sign_hardened_behavior", new=mock_sign_app)
@@ -171,5 +161,4 @@ async def test_vpn_hardened(mocker):
     }
     config = {"work_dir": ""}
 
-    await macvpn.vpn_behavior(config, task, notarize=True)
-    await macvpn.vpn_behavior(config, task, notarize=False)
+    await macvpn.vpn_behavior(config, task)
