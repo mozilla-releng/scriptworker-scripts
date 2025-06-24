@@ -1328,15 +1328,14 @@ async def test_resign_pkg_behavior(mocker, tmpdir):
         ],
         "payload": {
             "upstreamArtifacts": [
-                {
-                    "taskId": "task1",
-                    "formats": ["macapp"],
-                    "paths": ["public/build/1/target.tar.gz", "public/build/2/target.tar.gz", "public/build/1/target.pkg", "public/build/2/target.pkg"],
-                },
-                {"taskId": "task2", "paths": ["public/build/3/target.tar.gz", "public/build/3/target.tar.gz"], "formats": []},
+                {"taskId": "task-identifer", "paths": ["public/build/example.tar.gz", "public/build/example.pkg"], "formats": []},
             ]
         },
     }
+    upstream_task_id = task["payload"]["upstreamArtifacts"][0]["taskId"]
+    upstream_artifact_dir = os.path.join(work_dir, "cot", upstream_task_id, "public", "build")
+    makedirs(os.path.dirname(upstream_artifact_dir))
+    os.symlink(TEST_DATA_DIR, upstream_artifact_dir)
 
     async def mock_run_command(cmd, **kwargs):
         # Verify that the productsign command was run, with signing arguments.
@@ -1345,14 +1344,19 @@ async def test_resign_pkg_behavior(mocker, tmpdir):
         assert "--sign" in cmd
 
         # Verify that we are signing a pkg file
-        assert os.path.basename(cmd[-2]) == "target.pkg"
-        assert os.path.basename(cmd[-1]) == "target.pkg"
+        assert os.path.basename(cmd[-2]) == "example.pkg"
+        assert os.path.basename(cmd[-1]) == "example.pkg"
         assert "productsign" in os.path.dirname(cmd[-1])
+
+        # Don't actually sign - just copy
+        copy2(cmd[-2], cmd[-1])
 
     mocker.patch.object(mac, "run_command", new=mock_run_command)
     mocker.patch.object(mac, "unlock_keychain", new=noop_async)
     mocker.patch.object(mac, "update_keychain_search_path", new=noop_async)
     mocker.patch.object(mac, "get_sign_config", return_value=config["mac_config"]["dep"])
-    mocker.patch.object(mac, "copy_pkgs_to_artifact_dir", new=noop_async)
 
     await mac.resign_pkg_behavior(config, task)
+
+    # The "signed" package should exist in the artifact dir.
+    assert os.path.isfile(os.path.join(artifact_dir, "public", "build", "example.pkg"))
