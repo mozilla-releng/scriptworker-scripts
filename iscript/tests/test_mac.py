@@ -40,6 +40,14 @@ def touch(path):
         pass
 
 
+def symlink_upstream(config, task):
+    work_dir = config["work_dir"]
+    for artifact in task["payload"]["upstreamArtifacts"]:
+        upstream_dir = os.path.join(work_dir, "cot", artifact["taskId"], "public", "build")
+        makedirs(os.path.dirname(upstream_dir))
+        os.symlink(TEST_DATA_DIR, upstream_dir)
+
+
 # App {{{1
 def test_app():
     """``App`` attributes can be set, and ``check_required_attrs`` raises if
@@ -1332,10 +1340,7 @@ async def test_resign_pkg_behavior(mocker, tmpdir):
             ]
         },
     }
-    upstream_task_id = task["payload"]["upstreamArtifacts"][0]["taskId"]
-    upstream_artifact_dir = os.path.join(work_dir, "cot", upstream_task_id, "public", "build")
-    makedirs(os.path.dirname(upstream_artifact_dir))
-    os.symlink(TEST_DATA_DIR, upstream_artifact_dir)
+    symlink_upstream(config, task)
 
     async def mock_run_command(cmd, **kwargs):
         # Verify that the productsign command was run, with signing arguments.

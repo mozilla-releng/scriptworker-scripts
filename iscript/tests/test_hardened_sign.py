@@ -5,9 +5,11 @@ from pathlib import Path
 import os
 import pytest
 import copy
+from shutil import copy2
 
 import iscript.hardened_sign as hs
 from iscript.exceptions import IScriptError
+from scriptworker_client.utils import makedirs
 
 TEST_DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 
@@ -22,6 +24,15 @@ def noop_sync(*args, **kwargs):
 
 async def fail_async(*args, **kwargs):
     raise IScriptError("fail_async exception")
+
+
+def symlink_upstream(config, task):
+    data_dir = os.path.join(os.path.dirname(__file__), "data")
+    work_dir = config["work_dir"]
+    for artifact in task["payload"]["upstreamArtifacts"]:
+        upstream_dir = os.path.join(work_dir, "cot", artifact["taskId"], "public", "build")
+        makedirs(os.path.dirname(upstream_dir))
+        os.symlink(data_dir, upstream_dir)
 
 
 hs_config = [{"deep": True, "runtime": True, "force": True, "entitlements": "https://foo.bar", "globs": ["/"]}]
@@ -79,3 +90,105 @@ def test_copy_provisioning_profile_fail(tmpdir):
 def test_build_sign_command(tmpdir):
     file_map = {hs_config[0]["entitlements"]: "filepath"}
     hs.build_sign_command(tmpdir, "12345identity", "keychainpath", hs_config[0], file_map)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "create_pkg,provision_profile",
+    ((False, None), (True, None),
+    (False, {"profile_name": "comexamplehelloworld.provisionprofile", "target_path": "/Contents/embedded.provisionprofile"}),
+    (True, {"profile_name": "comexamplehelloworld.provisionprofile", "target_path": "/Contents/embedded.provisionprofile"})),
+)
+async def test_sign_hardened_behavior(mocker, tmpdir, create_pkg, provision_profile):
+    artifact_dir = os.path.join(str(tmpdir), "artifact")
+    work_dir = os.path.join(str(tmpdir), "work")
+    config = {
+        "artifact_dir": artifact_dir,
+        "work_dir": work_dir,
+        "local_notarization_accounts": ["acct0", "acct1", "acct2"],
+        "mac_config": {
+            "dep": {
+                "designated_requirements": "",  # put this here bc it's easier
+                "zipfile_cmd": "zip",
+                "notarize_type": "single_zip",
+                "signing_keychain": "keychain_path",
+                "sign_with_entitlements": False,
+                "base_bundle_id": "org.test",
+                "identity": "id",
+                "keychain_password": "keychain_password",
+                "pkg_cert_id": "cert_id",
+                "apple_notarization_account": "apple_account",
+                "apple_notarization_password": "apple_password",
+                "apple_asc_provider": "apple_asc_provider",
+                "notarization_poll_timeout": 2,
+                "create_pkg": True,
+            }
+        },
+    }
+    task = {
+        "scopes": [
+            "project:releng:signing:cert:dep-signing",
+        ],
+        "payload": {
+            "upstreamArtifacts": [
+                {"taskId": "task-identifer", "paths": ["public/build/example.tar.gz"], "formats": []},
+            ],
+            "behavior": "mac_sign_hardened",
+            "hardened-sign-config": hs_config,
+        },
+    }
+    symlink_upstream(config, task)
+    if provision_profile is not None:
+        task["payload"]["provisioning-profile-config"] = [provision_profile]
+        pprofile_dir = os.path.join(str(tmpdir), "provisionprofiles")
+        makedirs(pprofile_dir)
+        with open(os.path.join(pprofile_dir, provision_profile["profile_name"]), "w"):
+            pass
+
+    async def mock_download_signing_resources(config, folder):
+        return {config[0]["entitlements"]: "entitlements-filename.xml"}
+
+    orig_run_command = hs.run_command
+    async def mock_run_command(cmd, **kwargs):
+        if cmd[0] != "codesign":
+            return orig_run_command(cmd, **kwargs)
+        
+        # Verify the codesign arguments
+        assert "--sign" in cmd
+        assert "--keychain" in cmd
+        assert "--entitlements" in cmd
+        pass
+
+    mocker.patch.object(hs, "download_signing_resources", new=mock_download_signing_resources)
+    mocker.patch.object(hs, "unlock_keychain", new=noop_async)
+    mocker.patch.object(hs, "update_keychain_search_path", new=noop_async)
+    mocker.patch.object(hs, "get_sign_config", return_value=config["mac_config"]["dep"])
+    mocker.patch.object(hs, "run_command", new=mock_run_command)
+
+    async def mock_create_pkg_files(config, sign_config, apps, requirements_plist_path):
+        data_dir = os.path.join(os.path.dirname(__file__), "data")
+        for app in apps:
+            hs.set_app_path_and_name(app)
+
+            # Check that the provisioning profile was copied into the bundle
+            if provision_profile is not None:
+                filename = os.path.join(app.app_path, provision_profile["target_path"].strip("/"))
+                assert os.path.isfile(filename)
+    
+            app.pkg_path = app.app_path.replace(".app", ".pkg")
+            copy2(os.path.join(data_dir, "example.pkg"), app.pkg_path)
+
+    if create_pkg:
+        mocker.patch.object(hs, "download_requirements_plist_file", return_value=os.path.join(work_dir, "requirements.plist"))
+        mocker.patch.object(hs, "create_pkg_files", new=mock_create_pkg_files)
+    else:
+        mocker.patch.object(hs, "download_requirements_plist_file", new=fail_async)
+        mocker.patch.object(hs, "create_pkg_files", new=fail_async)
+        mocker.patch.object(hs, "copy_pkgs_to_artifact_dir", new=fail_async)
+
+    await hs.sign_hardened_behavior(config, task, create_pkg=create_pkg)
+
+    # The output artifacts should be created
+    assert os.path.isfile(os.path.join(artifact_dir, "public", "build", "example.tar.gz"))
+    if create_pkg:
+        assert os.path.isfile(os.path.join(artifact_dir, "public", "build", "example.pkg"))
