@@ -95,9 +95,12 @@ def test_build_sign_command(tmpdir):
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "create_pkg,provision_profile",
-    ((False, None), (True, None),
-    (False, {"profile_name": "comexamplehelloworld.provisionprofile", "target_path": "/Contents/embedded.provisionprofile"}),
-    (True, {"profile_name": "comexamplehelloworld.provisionprofile", "target_path": "/Contents/embedded.provisionprofile"})),
+    (
+        (False, None),
+        (True, None),
+        (False, {"profile_name": "comexamplehelloworld.provisionprofile", "target_path": "/Contents/embedded.provisionprofile"}),
+        (True, {"profile_name": "comexamplehelloworld.provisionprofile", "target_path": "/Contents/embedded.provisionprofile"}),
+    ),
 )
 async def test_sign_hardened_behavior(mocker, tmpdir, create_pkg, provision_profile):
     artifact_dir = os.path.join(str(tmpdir), "artifact")
@@ -149,10 +152,11 @@ async def test_sign_hardened_behavior(mocker, tmpdir, create_pkg, provision_prof
         return {config[0]["entitlements"]: "entitlements-filename.xml"}
 
     orig_run_command = hs.run_command
+
     async def mock_run_command(cmd, **kwargs):
         if cmd[0] != "codesign":
             return orig_run_command(cmd, **kwargs)
-        
+
         # Verify the codesign arguments
         assert "--sign" in cmd
         assert "--keychain" in cmd
@@ -174,7 +178,7 @@ async def test_sign_hardened_behavior(mocker, tmpdir, create_pkg, provision_prof
             if provision_profile is not None:
                 filename = os.path.join(app.app_path, provision_profile["target_path"].strip("/"))
                 assert os.path.isfile(filename)
-    
+
             app.pkg_path = app.app_path.replace(".app", ".pkg")
             copy2(os.path.join(data_dir, "example.pkg"), app.pkg_path)
 
