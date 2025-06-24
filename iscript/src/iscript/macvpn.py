@@ -15,10 +15,7 @@ from iscript.mac import (
     download_entitlements_file,
     extract_all_apps,
     get_app_paths,
-    notarize_no_sudo,
-    poll_all_notarization_status,
     sign_all_apps,
-    staple_notarization,
     unlock_keychain,
     update_keychain_search_path,
 )
