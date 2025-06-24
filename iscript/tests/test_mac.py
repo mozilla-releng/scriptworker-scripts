@@ -40,14 +40,6 @@ def touch(path):
         pass
 
 
-def symlink_upstream(config, task):
-    work_dir = config["work_dir"]
-    for artifact in task["payload"]["upstreamArtifacts"]:
-        upstream_dir = os.path.join(work_dir, "cot", artifact["taskId"], "public", "build")
-        makedirs(os.path.dirname(upstream_dir))
-        os.symlink(TEST_DATA_DIR, upstream_dir)
-
-
 # App {{{1
 def test_app():
     """``App`` attributes can be set, and ``check_required_attrs`` raises if
