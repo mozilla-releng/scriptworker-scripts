@@ -223,3 +223,5 @@ async def sign_hardened_behavior(config, task, create_pkg=False, **kwargs):
         await create_pkg_files(config, sign_config, non_langpack_apps, requirements_plist_path)
         await copy_pkgs_to_artifact_dir(config, non_langpack_apps)
         log.info("Done creating pkgs.")
+    
+    return non_langpack_apps

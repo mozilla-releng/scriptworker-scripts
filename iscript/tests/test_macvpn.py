@@ -114,6 +114,8 @@ async def test_vpn_behavior(mocker):
     mocker.patch.object(macvpn, "poll_all_notarization_status", new=noop_async)
     mocker.patch.object(macvpn, "staple_notarization", new=noop_async)
     mocker.patch.object(macvpn, "copy_pkgs_to_artifact_dir", new=noop_async)
+    # We should call the legacy signer if no config was provided.
+    mocker.patch.object(macvpn, "sign_hardened_behavior", new=fail_async)
 
     task = {
         "payload": {
@@ -127,5 +129,50 @@ async def test_vpn_behavior(mocker):
         }
     }
     config = {"work_dir": ""}
+    await macvpn.vpn_behavior(config, task, notarize=True)
+    await macvpn.vpn_behavior(config, task, notarize=False)
+
+@pytest.mark.asyncio
+async def test_vpn_hardened(mocker):
+    def get_app_paths(config, task):
+        return [App(parent_dir=".")]
+
+    def get_sign_config(*args, **kwargs):
+        return {"signing_keychain": None, "keychain_password": None, "pkg_cert_id": "123"}
+    
+    async def mock_sign_app(config, task, create_pkg):
+        return get_app_paths(config, task)
+
+    mocker.patch.object(macvpn, "get_app_paths", new=get_app_paths)
+    mocker.patch.object(macvpn, "get_sign_config", new=get_sign_config)
+    mocker.patch.object(macvpn, "_create_pkg_files", new=noop_async)
+    mocker.patch.object(macvpn, "_create_notarization_zipfile", new=noop_async)
+    mocker.patch.object(macvpn, "notarize_no_sudo", new=noop_async)
+    mocker.patch.object(macvpn, "poll_all_notarization_status", new=noop_async)
+    mocker.patch.object(macvpn, "staple_notarization", new=noop_async)
+    mocker.patch.object(macvpn, "copy_pkgs_to_artifact_dir", new=noop_async)
+    # We should call the hardened signer if config was provided.
+    mocker.patch.object(macvpn, "sign_hardened_behavior", new=mock_sign_app)
+    mocker.patch.object(macvpn, "vpn_legacy_behavior", new=fail_async)
+
+    task = {
+        "payload": {
+            "behavior": "mac_sign_and_pkg_vpn",
+            "hardened-sign-config":[{
+                "deep": False,
+                "entitlements": "http://localhost/notarealurl",
+                "force": False,
+                "globs": "/",
+                "runtime": True
+            }],
+            "provisioning-profile-config": [{
+                "profile_name": "comexamplemacosFirefoxVPN.provisionprofile",
+                "target_path": "/Contents/embedded.provisionprofile",
+            }],
+            "upstreamArtifacts": [{"formats": ["macapp"]}],
+        }
+    }
+    config = {"work_dir": ""}
+
     await macvpn.vpn_behavior(config, task, notarize=True)
     await macvpn.vpn_behavior(config, task, notarize=False)
