@@ -1293,6 +1293,7 @@ async def test_single_file_behavior(mocker, tmpdir, use_langpack, filename, form
     mocker.patch.object(mac, "get_sign_config", return_value=config["mac_config"]["dep"])
     await mac.single_file_behavior(config, task, notarize)
 
+
 # resign_pkg_behavior {{{1
 @pytest.mark.asyncio
 async def test_resign_pkg_behavior(mocker, tmpdir):
@@ -1355,4 +1356,3 @@ async def test_resign_pkg_behavior(mocker, tmpdir):
     mocker.patch.object(mac, "copy_pkgs_to_artifact_dir", new=noop_async)
 
     await mac.resign_pkg_behavior(config, task)
-

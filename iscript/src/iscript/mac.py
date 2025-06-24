@@ -1418,14 +1418,14 @@ async def resign_pkg_behavior(config, task):
         IScriptError: on fatal error.
 
     """
-    work_dir=config["work_dir"]
+    work_dir = config["work_dir"]
     sign_config = get_sign_config(config, task, base_key="mac_config")
 
     await unlock_keychain(sign_config["signing_keychain"], sign_config["keychain_password"])
     await update_keychain_search_path(config, sign_config["signing_keychain"])
 
     if "pkg_cert_id" not in sign_config:
-        raise IScriptError(f"Unable to find installer signing cert!")
+        raise IScriptError("Unable to find installer signing cert!")
 
     sign_cmd = ["productsign", "--keychain", sign_config["signing_keychain"], "--sign", sign_config["pkg_cert_id"]]
     signed_apps = []
@@ -1447,8 +1447,9 @@ async def resign_pkg_behavior(config, task):
 
         counter = counter + 1
         signed_apps.append(app)
-    
+
     await copy_pkgs_to_artifact_dir(config, signed_apps)
+
 
 # single_file_behavior {{{1
 async def single_file_behavior(config, task, notarize=True):
