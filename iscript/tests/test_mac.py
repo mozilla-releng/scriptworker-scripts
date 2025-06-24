@@ -1292,3 +1292,67 @@ async def test_single_file_behavior(mocker, tmpdir, use_langpack, filename, form
     mocker.patch.object(mac, "unlock_keychain", new=noop_async)
     mocker.patch.object(mac, "get_sign_config", return_value=config["mac_config"]["dep"])
     await mac.single_file_behavior(config, task, notarize)
+
+# resign_pkg_behavior {{{1
+@pytest.mark.asyncio
+async def test_resign_pkg_behavior(mocker, tmpdir):
+    artifact_dir = os.path.join(str(tmpdir), "artifact")
+    work_dir = os.path.join(str(tmpdir), "work")
+    config = {
+        "artifact_dir": artifact_dir,
+        "work_dir": work_dir,
+        "local_notarization_accounts": ["acct0", "acct1", "acct2"],
+        "mac_config": {
+            "dep": {
+                "designated_requirements": "",  # put this here bc it's easier
+                "zipfile_cmd": "zip",
+                "notarize_type": "single_zip",
+                "signing_keychain": "keychain_path",
+                "sign_with_entitlements": False,
+                "base_bundle_id": "org.test",
+                "identity": "id",
+                "keychain_password": "keychain_password",
+                "pkg_cert_id": "cert_id",
+                "apple_notarization_account": "apple_account",
+                "apple_notarization_password": "apple_password",
+                "apple_asc_provider": "apple_asc_provider",
+                "notarization_poll_timeout": 2,
+                "create_pkg": True,
+            }
+        },
+    }
+    task = {
+        "scopes": [
+            "project:releng:signing:cert:dep-signing",
+        ],
+        "payload": {
+            "upstreamArtifacts": [
+                {
+                    "taskId": "task1",
+                    "formats": ["macapp"],
+                    "paths": ["public/build/1/target.tar.gz", "public/build/2/target.tar.gz", "public/build/1/target.pkg", "public/build/2/target.pkg"],
+                },
+                {"taskId": "task2", "paths": ["public/build/3/target.tar.gz", "public/build/3/target.tar.gz"], "formats": []},
+            ]
+        },
+    }
+
+    async def mock_run_command(cmd, **kwargs):
+        # Verify that the productsign command was run, with signing arguments.
+        assert cmd[0] == "productsign"
+        assert "--keychain" in cmd
+        assert "--sign" in cmd
+
+        # Verify that we are signing a pkg file
+        assert os.path.basename(cmd[-2]) == "target.pkg"
+        assert os.path.basename(cmd[-1]) == "target.pkg"
+        assert "productsign" in os.path.dirname(cmd[-1])
+
+    mocker.patch.object(mac, "run_command", new=mock_run_command)
+    mocker.patch.object(mac, "unlock_keychain", new=noop_async)
+    mocker.patch.object(mac, "update_keychain_search_path", new=noop_async)
+    mocker.patch.object(mac, "get_sign_config", return_value=config["mac_config"]["dep"])
+    mocker.patch.object(mac, "copy_pkgs_to_artifact_dir", new=noop_async)
+
+    await mac.resign_pkg_behavior(config, task)
+
