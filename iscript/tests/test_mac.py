@@ -1300,4 +1300,3 @@ async def test_single_file_behavior(mocker, tmpdir, use_langpack, filename, form
     mocker.patch.object(mac, "unlock_keychain", new=noop_async)
     mocker.patch.object(mac, "get_sign_config", return_value=config["mac_config"]["dep"])
     await mac.single_file_behavior(config, task, notarize)
-

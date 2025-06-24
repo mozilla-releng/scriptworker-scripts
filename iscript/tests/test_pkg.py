@@ -10,6 +10,7 @@ from scriptworker_client.utils import makedirs
 
 import iscript.pkg as pkg
 
+
 # helpers {{{1
 async def noop_async(*args, **kwargs):
     pass

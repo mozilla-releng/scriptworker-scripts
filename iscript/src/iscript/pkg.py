@@ -1,20 +1,19 @@
 #!/usr/bin/env python
 """iscript mac installer package functions."""
 
-import os
 import logging
+import os
 
 from iscript.exceptions import IScriptError
-from scriptworker_client.aio import retry_async
-from scriptworker_client.utils import makedirs, run_command
 from iscript.mac import (
-    App,
     copy_pkgs_to_artifact_dir,
     get_app_paths,
     unlock_keychain,
     update_keychain_search_path,
 )
 from iscript.util import get_sign_config
+from scriptworker_client.aio import retry_async
+from scriptworker_client.utils import makedirs, run_command
 
 log = logging.getLogger(__name__)
 
