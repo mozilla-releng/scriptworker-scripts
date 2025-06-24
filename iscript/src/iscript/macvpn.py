@@ -309,7 +309,6 @@ async def vpn_behavior(config, task):
     Args:
         config (dict): the running configuration
         task (dict): the running task
-        notarize (bool): if notarization is enabled
 
     Raises:
         IScriptError: on fatal error.
