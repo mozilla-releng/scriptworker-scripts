@@ -1,8 +1,0 @@
--r base.in
-
-check-manifest
-coverage>=4.2b1
-pip-compile-multi
-pytest
-pytest-cov
-pytest-asyncio
