@@ -20,6 +20,7 @@ members = [
     "scriptworker_client",
     "scriptworker_client/packages/pytest-scriptworker-client",
     "shipitscript",
+    "signingscript",
 ]
 
 [tool.uv.sources]
