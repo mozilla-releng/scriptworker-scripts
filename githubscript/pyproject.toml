@@ -1,0 +1,47 @@
+[project]
+name = "githubscript"
+version = "0.1.0"
+description = "Taskcluster worker in charge of updating Github and notably Github Releases"
+url = "https://github.com/mozilla-releng/scriptworker-scripts/"
+license = "MPL-2.0"
+readme = "README.md"
+authors = [
+    { name = "Mozilla Release Engineering", email = "release+python@mozilla.com" }
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+]
+dependencies = [
+    "aiohttp_retry >= 2.3",
+    "github3.py",
+    "scriptworker",
+    "scriptworker-client",
+    "taskcluster",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "tox",
+    "tox-uv",
+    "check-manifest",
+    "coverage",
+    "pytest",
+    "pytest-asyncio>=0.6.0",
+    "pytest-cov",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build]
+include = [
+    "src",
+]
+
+[tool.hatch.build.targets.wheel.sources]
+"src/" = ""
+
+[project.scripts]
+githubscript = "githubscript.script:main"
