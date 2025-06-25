@@ -2,8 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-ARG BASE_IMAGE
-FROM $BASE_IMAGE
+FROM ghcr.io/astral-sh/uv:0.7.15-bookworm
+ARG PYTHON_VERSION
 
 RUN ln -s /app/docker.d/healthcheck /bin/healthcheck \
  && groupadd --gid 10001 app \
@@ -22,13 +22,15 @@ USER app
 WORKDIR /app
 
 # Install scriptworker_client and configloader
-RUN python -m venv /app \
+RUN uv venv --python ${PYTHON_VERSION} /app/.venv \
+ && . /app/.venv/bin/activate \
  && cd /app/scriptworker_client \
- && /app/bin/pip install --no-deps -r requirements/base.txt \
- && /app/bin/pip install . \
- && python -m venv /app/configloader_venv \
+ && uv pip install . \
+ && deactivate \
+ && uv venv /app/configloader_venv \
+ && . /app/configloader_venv/bin/activate \
  && cd /app/configloader \
- && /app/configloader_venv/bin/pip install --no-deps -r requirements/base.txt \
- && /app/configloader_venv/bin/pip install .
+ && uv pip install . \
+ && deactivate
 
 CMD ["/app/docker.d/init.sh"]
