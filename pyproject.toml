@@ -15,6 +15,7 @@ members = [
     "iscript",
     "landoscript",
     "notarization_poller",
+    "pushapkscript",
     "scriptworker_client",
     "scriptworker_client/packages/pytest-scriptworker-client",
 ]
