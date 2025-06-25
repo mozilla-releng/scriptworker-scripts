@@ -1,0 +1,50 @@
+[project]
+name = "shipitscript"
+version = "4.2.3"
+description = "Taskcluster shipit worker"
+url = "https://github.com/mozilla-releng/scriptworker-scripts/"
+license = "MPL-2.0"
+readme = "README.rst"
+authors = [
+    { name = "Mozilla Release Engineering", email = "release+python@mozilla.com" }
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+]
+dependencies = [
+    "redo",
+    "scriptworker",
+    "taskcluster",
+    "mozilla-repo-urls",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "tox",
+    "tox-uv",
+    "check-manifest",
+    "coverage",
+    "coveralls",
+    "mock",
+    "pytest",
+    "pytest-asyncio",
+    "pytest-cov",
+    "pytest-mock",
+    "requests-mock",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build]
+include = [
+    "src",
+]
+
+[tool.hatch.build.targets.wheel.sources]
+"src/" = ""
+
+[project.scripts]
+shipitscript = "shipitscript.script:main"
