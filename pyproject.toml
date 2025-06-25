@@ -19,6 +19,7 @@ members = [
     "pushmsixscript",
     "scriptworker_client",
     "scriptworker_client/packages/pytest-scriptworker-client",
+    "shipitscript",
 ]
 
 [tool.uv.sources]
