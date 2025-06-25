@@ -1,0 +1,58 @@
+[project]
+name = "signingscript"
+version = "12.2.0"
+description = "Taskcluster signing script"
+url = "https://github.com/mozilla-releng/scriptworker-scripts/"
+license = "MPL-2.0"
+readme = "README.md"
+authors = [
+    { name = "Mozilla Release Engineering", email = "release+python@mozilla.com" }
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+]
+dependencies = [
+    "arrow",
+    "mar>=3.0.0",
+    "scriptworker",
+    "taskcluster",
+    "mohawk>=1.0.0",
+    "winsign==2.2.4",
+    "macholib>=1.11",
+    "mozbuild",
+    "jsonschema>=4.0.0",
+
+    # for mozbuild - remove after the following bug is fixed: https://bugzilla.mozilla.org/show_bug.cgi?id=1831648
+    "packaging",
+    "six",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "tox",
+    "tox-uv",
+    "coverage",
+    "coveralls",
+    "mock",
+    "pytest",
+    "pytest-asyncio>=0.6.0",
+    "pytest-cov",
+    "pytest-mock",
+    "check-manifest",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build]
+include = [
+    "src",
+]
+
+[tool.hatch.build.targets.wheel.sources]
+"src/" = ""
+
+[project.scripts]
+signingscript = "signingscript.script:main"
