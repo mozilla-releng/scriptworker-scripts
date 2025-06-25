@@ -26,9 +26,28 @@ members = [
 ]
 
 [tool.uv.sources]
+configloader = { workspace = true }
 pytest-scriptworker-client = { workspace = true }
 scriptworker_client = { workspace = true }
 mozbuild = { path = "vendored/mozbuild" }
+
+[tool.uv]
+dev-dependencies = [
+    "configloader",
+    "tox",
+    "tox-uv",
+    "ruff",
+    "mypy",
+    "yamllint",
+    "pytest",
+    "pytest-xdist",
+]
+
+[dependency-groups]
+docs = [
+    "recommonmark",
+    "sphinx-rtd-theme",
+]
 
 [tool.black]
 line-length = 160
