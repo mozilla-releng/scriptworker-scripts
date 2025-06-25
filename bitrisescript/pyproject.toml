@@ -1,0 +1,51 @@
+[project]
+name = "bitrisescript"
+version = "0.1.0"
+description = "Taskcluster worker in charge of scheduling Bitrise workflows"
+url = "https://github.com/mozilla-releng/scriptworker-scripts/"
+license = "MPL-2.0"
+readme = "README.md"
+authors = [
+    { name = "Mozilla Release Engineering", email = "release+python@mozilla.com" }
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+]
+dependencies = [
+    "aiohttp",
+    "aiohttp_retry >= 2.3",
+    "scriptworker",
+    "scriptworker-client",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "tox",
+    "tox-uv",
+    "aioresponses>=0.7.6",
+    "black",
+    "check-manifest",
+    "coverage",
+    "flake8",
+    "isort",
+    "pytest",
+    "pytest-asyncio>=0.6.0",
+    "pytest-cov",
+    "pytest-mock",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build]
+include = [
+    "src",
+]
+
+[tool.hatch.build.targets.wheel.sources]
+"src/" = ""
+
+[project.scripts]
+bitrisescript = "bitrisescript.script:main"

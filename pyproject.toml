@@ -8,6 +8,7 @@ members = [
     "addonscript",
     "balrogscript",
     "beetmoverscript",
+    "bitrisescript",
     "scriptworker_client",
     "scriptworker_client/packages/pytest-scriptworker-client",
 ]
