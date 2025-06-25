@@ -1,0 +1,59 @@
+[project]
+name = "iscript"
+version = "1.0.1"
+description = "Taskcluster iScript"
+url = "https://github.com/mozilla-releng/scriptworker-scripts/"
+license = "MPL-2.0"
+readme = "README.md"
+authors = [
+    { name = "Mozilla Release Engineering", email = "release+python@mozilla.com" }
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+]
+dependencies = [
+    "aiohttp",
+    "arrow>=1.0",
+    "attrs",
+    "macholib",
+    "mozbuild",
+    "pexpect",
+    "requests-hawk",
+    "scriptworker-client",
+    "taskcluster",
+    # for mozbuild - remove after the following bug is fixed: https://bugzilla.mozilla.org/show_bug.cgi?id=1831648
+    "packaging",
+    "six",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "tox",
+    "tox-uv",
+    "check-manifest",
+    "coverage",
+    "mock",
+    "mypy",
+    "python-coveralls",
+    "pytest",
+    "pytest-asyncio",
+    "pytest-cov",
+    "pytest-mock",
+    "types-requests",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build]
+include = [
+    "src",
+]
+
+[tool.hatch.build.targets.wheel.sources]
+"src/" = ""
+
+[project.scripts]
+iscript = "iscript.script:main"
