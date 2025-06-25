@@ -11,17 +11,14 @@ transforms:
     - taskgraph.transforms.task:transforms
 
 tasks:
-    # k8s-image:
-    #     definition: k8s-image
     python311:
-        definition: python
+        definition: base-test
         args:
             PYTHON_VERSION: "3.11.9"
     python38:
-        definition: python
+        definition: base-test
         args:
             PYTHON_VERSION: "3.8.3"
-            PYTHON_REQ_SUFFIX: ".py38"
 
     # Used by push-image kind
     skopeo: {}
@@ -86,18 +83,18 @@ tasks:
     pushapkscript-test-py311:
         definition: base-test
         args:
-            BASE_IMAGE: python:3.11.9
+            PYTHON_VERSION: "3.11.9"
             APT_PACKAGES: default-jdk
 
     pushflatpakscript-test-py311:
         definition: base-test
         args:
-            BASE_IMAGE: python:3.11
+            PYTHON_VERSION: "3.11.9"
             # Copied from pushflatpakscript/docker.d/image_setup.sh
             APT_PACKAGES: gir1.2-ostree-1.0 libgirepository1.0-dev ostree
 
     signingscript-test-py311:
         definition: base-test
         args:
-            BASE_IMAGE: python:3.11
+            PYTHON_VERSION: "3.11.9"
             APT_PACKAGES: osslsigncode cmake clang
