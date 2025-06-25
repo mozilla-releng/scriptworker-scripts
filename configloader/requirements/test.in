@@ -1,9 +1,0 @@
-# pyup: ignore file
-# Specifically for testing
--r base.in
-
-check-manifest
-coverage>=4.2
-pip-compile-multi
-pytest
-pytest-cov
