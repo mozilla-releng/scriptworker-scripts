@@ -21,6 +21,7 @@ members = [
     "configloader",
     "githubscript",
     "iscript",
+    "landoscript",
     "pytest-scriptworker-client",
     "scriptworker-client",
     "scriptworker-scripts",
@@ -1864,6 +1865,19 @@ wheels = [
 ]
 
 [[package]]
+name = "fluent-syntax"
+version = "0.19.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "typing-extensions", version = "4.13.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "typing-extensions", version = "4.14.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/51/52/de75f2faf499ed5a089acff2ab8bda5fc3b8db8a3f1615428ef9ccbf1917/fluent.syntax-0.19.0.tar.gz", hash = "sha256:920326d7f46864b9758f0044e9968e3112198bc826acee16ddd8f11d359004fd", size = 15039, upload-time = "2023-03-16T11:03:24.023Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/54/28/475734afb670bf7932caa1828183a4687cac51111950b9fb633c4f976afc/fluent.syntax-0.19.0-py2.py3-none-any.whl", hash = "sha256:b352b3475fac6c6ed5f06527921f432aac073d764445508ee5218aeccc7cc5c4", size = 16432, upload-time = "2023-03-16T11:03:21.934Z" },
+]
+
+[[package]]
 name = "fqdn"
 version = "1.5.1"
 source = { registry = "https://pypi.org/simple" }
@@ -2169,6 +2183,15 @@ dev = [
     { name = "pytest-cov" },
     { name = "tox" },
     { name = "tox-uv" },
+]
+
+[[package]]
+name = "gitignorant"
+version = "0.3.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/b0/3e/c789602feb9a5edf75b296305fd7b25d2b6e44f3abba565374683c8cf0ad/gitignorant-0.3.1.tar.gz", hash = "sha256:eb51b3421761e41f594758ef1f93aa438f94856da8beea44ccd043f9c2373442", size = 4425, upload-time = "2023-08-23T11:19:12.069Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5b/e0/8594e6d99c89c40010d572687d709d345061ff66583d51d443d4a74b472f/gitignorant-0.3.1-py3-none-any.whl", hash = "sha256:d2b96ffe90eaf4fa2e1d68ad4e3f807213c8ec1e54a943a9e7105a9f7aaa4232", size = 5064, upload-time = "2023-08-23T11:19:11.038Z" },
 ]
 
 [[package]]
@@ -2709,6 +2732,18 @@ wheels = [
 ]
 
 [[package]]
+name = "iniparse"
+version = "0.5"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "six" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/4c/9a/02beaf11fc9ea7829d3a9041536934cd03990e09c359724f99ee6bd2b41b/iniparse-0.5.tar.gz", hash = "sha256:932e5239d526e7acb504017bb707be67019ac428a6932368e6851691093aa842", size = 32233, upload-time = "2020-01-29T14:12:35.567Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5f/b0/4d357324948188e76154b332e119fb28e374c1ebe4d4f6bca729aaa44309/iniparse-0.5-py3-none-any.whl", hash = "sha256:db6ef1d8a02395448e0e7b17ac0aa28b8d338b632bbd1ffca08c02ddae32cf97", size = 24445, upload-time = "2020-01-29T14:12:34.068Z" },
+]
+
+[[package]]
 name = "ipaddress"
 version = "1.0.23"
 source = { registry = "https://pypi.org/simple" }
@@ -2982,6 +3017,69 @@ wheels = [
 ]
 
 [[package]]
+name = "landoscript"
+version = "1.0.0"
+source = { editable = "landoscript" }
+dependencies = [
+    { name = "aiohttp", version = "3.10.11", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "aiohttp", version = "3.12.13", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
+    { name = "async-timeout" },
+    { name = "gql" },
+    { name = "moz-l10n" },
+    { name = "mozilla-version" },
+    { name = "scriptworker" },
+    { name = "scriptworker-client" },
+    { name = "yarl", version = "1.15.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "yarl", version = "1.20.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "coverage", version = "7.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "coverage", version = "7.9.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
+    { name = "coveralls" },
+    { name = "pytest", version = "8.3.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "pytest", version = "8.4.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
+    { name = "pytest-aioresponses" },
+    { name = "pytest-asyncio", version = "0.24.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "pytest-asyncio", version = "0.26.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
+    { name = "pytest-cov", version = "5.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "pytest-cov", version = "6.2.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
+    { name = "pytest-responses" },
+    { name = "pytest-scriptworker-client" },
+    { name = "tox", version = "4.25.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "tox", version = "4.27.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
+    { name = "tox-uv", version = "1.13.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "tox-uv", version = "1.26.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "aiohttp" },
+    { name = "async-timeout" },
+    { name = "gql" },
+    { name = "moz-l10n" },
+    { name = "mozilla-version" },
+    { name = "scriptworker" },
+    { name = "scriptworker-client", editable = "scriptworker_client" },
+    { name = "yarl" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "coverage" },
+    { name = "coveralls" },
+    { name = "pytest" },
+    { name = "pytest-aioresponses" },
+    { name = "pytest-asyncio" },
+    { name = "pytest-cov" },
+    { name = "pytest-responses" },
+    { name = "pytest-scriptworker-client", editable = "scriptworker_client/packages/pytest-scriptworker-client" },
+    { name = "tox" },
+    { name = "tox-uv" },
+]
+
+[[package]]
 name = "lockfile"
 version = "0.12.2"
 source = { registry = "https://pypi.org/simple" }
@@ -3211,6 +3309,22 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/25/78/d5f91e80676e4363c0747a97af6531e78edf2e248a98ce7baf85631653da/mohawk-1.1.0.tar.gz", hash = "sha256:d2a0e3ab10a209cc79e95e28f2dd54bd4a73fd1998ffe27b7ba0f962b6be9723", size = 18507, upload-time = "2019-10-28T15:15:32.514Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/84/2a/56172c8d68b1439cc01a7c9eb5620006a77f91f313f8aa13877c6393d9cf/mohawk-1.1.0-py3-none-any.whl", hash = "sha256:3ed296a30453d0b724679e0fd41e4e940497f8e461a9a9c3b7f36e43bab0fa09", size = 22863, upload-time = "2019-10-28T15:15:30.972Z" },
+]
+
+[[package]]
+name = "moz-l10n"
+version = "0.7.4"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "fluent-syntax" },
+    { name = "gitignorant" },
+    { name = "iniparse" },
+    { name = "polib" },
+    { name = "tomli", marker = "python_full_version < '3.11'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/0f/68/0217b288dbca3f68077521acc5a366891dc3a3abea6d230bdfdc99daa83c/moz_l10n-0.7.4.tar.gz", hash = "sha256:2dff2c4e43a57be5699ad134b397bc8caac8db8ef529c507dd42575d1f749342", size = 82230, upload-time = "2025-05-22T18:16:20.458Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/fd/da/4ac919745cacd2133f3a2420da5343eb7bb28906b342054e1169c4316184/moz_l10n-0.7.4-py3-none-any.whl", hash = "sha256:0c0fd0bab2c7d592b2efaa08d2b03f60871ee347b8aabfa6367e83d3c04bd837", size = 113859, upload-time = "2025-05-22T18:16:19.163Z" },
 ]
 
 [[package]]
@@ -3718,6 +3832,15 @@ resolution-markers = [
 sdist = { url = "https://files.pythonhosted.org/packages/f9/e2/3e91f31a7d2b083fe6ef3fa267035b518369d9511ffab804f839851d2779/pluggy-1.6.0.tar.gz", hash = "sha256:7dcc130b76258d33b90f61b658791dede3486c3e6bfb003ee5c9bfb396dd22f3", size = 69412, upload-time = "2025-05-15T12:30:07.975Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/54/20/4d324d65cc6d9205fabedc306948156824eb9f0ee1633355a8f7ec5c66bf/pluggy-1.6.0-py3-none-any.whl", hash = "sha256:e920276dd6813095e9377c0bc5566d94c932c33b27a3e3945d8389c374dd4746", size = 20538, upload-time = "2025-05-15T12:30:06.134Z" },
+]
+
+[[package]]
+name = "polib"
+version = "1.2.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/10/9a/79b1067d27e38ddf84fe7da6ec516f1743f31f752c6122193e7bce38bdbf/polib-1.2.0.tar.gz", hash = "sha256:f3ef94aefed6e183e342a8a269ae1fc4742ba193186ad76f175938621dbfc26b", size = 161658, upload-time = "2023-02-23T17:53:56.873Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/6b/99/45bb1f9926efe370c6dbe324741c749658e44cb060124f28dad201202274/polib-1.2.0-py2.py3-none-any.whl", hash = "sha256:1c77ee1b81feb31df9bca258cbc58db1bbb32d10214b173882452c73af06d62d", size = 20634, upload-time = "2023-02-23T17:53:59.919Z" },
 ]
 
 [[package]]
@@ -4520,6 +4643,19 @@ wheels = [
 ]
 
 [[package]]
+name = "pytest-responses"
+version = "0.5.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pytest", version = "8.3.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "pytest", version = "8.4.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
+    { name = "responses" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c4/0a/81b8cc3cf4b6605d97ed37217af9e2f82c97ebe130f60cf85fe82edfe0e1/pytest_responses-0.5.1-py2.py3-none-any.whl", hash = "sha256:4172e565b94ac1ea3b10aba6e40855ad60cd7f141476b2d8a47e4b5f250be734", size = 6693, upload-time = "2022-10-11T17:15:40.889Z" },
+]
+
+[[package]]
 name = "pytest-scriptworker-client"
 version = "0.1.0"
 source = { editable = "scriptworker_client/packages/pytest-scriptworker-client" }
@@ -4717,6 +4853,21 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/f3/61/d7545dafb7ac2230c70d38d31cbfe4cc64f7144dc41f6e4e4b78ecd9f5bb/requests-toolbelt-1.0.0.tar.gz", hash = "sha256:7681a0a3d047012b5bdc0ee37d7f8f07ebe76ab08caeccfc3921ce23c88d5bc6", size = 206888, upload-time = "2023-05-01T04:11:33.229Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/3f/51/d4db610ef29373b879047326cbf6fa98b6c1969d6f6dc423279de2b1be2c/requests_toolbelt-1.0.0-py2.py3-none-any.whl", hash = "sha256:cccfdd665f0a24fcf4726e690f65639d272bb0637b9b92dfd91a5568ccf6bd06", size = 54481, upload-time = "2023-05-01T04:11:28.427Z" },
+]
+
+[[package]]
+name = "responses"
+version = "0.25.7"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pyyaml" },
+    { name = "requests" },
+    { name = "urllib3", version = "1.26.20", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
+    { name = "urllib3", version = "2.5.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/81/7e/2345ac3299bd62bd7163216702bbc88976c099cfceba5b889f2a457727a1/responses-0.25.7.tar.gz", hash = "sha256:8ebae11405d7a5df79ab6fd54277f6f2bc29b2d002d0dd2d5c632594d1ddcedb", size = 79203, upload-time = "2025-03-11T15:36:16.624Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e4/fc/1d20b64fa90e81e4fa0a34c9b0240a6cfb1326b7e06d18a5432a9917c316/responses-0.25.7-py3-none-any.whl", hash = "sha256:92ca17416c90fe6b35921f52179bff29332076bb32694c0df02dcac2c6bc043c", size = 34732, upload-time = "2025-03-11T15:36:14.589Z" },
 ]
 
 [[package]]

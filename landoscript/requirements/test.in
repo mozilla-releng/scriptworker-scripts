@@ -1,8 +1,0 @@
--r base.in
-
-coverage
-pytest
-pytest-aioresponses
-pytest-asyncio
-pytest-cov
-pytest-responses

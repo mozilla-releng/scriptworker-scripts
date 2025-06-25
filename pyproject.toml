@@ -13,6 +13,7 @@ members = [
     "configloader",
     "githubscript",
     "iscript",
+    "landoscript",
     "scriptworker_client",
     "scriptworker_client/packages/pytest-scriptworker-client",
 ]
