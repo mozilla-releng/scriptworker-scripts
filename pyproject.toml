@@ -11,6 +11,7 @@ members = [
     "bitrisescript",
     "bouncerscript",
     "configloader",
+    "githubscript",
     "scriptworker_client",
     "scriptworker_client/packages/pytest-scriptworker-client",
 ]
