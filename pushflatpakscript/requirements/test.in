@@ -1,9 +1,0 @@
--r base.in
-
-check-manifest
-coverage>=4.2b1
-mock
-pip-compile-multi
-pytest
-pytest-asyncio
-pytest-cov
