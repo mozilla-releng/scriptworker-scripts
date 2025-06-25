@@ -18,8 +18,6 @@ from iscript.exceptions import IScriptError
         ("mac_single_file", ["mac_sign", "mac_single_file"], "mac_single_file", False),
         ("mac_notarize", ["mac_sign", "mac_notarize"], "mac_notarize", False),
         ("mac_notarize", ["mac_sign", "mac_notarize", "mac_sign_and_pkg"], "mac_notarize", False),
-        ("mac_notarize_vpn", ["mac_notarize_vpn", "mac_sign_and_pkg_vpn"], "mac_notarize_vpn", False),
-        ("mac_notarize_vpn", ["mac_sign_and_pkg_vpn"], "mac_sign_and_pkg_vpn", False),
         ("mac_notarize", ["mac_sign", "mac_sign_and_pkg"], "mac_sign_and_pkg", False),
         ("mac_sign", ["mac_sign"], "mac_sign", False),
         ("mac_sign_and_pkg", ["mac_single_file", "mac_sign_and_pkg"], "mac_sign_and_pkg", False),

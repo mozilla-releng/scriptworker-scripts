@@ -8,16 +8,14 @@ from pathlib import Path
 from shutil import copy2, copytree
 
 from iscript.exceptions import IScriptError
+from iscript.hardened_sign import sign_hardened_behavior
 from iscript.mac import (
     App,
     copy_pkgs_to_artifact_dir,
     download_entitlements_file,
     extract_all_apps,
     get_app_paths,
-    notarize_no_sudo,
-    poll_all_notarization_status,
     sign_all_apps,
-    staple_notarization,
     unlock_keychain,
     update_keychain_search_path,
 )
@@ -229,25 +227,15 @@ async def _create_pkg_files(config, sign_config, app):
         copy2(build_path, app.pkg_path)
 
 
-async def vpn_behavior(config, task, notarize=True):
-    """Notarize vpn app.
-
-    Workflow:
-    . Sign all inner apps
-    . Sign main app
-    . Create pkg
-    . Notarize and staple pkg (optional)
-    . Zip pkg
-    . Move zipped app to artifacts
+async def vpn_legacy_behavior(config, task):
+    """Sign the VPN app for this task
 
     Args:
         config (dict): the running configuration
         task (dict): the running task
-        notarize (bool): if notarization is enabled
 
     Raises:
         IScriptError: on fatal error.
-
     """
     top_app = get_app_paths(config, task)
     assert len(top_app) == 1
@@ -305,22 +293,39 @@ async def vpn_behavior(config, task, notarize=True):
         provisionprofile_filename="orgmozillamacosFirefoxVPN.provisionprofile",
     )
 
+    return [top_app]
+
+
+async def vpn_behavior(config, task):
+    """Notarize vpn app.
+
+    Workflow:
+    . Sign all inner apps
+    . Sign main app
+    . Create pkg
+    . Zip pkg
+    . Move zipped app to artifacts
+
+    Args:
+        config (dict): the running configuration
+        task (dict): the running task
+
+    Raises:
+        IScriptError: on fatal error.
+
+    """
+
+    # Sign the application bundle(s)
+    if "hardened-sign-config" in task["payload"]:
+        top_apps = await sign_hardened_behavior(config, task, create_pkg=False)
+    else:
+        top_apps = await vpn_legacy_behavior(config, task)
+
     # Create the PKG and sign it
+    assert len(top_apps) == 1
+    top_app = top_apps[0]
+    sign_config = get_sign_config(config, task, base_key="mac_config")
     await _create_pkg_files(config, sign_config, top_app)
-
-    if notarize:
-        # Need to zip the pkg instead
-        # zip_path = await create_one_notarization_zipfile(config["work_dir"], [app], sign_config, path_attrs=['app_path'])
-        zip_path = os.path.join(config["work_dir"], "notarization.zip")
-        await _create_notarization_zipfile(config["work_dir"], top_app.pkg_path, zip_path)
-
-        # Notarization step
-        poll_uuids = await notarize_no_sudo(config["work_dir"], sign_config, zip_path)
-        await poll_all_notarization_status(sign_config, poll_uuids)
-        log.info("Done notarizing app")
-
-        # Staple step
-        await staple_notarization([top_app], path_attr="pkg_path")
 
     # Move PKG to artifact directory
     await copy_pkgs_to_artifact_dir(config, [top_app])
