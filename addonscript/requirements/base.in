@@ -1,6 +1,0 @@
-# pyup: ignore file
-aiohttp
-async-timeout
-pyjwt
-scriptworker
-taskcluster
