@@ -29,6 +29,7 @@ members = [
     "scriptworker-client",
     "scriptworker-scripts",
     "shipitscript",
+    "signingscript",
 ]
 
 [[package]]
@@ -7269,6 +7270,74 @@ dev = [
 ]
 
 [[package]]
+name = "signingscript"
+version = "12.2.0"
+source = { editable = "signingscript" }
+dependencies = [
+    { name = "arrow" },
+    { name = "jsonschema", version = "4.23.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "jsonschema", version = "4.24.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
+    { name = "macholib" },
+    { name = "mar" },
+    { name = "mohawk" },
+    { name = "mozbuild" },
+    { name = "packaging" },
+    { name = "scriptworker" },
+    { name = "six" },
+    { name = "taskcluster" },
+    { name = "winsign" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "check-manifest" },
+    { name = "coverage", version = "7.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "coverage", version = "7.9.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
+    { name = "coveralls" },
+    { name = "mock" },
+    { name = "pytest", version = "8.3.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "pytest", version = "8.4.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
+    { name = "pytest-asyncio", version = "0.24.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "pytest-asyncio", version = "0.26.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
+    { name = "pytest-cov", version = "5.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "pytest-cov", version = "6.2.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
+    { name = "pytest-mock" },
+    { name = "tox", version = "4.25.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "tox", version = "4.27.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
+    { name = "tox-uv", version = "1.13.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "tox-uv", version = "1.26.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "arrow" },
+    { name = "jsonschema", specifier = ">=4.0.0" },
+    { name = "macholib", specifier = ">=1.11" },
+    { name = "mar", specifier = ">=3.0.0" },
+    { name = "mohawk", specifier = ">=1.0.0" },
+    { name = "mozbuild", directory = "vendored/mozbuild" },
+    { name = "packaging" },
+    { name = "scriptworker" },
+    { name = "six" },
+    { name = "taskcluster" },
+    { name = "winsign", specifier = "==2.2.4" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "check-manifest" },
+    { name = "coverage" },
+    { name = "coveralls" },
+    { name = "mock" },
+    { name = "pytest" },
+    { name = "pytest-asyncio", specifier = ">=0.6.0" },
+    { name = "pytest-cov" },
+    { name = "pytest-mock" },
+    { name = "tox" },
+    { name = "tox-uv" },
+]
+
+[[package]]
 name = "simple-github"
 version = "2.2.1"
 source = { registry = "https://pypi.org/simple" }
@@ -7844,6 +7913,20 @@ resolution-markers = [
 sdist = { url = "https://files.pythonhosted.org/packages/7b/29/061ec845fb58521848f3739e466efd8250b4b7b98c1b6c5bf4d40b419b7e/webcolors-24.11.1.tar.gz", hash = "sha256:ecb3d768f32202af770477b8b65f318fa4f566c22948673a977b00d589dd80f6", size = 45064, upload-time = "2024-11-11T07:43:24.224Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/60/e8/c0e05e4684d13459f93d312077a9a2efbe04d59c393bc2b8802248c908d4/webcolors-24.11.1-py3-none-any.whl", hash = "sha256:515291393b4cdf0eb19c155749a096f779f7d909f7cceea072791cb9095b92e9", size = 14934, upload-time = "2024-11-11T07:43:22.529Z" },
+]
+
+[[package]]
+name = "winsign"
+version = "2.2.4"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "construct" },
+    { name = "cryptography" },
+    { name = "pyasn1" },
+    { name = "pyasn1-modules" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/06/2a/bd80fda66ad7131417a08b7c5c5a5cf9a860eb7bf1d1ab3f7b3d43a42c9e/winsign-2.2.4-py3-none-any.whl", hash = "sha256:54ad848993a10b16a88779845b366e257cf1218ce03be8004ff45846fca6f0aa", size = 27712, upload-time = "2022-05-24T17:05:24.197Z" },
 ]
 
 [[package]]
