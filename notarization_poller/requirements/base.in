@@ -1,5 +1,0 @@
-aiohttp
-arrow>=1.0
-async_timeout
-immutabledict
-taskcluster
