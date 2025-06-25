@@ -34,14 +34,11 @@ RUN apt-get update \
 USER app
 WORKDIR /app
 
-# Install signingscript + configloader + widevine
+# Install signingscript + widevine
 RUN cp -R /app/signingscript/docker.d/* /app/docker.d/ \
- && python -m venv /app \
- && cd signingscript \
- && /app/bin/pip install --no-deps -r requirements/base.txt \
- && /app/bin/pip install . \
- && python -m venv /app/configloader_venv \
- && cd /app/configloader \
- && /app/configloader_venv/bin/pip install --no-deps -r requirements/base.txt \
- && /app/configloader_venv/bin/pip install . \
- && ln -sf /etc/widevine.py $(/app/bin/python -c "import site; print(site.getsitepackages()[0])")/widevine.py
+ && . /app/.venv/bin/activate \
+ && cd /app/vendored/mozbuild \
+ && uv pip install . \
+ && cd /app/signingscript \
+ && uv pip install . \
+ && ln -sf /etc/widevine.py $(/app/.venv/bin/python -c "import site; print(site.getsitepackages()[0])")/widevine.py
