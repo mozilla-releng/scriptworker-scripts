@@ -24,6 +24,7 @@ members = [
     "landoscript",
     "notarization-poller",
     "pushapkscript",
+    "pushflatpakscript",
     "pushmsixscript",
     "pytest-scriptworker-client",
     "scriptworker-client",
@@ -5971,6 +5972,66 @@ dev = [
 ]
 
 [[package]]
+name = "pushflatpakscript"
+version = "0.0.1"
+source = { editable = "pushflatpakscript" }
+dependencies = [
+    { name = "scriptworker" },
+    { name = "taskcluster" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "check-manifest" },
+    { name = "coverage", version = "7.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "coverage", version = "7.9.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
+    { name = "coveralls" },
+    { name = "mock" },
+    { name = "pytest", version = "8.3.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "pytest", version = "8.4.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
+    { name = "pytest-asyncio", version = "0.24.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "pytest-asyncio", version = "0.26.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
+    { name = "pytest-cov", version = "5.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "pytest-cov", version = "6.2.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
+    { name = "tox", version = "4.25.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "tox", version = "4.27.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
+    { name = "tox-uv", version = "1.13.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "tox-uv", version = "1.26.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
+]
+flat-manager = [
+    { name = "aiohttp", version = "3.10.11", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "aiohttp", version = "3.12.13", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
+    { name = "pygobject", version = "3.48.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "pygobject", version = "3.50.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
+    { name = "tenacity", version = "9.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "tenacity", version = "9.1.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "scriptworker" },
+    { name = "taskcluster" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "check-manifest" },
+    { name = "coverage", specifier = ">=4.2b1" },
+    { name = "coveralls" },
+    { name = "mock" },
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "pytest-cov" },
+    { name = "tox" },
+    { name = "tox-uv" },
+]
+flat-manager = [
+    { name = "aiohttp" },
+    { name = "pygobject", specifier = "<3.52" },
+    { name = "tenacity" },
+]
+
+[[package]]
 name = "pushmsixscript"
 version = "0.1.0"
 source = { editable = "pushmsixscript" }
@@ -6060,6 +6121,62 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/1e/1f/7a7318ad054d66253d2b96e2d9038ea920f17c8a9bd687cdcfa16a655bdf/pyaxmlparser-0.3.31.tar.gz", hash = "sha256:fecb858ff1fb456466f8dcdcd814207b4c15edb95f67cfe0a38c7d7cd4a28d4d", size = 98936, upload-time = "2024-03-20T17:21:23.737Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b5/24/57b15aea113c87b22a2f56d3a0bda617ec414d546e6f3a4d7d770232d38b/pyaxmlparser-0.3.31-py3-none-any.whl", hash = "sha256:3c6609a48eb67e8a25d158243671c4f8b713d1fb10d9c5c45b1e62ddd8d8494f", size = 105910, upload-time = "2024-03-20T17:21:21.328Z" },
+]
+
+[[package]]
+name = "pycairo"
+version = "1.26.1"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.8.1' and python_full_version < '3.9'",
+    "python_full_version < '3.8.1'",
+]
+sdist = { url = "https://files.pythonhosted.org/packages/19/4f/0d48a017090d4527e921d6892bc550ae869902e67859fc960f8fe63a9094/pycairo-1.26.1.tar.gz", hash = "sha256:a11b999ce55b798dbf13516ab038e0ce8b6ec299b208d7c4e767a6f7e68e8430", size = 346882, upload-time = "2024-06-21T10:37:41.527Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/49/13/6279ce219c5735880af7a0b97d3041f106eebf8e7527aad3e4df4e2fcf6d/pycairo-1.26.1-cp310-cp310-win32.whl", hash = "sha256:b93b9e3072826a346f1f79cb1becc403d1ba4a3971cad61d144db0fe6dcb6be8", size = 766503, upload-time = "2024-06-21T10:37:05.819Z" },
+    { url = "https://files.pythonhosted.org/packages/32/ec/cf8510f556ce950546216738cdbee631e917ad6734b5cd84f9204756f708/pycairo-1.26.1-cp310-cp310-win_amd64.whl", hash = "sha256:acfc76924ed668d8fea50f6cc6097b9a57ef6cd3dc3f2fa20814380d639a6dd2", size = 861880, upload-time = "2024-06-21T10:37:10.404Z" },
+    { url = "https://files.pythonhosted.org/packages/8c/3b/a0d007048dd550afc3394bc7d80f6ddd1fa9c8d2d12b75aab651f604dba1/pycairo-1.26.1-cp310-cp310-win_arm64.whl", hash = "sha256:067191315c3b4d09cad1ec57cdb8fc1d72e2574e89389c268a94f22d4fa98b5f", size = 675603, upload-time = "2024-06-21T10:37:13.292Z" },
+    { url = "https://files.pythonhosted.org/packages/b7/25/7ef228b6436423a606c03044e65f9d7066179e0d3d7e3648979c7899ce9e/pycairo-1.26.1-cp311-cp311-win32.whl", hash = "sha256:56a29623aa7b4adbde5024c61ff001455b5a3def79e512742ea45ab36c3fe24b", size = 766504, upload-time = "2024-06-21T10:37:16.09Z" },
+    { url = "https://files.pythonhosted.org/packages/2d/54/fa4f1749b572853f537214bb01b6601b0eba7a9857b3a660e939b1959f4b/pycairo-1.26.1-cp311-cp311-win_amd64.whl", hash = "sha256:8d2889e03a095de5da9e68a589b691a3ada09d60ef18b5fc1b1b99f2a7794297", size = 861879, upload-time = "2024-06-21T10:37:18.802Z" },
+    { url = "https://files.pythonhosted.org/packages/6d/e5/e33bdb7a6cf7a86f994fc5950793b79dfd090b4302301daa62e5e7285bd6/pycairo-1.26.1-cp311-cp311-win_arm64.whl", hash = "sha256:7a307111de345304ed8eadd7f81ebd7fb1fc711224aa314a4e8e33af7dfa3d27", size = 675602, upload-time = "2024-06-21T10:37:20.904Z" },
+    { url = "https://files.pythonhosted.org/packages/e0/b8/6b92544a90444fc97ea903798bc533e043b2d4653cb2a679d220978741c6/pycairo-1.26.1-cp312-cp312-win32.whl", hash = "sha256:5cc1808e9e30ccd0f4d84ba7700db5aab5673f8b6b901760369ebb88a0823436", size = 766911, upload-time = "2024-06-21T10:37:23.118Z" },
+    { url = "https://files.pythonhosted.org/packages/60/18/9d1bfe0c0ff23c65f04001d62d358e56fba11bbc1a86587aabc93f1809ba/pycairo-1.26.1-cp312-cp312-win_amd64.whl", hash = "sha256:36131a726f568b2dbc5e78ff50fbaa379e69db00614d46d66b1e4289caf9b1ce", size = 862105, upload-time = "2024-06-21T10:37:25.7Z" },
+    { url = "https://files.pythonhosted.org/packages/f6/71/f21682a17ed0e23d2545a2de39a6f30255868cd81c5f78505640af75f8d3/pycairo-1.26.1-cp312-cp312-win_arm64.whl", hash = "sha256:5577b51543ea4c283c15f436d891e9eaf6fd43fe74882adb032fba2c271f3fe9", size = 675512, upload-time = "2024-06-21T10:37:27.831Z" },
+    { url = "https://files.pythonhosted.org/packages/02/00/b72beb131c320fdb23cea8e20cb4a5b38acc6510c2890877a74cdcea484d/pycairo-1.26.1-cp38-cp38-win32.whl", hash = "sha256:27ec7b42c58af35dc11352881262dce4254378b0f11be0959d1c13edb4539d2c", size = 766848, upload-time = "2024-06-21T10:37:30.034Z" },
+    { url = "https://files.pythonhosted.org/packages/09/34/619273df157e839e6754ce2ba44bf95522b5b200e2be0fb9c8106329ca46/pycairo-1.26.1-cp38-cp38-win_amd64.whl", hash = "sha256:27357994d277b3fd10a45e9ef58f80a4cb5e3291fe76c5edd58d2d06335eb8e7", size = 862458, upload-time = "2024-06-21T10:37:32.92Z" },
+    { url = "https://files.pythonhosted.org/packages/58/3f/9ddd32ef2ca7af25392df6cc01b8d536f2c6de56a28fd2b3e33eb99a51b2/pycairo-1.26.1-cp39-cp39-win32.whl", hash = "sha256:e68300d1c2196d1d34de3432885ae9ff78e10426fa16f765742a11c6f8fe0a71", size = 766767, upload-time = "2024-06-21T10:37:34.827Z" },
+    { url = "https://files.pythonhosted.org/packages/97/72/afe8c322fb58fc66f10061f94d74440c40b9a11c7896c6c47f0fdc5a8556/pycairo-1.26.1-cp39-cp39-win_amd64.whl", hash = "sha256:ce049930e294c29b53c68dcaab3df97cc5de7eb1d3d8e8a9f5c77e7164cd6e85", size = 862456, upload-time = "2024-06-21T10:37:37.068Z" },
+    { url = "https://files.pythonhosted.org/packages/70/01/0dd13ad12dc840bcbdf313ce5f3658ba8599c33cab87188fa355aafe1a09/pycairo-1.26.1-cp39-cp39-win_arm64.whl", hash = "sha256:22e1db531d4ed3167a98f0ea165bfa2a30df9d6eb22361c38158c031065999a4", size = 675865, upload-time = "2024-06-21T10:37:38.967Z" },
+]
+
+[[package]]
+name = "pycairo"
+version = "1.28.0"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.13'",
+    "python_full_version == '3.12.*'",
+    "python_full_version == '3.11.*'",
+    "python_full_version == '3.10.*'",
+    "python_full_version == '3.9.*'",
+]
+sdist = { url = "https://files.pythonhosted.org/packages/40/d9/412da520de9052b7e80bfc810ec10f5cb3dbfa4aa3e23c2820dc61cdb3d0/pycairo-1.28.0.tar.gz", hash = "sha256:26ec5c6126781eb167089a123919f87baa2740da2cca9098be8b3a6b91cc5fbc", size = 662477, upload-time = "2025-04-14T20:11:08.218Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3e/67/6e5d6328c6037f0479017f51e97f5cbb79a68ed6e93f671dac17cb47bf2e/pycairo-1.28.0-cp310-cp310-win32.whl", hash = "sha256:53e6dbc98456f789965dad49ef89ce2c62f9a10fc96c8d084e14da0ffb73d8a6", size = 750438, upload-time = "2025-04-14T20:10:43.722Z" },
+    { url = "https://files.pythonhosted.org/packages/00/79/e941186c2275333643504f57711b157ba17e81a2be805346585ad7fd382e/pycairo-1.28.0-cp310-cp310-win_amd64.whl", hash = "sha256:c8ab91a75025f984bc327ada335c787efb61c929ea0512063793cb36cee503d4", size = 841526, upload-time = "2025-04-14T20:10:45.557Z" },
+    { url = "https://files.pythonhosted.org/packages/84/4b/3495baabd3c830bf80bf112a0e645342bfe8f3fc05ed6423444adf62d496/pycairo-1.28.0-cp310-cp310-win_arm64.whl", hash = "sha256:e955328c1a5147bf71ee94e206413ce15e12630296a79788fcd246c80e5337b8", size = 691866, upload-time = "2025-04-16T19:30:17.73Z" },
+    { url = "https://files.pythonhosted.org/packages/c9/94/47d75f4eaac865f32e0550ed42869f8b3c4036f8e2b1e6163e9548f4d44f/pycairo-1.28.0-cp311-cp311-win32.whl", hash = "sha256:0fee15f5d72b13ba5fd065860312493dc1bca6ff2dce200ee9d704e11c94e60a", size = 750441, upload-time = "2025-04-14T20:10:48.311Z" },
+    { url = "https://files.pythonhosted.org/packages/aa/02/1169a2917b043998585f9dd0f36da618947fdf9b6cc0e9ff9852aa4d548b/pycairo-1.28.0-cp311-cp311-win_amd64.whl", hash = "sha256:6339979bfec8b58a06476094a9a5c104bd5a99932ddaff16ca0d9203d2f4482c", size = 841536, upload-time = "2025-04-14T20:10:51.112Z" },
+    { url = "https://files.pythonhosted.org/packages/eb/99/13031086fb4d4ea71568d9ce74e03afbb2e18047f1e6b4e8674851f0414f/pycairo-1.28.0-cp311-cp311-win_arm64.whl", hash = "sha256:c6ae15392e28ebfc0b35d8dc05d395d3b6be4bad9ad4caecf0fa12c8e7150225", size = 691895, upload-time = "2025-04-16T19:30:20.724Z" },
+    { url = "https://files.pythonhosted.org/packages/a9/d7/206d7945aac5c6c889e7fea4011410d1311455a1d8dfce66106d8d700b7f/pycairo-1.28.0-cp312-cp312-win32.whl", hash = "sha256:c00cfbb7f30eb7ca1d48886712932e2d91e8835a8496f4e423878296ceba573e", size = 750594, upload-time = "2025-04-14T20:10:53.72Z" },
+    { url = "https://files.pythonhosted.org/packages/2e/ba/259fc9a4d3afdad1e5b9db52b9d8a5df67f70dd787167185e8ec8a1af007/pycairo-1.28.0-cp312-cp312-win_amd64.whl", hash = "sha256:d50d190f5033992b55050b9f337ee42a45c3568445d5e5d7987bab96c278d8a6", size = 841767, upload-time = "2025-04-14T20:10:56.711Z" },
+    { url = "https://files.pythonhosted.org/packages/c0/08/aa0903612ea0e8686ad6af58d4fb9cbab8ee0b0831201cddf7abd578d045/pycairo-1.28.0-cp312-cp312-win_arm64.whl", hash = "sha256:957e0340ee1c279d197d4f7cfa96f6d8b48e453eec711fca999748d752468ff4", size = 691687, upload-time = "2025-04-16T19:30:23.729Z" },
+    { url = "https://files.pythonhosted.org/packages/59/a7/c3e5ed55781dfe1b31eb4a2482aeae707671f3d36b0ea53a1722f4a3dfe9/pycairo-1.28.0-cp313-cp313-win32.whl", hash = "sha256:d13352429d8a08a1cb3607767d23d2fb32e4c4f9faa642155383980ec1478c24", size = 750594, upload-time = "2025-04-14T20:10:59.284Z" },
+    { url = "https://files.pythonhosted.org/packages/8b/1c/ebadd290748aff3b6bc35431114d41e7a42f40a4b988c2aaf2dfed5d8156/pycairo-1.28.0-cp313-cp313-win_amd64.whl", hash = "sha256:082aef6b3a9dcc328fa648d38ed6b0a31c863e903ead57dd184b2e5f86790140", size = 841774, upload-time = "2025-04-14T20:11:01.79Z" },
+    { url = "https://files.pythonhosted.org/packages/3e/ce/a3f5f1946613cd8a4654322b878c59f273c6e9b01dfadadd3f609070e0b9/pycairo-1.28.0-cp313-cp313-win_arm64.whl", hash = "sha256:026afd53b75291917a7412d9fe46dcfbaa0c028febd46ff1132d44a53ac2c8b6", size = 691675, upload-time = "2025-04-16T19:30:26.565Z" },
+    { url = "https://files.pythonhosted.org/packages/79/0e/476ffe64b309672aa4012897d91a2bda7e5b2eb43504bbff48be03e5055c/pycairo-1.28.0-cp39-cp39-win32.whl", hash = "sha256:3ed16d48b8a79cc584cb1cb0ad62dfb265f2dda6d6a19ef5aab181693e19c83c", size = 750680, upload-time = "2025-04-14T20:11:04.197Z" },
+    { url = "https://files.pythonhosted.org/packages/f4/77/872e843993bb152f93e970f0807ee08b5a496116ad8eadfa0a1590452111/pycairo-1.28.0-cp39-cp39-win_amd64.whl", hash = "sha256:da0d1e6d4842eed4d52779222c6e43d254244a486ca9fdab14e30042fd5bdf28", size = 842157, upload-time = "2025-04-14T20:11:05.981Z" },
+    { url = "https://files.pythonhosted.org/packages/a8/c5/fce33dbb973c5ee7606167056502a70eb316350c41c7656e5739a5f9e490/pycairo-1.28.0-cp39-cp39-win_arm64.whl", hash = "sha256:458877513eb2125513122e8aa9c938630e94bb0574f94f4fb5ab55eb23d6e9ac", size = 691902, upload-time = "2025-04-16T19:30:28.615Z" },
 ]
 
 [[package]]
@@ -6332,6 +6449,35 @@ sdist = { url = "https://files.pythonhosted.org/packages/b0/77/a5b8c569bf593b014
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c7/21/705964c7812476f378728bdf590ca4b771ec72385c533964653c68e86bdc/pygments-2.19.2-py3-none-any.whl", hash = "sha256:86540386c03d588bb81d44bc3928634ff26449851e99741617ecb9037ee5ec0b", size = 1225217, upload-time = "2025-06-21T13:39:07.939Z" },
 ]
+
+[[package]]
+name = "pygobject"
+version = "3.48.2"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.8.1' and python_full_version < '3.9'",
+    "python_full_version < '3.8.1'",
+]
+dependencies = [
+    { name = "pycairo", version = "1.26.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/f9/9e/6bab1ed3bd878f0912d9a0600c21f3d88bab0e8a8d4c3ce50f5cf336faaf/pygobject-3.48.2.tar.gz", hash = "sha256:c3c0a7afbe5b2c1c64dc0530109b4dd571085153dbedfbccb8ec7c5ad233f977", size = 715243, upload-time = "2024-04-06T07:20:44.474Z" }
+
+[[package]]
+name = "pygobject"
+version = "3.50.1"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.13'",
+    "python_full_version == '3.12.*'",
+    "python_full_version == '3.11.*'",
+    "python_full_version == '3.10.*'",
+    "python_full_version == '3.9.*'",
+]
+dependencies = [
+    { name = "pycairo", version = "1.28.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/71/eb/53106840011df907781891a4968a35cfde42aef0e80f74c060367402a468/pygobject-3.50.1.tar.gz", hash = "sha256:a4df4e7adef7f4f01685a763d138eac9396585bfc68a7d31bbe4fbca2de0d7cb", size = 1081846, upload-time = "2025-05-25T14:53:01.761Z" }
 
 [[package]]
 name = "pyjwt"
@@ -7532,6 +7678,35 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/fb/48/2a94e0cca71acab9d5e6874c400594dafa9348b49fa226683fc815f1089d/taskcluster-urls-13.0.1.tar.gz", hash = "sha256:b25e122ecec249c4299ac7b20b08db76e3e2025bdaeb699a9d444556de5fd367", size = 10681, upload-time = "2020-07-17T17:45:32.292Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/24/7a/a2462a171675fab3de5f8e9d7e7d1624a7cd81e305c07c00fbe39b860626/taskcluster_urls-13.0.1-py3-none-any.whl", hash = "sha256:f66dcbd6572a6216ab65949f0fa0b91f2df647918028436c384e6af5cd12ae2b", size = 10205, upload-time = "2020-07-18T17:10:25.83Z" },
+]
+
+[[package]]
+name = "tenacity"
+version = "9.0.0"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.8.1' and python_full_version < '3.9'",
+    "python_full_version < '3.8.1'",
+]
+sdist = { url = "https://files.pythonhosted.org/packages/cd/94/91fccdb4b8110642462e653d5dcb27e7b674742ad68efd146367da7bdb10/tenacity-9.0.0.tar.gz", hash = "sha256:807f37ca97d62aa361264d497b0e31e92b8027044942bfa756160d908320d73b", size = 47421, upload-time = "2024-07-29T12:12:27.547Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b6/cb/b86984bed139586d01532a587464b5805f12e397594f19f931c4c2fbfa61/tenacity-9.0.0-py3-none-any.whl", hash = "sha256:93de0c98785b27fcf659856aa9f54bfbd399e29969b0621bc7f762bd441b4539", size = 28169, upload-time = "2024-07-29T12:12:25.825Z" },
+]
+
+[[package]]
+name = "tenacity"
+version = "9.1.2"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.13'",
+    "python_full_version == '3.12.*'",
+    "python_full_version == '3.11.*'",
+    "python_full_version == '3.10.*'",
+    "python_full_version == '3.9.*'",
+]
+sdist = { url = "https://files.pythonhosted.org/packages/0a/d4/2b0cd0fe285e14b36db076e78c93766ff1d529d70408bd1d2a5a84f1d929/tenacity-9.1.2.tar.gz", hash = "sha256:1169d376c297e7de388d18b4481760d478b0e99a777cad3a9c86e556f4b697cb", size = 48036, upload-time = "2025-04-02T08:25:09.966Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e5/30/643397144bfbfec6f6ef821f36f33e57d35946c44a2352d3c9f0ae847619/tenacity-9.1.2-py3-none-any.whl", hash = "sha256:f77bf36710d8b73a50b2dd155c97b870017ad21afe6ab300326b0371b3b05138", size = 28248, upload-time = "2025-04-02T08:25:07.678Z" },
 ]
 
 [[package]]
