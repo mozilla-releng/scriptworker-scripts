@@ -7,6 +7,7 @@ requires-python = ">=3.8"
 members = [
     "addonscript",
     "balrogscript",
+    "beetmoverscript",
     "scriptworker_client",
     "scriptworker_client/packages/pytest-scriptworker-client",
 ]

@@ -1,3 +1,58 @@
+[project]
+name = "beetmoverscript"
+version = "8.5.7"
+description = "Taskcluster Beetmover Script"
+url = "https://github.com/mozilla-releng/scriptworker-scripts/"
+license = "MPL-2.0"
+readme = "README.md"
+authors = [
+    { name = "Mozilla Release Engineering", email = "release+python@mozilla.com" }
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+]
+dependencies = [
+    "arrow",
+    "Jinja2",
+    "boto3",
+    "mozilla-version",
+    "redo",
+    "scriptworker",
+    "taskcluster",
+    "google-cloud-storage<3",
+    "google-cloud-artifact-registry",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "tox",
+    "tox-uv",
+    "check-manifest",
+    "coverage",
+    "mock",
+    "pytest",
+    "pytest-aioresponses",
+    "pytest-asyncio",
+    "pytest-cov",
+    "pytest-mock",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build]
+include = [
+    "src",
+]
+
+[tool.hatch.build.targets.wheel.sources]
+"src/" = ""
+
+[project.scripts]
+beetmoverscript = "beetmoverscript.script:main"
+
 [tool.towncrier]
 package = "beetmoverscript"
 package_dir = "."
