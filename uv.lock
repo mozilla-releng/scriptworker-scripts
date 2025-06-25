@@ -30,6 +30,7 @@ members = [
     "scriptworker-scripts",
     "shipitscript",
     "signingscript",
+    "treescript",
 ]
 
 [[package]]
@@ -1519,6 +1520,20 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/d8/53/6f443c9a4a8358a93a6792e2acffb9d9d5cb0a5cfd8802644b7b1c9a02e4/colorama-0.4.6.tar.gz", hash = "sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44", size = 27697, upload-time = "2022-10-25T02:36:22.414Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d1/d6/3965ed04c63042e047cb6a3e6ed1a63a35087b6a609aa3a15ed8ac56c221/colorama-0.4.6-py2.py3-none-any.whl", hash = "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6", size = 25335, upload-time = "2022-10-25T02:36:20.889Z" },
+]
+
+[[package]]
+name = "compare-locales"
+version = "9.0.4"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "fluent-syntax" },
+    { name = "six" },
+    { name = "toml" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/e0/56/b0307642caae7fe5276b529852ba3c5436d4f61b97319874d0a5393365a9/compare_locales-9.0.4.tar.gz", hash = "sha256:73d0d384aefa0bc96f5fd8521c08c8bb89b16a37316701323a77960accabd551", size = 58373, upload-time = "2024-07-01T08:30:45.545Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/39/51/7e5b671298d1486e2041898e050d8a7c2aa2df1dea8c61b7be578994e69a/compare_locales-9.0.4-py3-none-any.whl", hash = "sha256:933d2b6e20f460d3ac2d3176295684505a42085b25e6c31944fcafbaf52f1cc0", size = 75469, upload-time = "2024-07-01T08:30:43.72Z" },
 ]
 
 [[package]]
@@ -3171,6 +3186,15 @@ wheels = [
 ]
 
 [[package]]
+name = "hglib"
+version = "2.6.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/87/29/ae7dbf62b0eff6d66adb71a2774a1689184d4bbdbd06ea73d32dd1049eb5/hglib-2.6.2.tar.gz", hash = "sha256:3f7e3a8a1a334aee8eeda10003dd6b0c8a1487b0adb052b1243c28b75bf1539e", size = 23177, upload-time = "2022-05-05T12:26:19.147Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/4b/bf/2fbde85c9f4d3447473655b647ace50abe922e540b35d0cf48e786cf16dd/hglib-2.6.2-py3-none-any.whl", hash = "sha256:651e63d037dc48e812b00ca3eb9a50c057d07d4897de69c914a57dce547079a2", size = 24194, upload-time = "2022-05-05T12:26:17.401Z" },
+]
+
+[[package]]
 name = "httplib2"
 version = "0.22.0"
 source = { registry = "https://pypi.org/simple" }
@@ -4462,6 +4486,61 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/d6/54/cfe61301667036ec958cb99bd3efefba235e65cdeb9c84d24a8293ba1d90/mdurl-0.1.2.tar.gz", hash = "sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba", size = 8729, upload-time = "2022-08-14T12:40:10.846Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b3/38/89ba8ad64ae25be8de66a6d463314cf1eb366222074cfda9ee839c56a4b4/mdurl-0.1.2-py3-none-any.whl", hash = "sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8", size = 9979, upload-time = "2022-08-14T12:40:09.779Z" },
+]
+
+[[package]]
+name = "mercurial"
+version = "7.0.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/2d/d4/5be888405717a3f998250012efd6af6e928b2baf3df4f347bcd1d6c226f8/mercurial-7.0.2.tar.gz", hash = "sha256:f7731f1b42acaeaacb8cf7e41c0a472a7aa31a8f47e518baea735f1cb2987e0c", size = 8981974, upload-time = "2025-05-07T10:22:22.689Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ea/53/734242ad6049be30db6b9d35521471a2f33e1d30aac004d15d019a0d1913/mercurial-7.0.2-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:41068625313b604be636fbe35720aedc47a5e7a5e49eda319e2f6c6059bbecb2", size = 5228786, upload-time = "2025-05-07T16:05:53.77Z" },
+    { url = "https://files.pythonhosted.org/packages/3d/64/3476ac651d0440e861c2ff9fc0787b60720f74c3f607a0b18c47d9590ee1/mercurial-7.0.2-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:439d6566b8916dcf1dfcb7f23746e54886ea2984fda98f877bc025bf556a8f7e", size = 7419744, upload-time = "2025-05-07T10:21:12.173Z" },
+    { url = "https://files.pythonhosted.org/packages/2f/ca/b5fbbaac0bb29e489bdd4d367310555397ed6580c6f468416ce60886cff7/mercurial-7.0.2-cp310-cp310-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:7c246e1b486d15bc5908e587396646fa4fa26b5e055e280753064094b5e88cff", size = 7116185, upload-time = "2025-05-07T10:21:17.119Z" },
+    { url = "https://files.pythonhosted.org/packages/e7/3a/76f3cd7c5d7813d1b10d06279d4b6020723a4bc5f8522b56076f70a934e4/mercurial-7.0.2-cp310-cp310-musllinux_1_2_i686.whl", hash = "sha256:e8cdcff82383fea2b12124f22f987078f92651f0ef27605c2ccd11e7756783f1", size = 7082422, upload-time = "2025-05-07T10:21:19.871Z" },
+    { url = "https://files.pythonhosted.org/packages/de/74/61683781e536145864563fdd36c9de0fb4bfcf085acc9518f5b225f17b3a/mercurial-7.0.2-cp310-cp310-musllinux_1_2_x86_64.whl", hash = "sha256:09553ef65a274385713861eaf2481964c739687ba3bccef8ba9d8e0fea8097cd", size = 7307982, upload-time = "2025-05-07T10:21:22.324Z" },
+    { url = "https://files.pythonhosted.org/packages/2c/f1/e20cace89ae0bcb8bca0af2ff1fa5cf4b0289b4e0ad8c72947d9fa70879c/mercurial-7.0.2-cp310-cp310-win32.whl", hash = "sha256:a5ff5cb0fcb8e8346b64b2e2878fd82117f7791a10450aaee26b80d4b6a1f013", size = 6378337, upload-time = "2025-05-07T16:06:09.033Z" },
+    { url = "https://files.pythonhosted.org/packages/ce/94/a3e7384c2a699bdeaf3fa51c326f8d0374a26ed4efa7d2a9a14cb6cd3574/mercurial-7.0.2-cp310-cp310-win_amd64.whl", hash = "sha256:d6a7036a7f0d9ac3a4f0fb5c2c33c7eac4d939b8342db9db24223b5e4858152e", size = 6639575, upload-time = "2025-05-07T16:06:11.099Z" },
+    { url = "https://files.pythonhosted.org/packages/70/95/54659baed413b358268dda0fa53ffef080b369ba8a484edbc7fd5049d051/mercurial-7.0.2-cp310-cp310-win_arm64.whl", hash = "sha256:5c67998b9d795070b43236b7d13330ce956b615a2fb77f4ca5080f9a3edec455", size = 6604396, upload-time = "2025-05-07T16:06:13.445Z" },
+    { url = "https://files.pythonhosted.org/packages/0f/95/841ec1ad64c5d43dec3478f3a9fad23d4da31fe976bb1369ff5d5dc93dca/mercurial-7.0.2-cp311-cp311-macosx_10_9_universal2.whl", hash = "sha256:ef5d64b9c76665d755d7bf1679f7b53a0c2500a3f174283956960bf94c265c3c", size = 5228858, upload-time = "2025-05-07T16:05:56.44Z" },
+    { url = "https://files.pythonhosted.org/packages/88/1a/26d123991c544493e76da8bbc336a5f293d8d22127b41a42a64d335c8544/mercurial-7.0.2-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:31be9c39876074a70f9ae5b806c1ab7b5b6e5d932fb433b49b7dbc966ff8bb0c", size = 7432067, upload-time = "2025-05-07T10:21:32.105Z" },
+    { url = "https://files.pythonhosted.org/packages/29/cf/2f41fa556b719a7058040596f59390f625cea8c366fd26ab7f0230e7f3ea/mercurial-7.0.2-cp311-cp311-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:b0a392c5e5159c544162e7968c47e2e9d3bcba0a2437509c06836a681f71dd1b", size = 7128504, upload-time = "2025-05-07T10:21:35.137Z" },
+    { url = "https://files.pythonhosted.org/packages/3a/5c/28dca99e9b63a465a5b0b9b5bd2b2e80f6a54a3f4e5b2aaebfa5b27f10da/mercurial-7.0.2-cp311-cp311-musllinux_1_2_i686.whl", hash = "sha256:0b6f45b121d5502b3199f0dc73159020fecc0867110359e0a80f740d5ddaff05", size = 7093255, upload-time = "2025-05-07T10:21:37.728Z" },
+    { url = "https://files.pythonhosted.org/packages/15/b7/bed176059afd57936e387986effd41ddce7fa53c8c9d408921954afb11c2/mercurial-7.0.2-cp311-cp311-musllinux_1_2_x86_64.whl", hash = "sha256:fc141bb20716f8681ddaabf27ac0312767efc73925f35e3e14da83ceb0b1385e", size = 7319004, upload-time = "2025-05-07T10:21:40.324Z" },
+    { url = "https://files.pythonhosted.org/packages/01/60/30f3444d87f7916597477d91d225b0978bc01f07762ed9c1fb4c1d206699/mercurial-7.0.2-cp311-cp311-win32.whl", hash = "sha256:3aecf28b872f765d6b540f2c5099779255e7356a21776ee55048339276d58bca", size = 6667365, upload-time = "2025-05-07T16:06:15.45Z" },
+    { url = "https://files.pythonhosted.org/packages/95/70/541ac6357a686981cc5cf53a3106cf98b50e3c4b01d925c4c7040d11d240/mercurial-7.0.2-cp311-cp311-win_amd64.whl", hash = "sha256:487d469973635020a4a5909fd0e9a9cdfcb5f4c9bc7e0cc831344e8b75fa66cd", size = 6966062, upload-time = "2025-05-07T16:06:17.62Z" },
+    { url = "https://files.pythonhosted.org/packages/83/3f/d3ad783e2350319304fae526c4ffd958c929746c3f794cfcd34891bc6451/mercurial-7.0.2-cp311-cp311-win_arm64.whl", hash = "sha256:459268dc408b664b04be0b9d5b5556f29fd3f1756a2405acc7d0325e34a89445", size = 6930991, upload-time = "2025-05-07T16:06:19.704Z" },
+    { url = "https://files.pythonhosted.org/packages/4e/db/4cf82eed8ea84e01551ddd4c8ab5a095c26632d375665480db2058a4ac8b/mercurial-7.0.2-cp312-cp312-macosx_10_13_universal2.whl", hash = "sha256:53e83620b52b940acbbeb64b8fb5e72618b062091505a56bffd700989024efb8", size = 5229496, upload-time = "2025-05-07T16:05:59.369Z" },
+    { url = "https://files.pythonhosted.org/packages/47/db/59727fa1e4ee37436bf33b0fe7f62c9ecbc563ff4840a3b1f4fd866d7dc7/mercurial-7.0.2-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:f01a824d248d367af5d2ffaf3bc4e1c4b2e2fae8ed291c7354a06444784e501a", size = 7433439, upload-time = "2025-05-07T10:21:42.407Z" },
+    { url = "https://files.pythonhosted.org/packages/c1/a4/2ac86474ff0028fbba46955e5512572dc352081c85405866e4dc768097b2/mercurial-7.0.2-cp312-cp312-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:c3855066b349fc6a95943c786aab0ea7a8fcbad0bcaf98680c31d8f4defd6b70", size = 7126358, upload-time = "2025-05-07T10:21:44.515Z" },
+    { url = "https://files.pythonhosted.org/packages/c9/0e/f3449b93fae165677117dbb6c368a342075646f77e577b6a18c8ed3de4f8/mercurial-7.0.2-cp312-cp312-musllinux_1_2_i686.whl", hash = "sha256:cefdde4e64c6bcaef372ce4f68f49a10bac311256c071fe666748d468d23340f", size = 7095669, upload-time = "2025-05-07T10:21:47.097Z" },
+    { url = "https://files.pythonhosted.org/packages/f7/67/df774b8f2c553a23cf4f7aa45af513dd72d353558ee754a96f9b07f6d66e/mercurial-7.0.2-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:4d87d33dabddb207fdc7db93244c5569c9226ab4826f6df26445f91da73cb4b5", size = 7320171, upload-time = "2025-05-07T10:21:49.335Z" },
+    { url = "https://files.pythonhosted.org/packages/d2/ba/39bbe165ac06d83a2efeacbd66335ff7ed4dd49f4efec8c2be994bfba3f1/mercurial-7.0.2-cp312-cp312-win32.whl", hash = "sha256:53a9f29341d70a7c9557814453e3b86cb2fbc3898f81523e09df9bd876d6b6dd", size = 6893103, upload-time = "2025-05-07T16:06:21.822Z" },
+    { url = "https://files.pythonhosted.org/packages/fd/ae/d3be45af83f84d5cc4ede1723b3173bf28a32dbf24024677a414aa32a6c1/mercurial-7.0.2-cp312-cp312-win_amd64.whl", hash = "sha256:86e7fefb3d1e500ca96e583ed2944ff2f2d65b0f40da0cd1b7685e875535fb5f", size = 7217207, upload-time = "2025-05-07T16:06:24.761Z" },
+    { url = "https://files.pythonhosted.org/packages/bf/6b/88ad085953da7485ea00b5ee3c053046a7dafaba69e63fef7f55068a9f99/mercurial-7.0.2-cp312-cp312-win_arm64.whl", hash = "sha256:44384c2b6e88274e607a0cb07f870f20a6d60c586124e13db1163843ec3e7847", size = 7181796, upload-time = "2025-05-07T16:06:27.136Z" },
+    { url = "https://files.pythonhosted.org/packages/fa/e6/5de3361265cbcc7bc3a502756dadac2acc0a13a33cd18e8a964af78177e7/mercurial-7.0.2-cp313-cp313-macosx_10_13_universal2.whl", hash = "sha256:3a42cf7c8f02c8d2cfba42baf4e94b4edefa5c03db29382030a730b2e522750c", size = 5229315, upload-time = "2025-05-07T16:06:01.421Z" },
+    { url = "https://files.pythonhosted.org/packages/9b/94/0b62256e77c7b8d0126fb4d47eb4f7c1a59337afd028c5d61ba276141874/mercurial-7.0.2-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:2f2d2d18df34c7b3434dbc0307820f8d0183827a9b76766ce460d05652a7609c", size = 7433992, upload-time = "2025-05-07T10:21:51.493Z" },
+    { url = "https://files.pythonhosted.org/packages/d6/d0/0a5815e95620eb715fd5424a5b796baabc931bef26072300760677a4ec6a/mercurial-7.0.2-cp313-cp313-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:b47c4b666da655636f4bf02b8cc47b53167482d274a8f29023fea5d759f10c22", size = 7126263, upload-time = "2025-05-07T10:21:53.731Z" },
+    { url = "https://files.pythonhosted.org/packages/d1/8c/0500b656d38339fa4bee512ed347ca111f1ae0dd5631f371f5addd7befd3/mercurial-7.0.2-cp313-cp313-musllinux_1_2_i686.whl", hash = "sha256:d2fdcdd80184203fc7f390f1bdd9fe57e5e3702c264c74379a02f222c7a058f3", size = 7096077, upload-time = "2025-05-07T10:21:56.353Z" },
+    { url = "https://files.pythonhosted.org/packages/53/fa/64bc9accff88ae01336b6101c0f68c54ce46423cda65d107989276b37cd6/mercurial-7.0.2-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:356348f75e97593126623701fab021fae49f75a2bdca7e5e06585ab135146464", size = 7320510, upload-time = "2025-05-07T10:21:58.935Z" },
+    { url = "https://files.pythonhosted.org/packages/30/c2/1611dad67b2270a19a8c8745e9c0754062165a32e830215c78c5339f735b/mercurial-7.0.2-cp313-cp313-win32.whl", hash = "sha256:a45d513fe87781cda70b435fa7a5223e03f4f33f7f0d47603fcc88140803b993", size = 6754305, upload-time = "2025-05-07T16:06:29.472Z" },
+    { url = "https://files.pythonhosted.org/packages/36/54/4fde10e19529115083cd04335f242035da8c64514f2341712c6b13c0a6d3/mercurial-7.0.2-cp313-cp313-win_amd64.whl", hash = "sha256:9af0e163ea9f5309fe515dc9da55fc28f96e3ea55c4eaef81c7e86a4d2b12da4", size = 7148307, upload-time = "2025-05-07T16:06:31.538Z" },
+    { url = "https://files.pythonhosted.org/packages/24/75/b4f3f1d46c4af3a50301c7cb4621ca1a175f4b238eb2398509333b8d0ea6/mercurial-7.0.2-cp313-cp313-win_arm64.whl", hash = "sha256:a1a90ef147f14efba8d3c096e01cf05fe186c978f952ff6ef8c86041c172b9d9", size = 7112852, upload-time = "2025-05-07T16:06:35.269Z" },
+    { url = "https://files.pythonhosted.org/packages/15/31/cf772dace8c3c076064a1fc69fa4c0158cbc15ce74052744cfd10a82d56c/mercurial-7.0.2-cp38-cp38-macosx_10_9_universal2.whl", hash = "sha256:4ae19279f74800f1c5dff16b76599fcb56810e0fb26359d2b602e1ebd7c112ee", size = 5228581, upload-time = "2025-05-07T16:06:04.007Z" },
+    { url = "https://files.pythonhosted.org/packages/5b/34/9a79e3376d7c92b07c2a746427b0b65d7ed826a6ba142c34c8ffc1108e9a/mercurial-7.0.2-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:a0fa1edeb6e93a6a6fad117f71a0da62e3615bea6369c0bd30ff88743194c6ea", size = 7430158, upload-time = "2025-05-07T10:22:01.127Z" },
+    { url = "https://files.pythonhosted.org/packages/19/34/3fa5ab4362b92b473d73c5bedab5e558ab34d902896e70d109a69f083e73/mercurial-7.0.2-cp38-cp38-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:916e71fe37873071763126bcc90055f7eb44b4bfb99810aa7b3f4702a98acaf1", size = 7124003, upload-time = "2025-05-07T10:22:04.771Z" },
+    { url = "https://files.pythonhosted.org/packages/58/c2/86b05b14cb8dff46a9f514390dca4d4ce8d7fe7ef873392cbf8f7ad6559c/mercurial-7.0.2-cp38-cp38-musllinux_1_2_i686.whl", hash = "sha256:9001e1271fff6d814049d4ffb32fedbef1915c2aa837449fb587fd91df99e83a", size = 7087453, upload-time = "2025-05-07T10:22:06.859Z" },
+    { url = "https://files.pythonhosted.org/packages/60/39/09c3139dd12e0e98933d236fda80f4ed169f57ae542eb4d60ad5e7ede520/mercurial-7.0.2-cp38-cp38-musllinux_1_2_x86_64.whl", hash = "sha256:0ff2f88fae42129edfc1dd168ea74ea103bf8c88157613dcc52023fbd2b3ab7f", size = 7312951, upload-time = "2025-05-07T10:22:08.929Z" },
+    { url = "https://files.pythonhosted.org/packages/31/73/f5b7c8a8163aeea062c2d9aadb54ba613471ae7d508da950b1a09bf9995b/mercurial-7.0.2-cp38-cp38-win32.whl", hash = "sha256:d26ed3da55fa46cf163aac583cdcf8e9c4e368940476e1cecc01907bd367dd51", size = 6346032, upload-time = "2025-05-07T16:06:37.288Z" },
+    { url = "https://files.pythonhosted.org/packages/64/c8/107344b802d2def55340e42dc038716913b64d4054e329a826215646f900/mercurial-7.0.2-cp38-cp38-win_amd64.whl", hash = "sha256:26f9688ce80cfb904b157cc9f12971a882dc8c49246b4a30b9f5594da5edafaf", size = 6517011, upload-time = "2025-05-07T16:06:39.42Z" },
+    { url = "https://files.pythonhosted.org/packages/73/d4/3c2b9743ec449548f5a0a1c54d15bfe98da89575c522b9d3b807eafc04c6/mercurial-7.0.2-cp39-cp39-macosx_10_9_universal2.whl", hash = "sha256:193610d74aba366689a43c18c5cf0959cb5ad618d2f9f49bbdb5a940603ba1b8", size = 5228800, upload-time = "2025-05-07T16:06:06.967Z" },
+    { url = "https://files.pythonhosted.org/packages/26/6d/f2d013e90f26d6c38d7078c3719b82e5938ff7ee379bcf01b25a42f39687/mercurial-7.0.2-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:f2ffe846bbf2d25aa793881bc49fa5bbe612dfa77bde7b72718ebfc62555b8e9", size = 7416872, upload-time = "2025-05-07T10:22:11.701Z" },
+    { url = "https://files.pythonhosted.org/packages/d8/91/54a2e575fa5b8efbfba33ce7172715b004fbbf286839cbdf075144c94e14/mercurial-7.0.2-cp39-cp39-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:2f43801d6c932585d4bc6a3ca500c92e310de9723ef1ae49bc08469f6be6b3a7", size = 7112850, upload-time = "2025-05-07T10:22:15.25Z" },
+    { url = "https://files.pythonhosted.org/packages/92/82/ec5ee5cf55b211e807c455eaa7c751328bec4d4260a0e73d005293280879/mercurial-7.0.2-cp39-cp39-musllinux_1_2_i686.whl", hash = "sha256:bf0253565e9a825adf87fd1541a902c8be5133ce98daa31f3c885f761c03d8dd", size = 7079179, upload-time = "2025-05-07T10:22:17.809Z" },
+    { url = "https://files.pythonhosted.org/packages/49/72/06ef07c8b7752283395cdfcba6d4a6a5355a66473496bd871eb513a9e63c/mercurial-7.0.2-cp39-cp39-musllinux_1_2_x86_64.whl", hash = "sha256:9209d5017d5c686c406797989c8632b2c946c57727d1d10b243359251f049c73", size = 7304552, upload-time = "2025-05-07T10:22:20.555Z" },
+    { url = "https://files.pythonhosted.org/packages/e4/a6/8b4f8649cb29a3c29b87ebd99f5b3c732952efa59c51b1c1eb50267dab84/mercurial-7.0.2-cp39-cp39-win32.whl", hash = "sha256:ddd3b385275899605957e918a351cf6a5b72ad150a03e8522be947230b8e035b", size = 6500770, upload-time = "2025-05-07T16:06:41.544Z" },
+    { url = "https://files.pythonhosted.org/packages/a4/72/62eb545a850184cc92003894c88d1f6056be4de93343c29422ee37392603/mercurial-7.0.2-cp39-cp39-win_amd64.whl", hash = "sha256:af6e9585c8a13a2f806486bd8ec0a1608309a8217ae774afcbca60e68b5bf8a7", size = 6668243, upload-time = "2025-05-07T16:06:43.656Z" },
+    { url = "https://files.pythonhosted.org/packages/a5/33/a6dfc4f97f6293c0150f4f4828abdbd88cc08225b3c5221d5befb39b016d/mercurial-7.0.2-cp39-cp39-win_arm64.whl", hash = "sha256:fbc6bac00898fa0f7b78a1feca167e20625cb1706c721fa550f1c98299166f3e", size = 6616450, upload-time = "2025-05-07T16:06:45.999Z" },
 ]
 
 [[package]]
@@ -7465,6 +7544,15 @@ wheels = [
 ]
 
 [[package]]
+name = "toml"
+version = "0.10.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/be/ba/1f744cdc819428fc6b5084ec34d9b30660f6f9daaf70eead706e3203ec3c/toml-0.10.2.tar.gz", hash = "sha256:b3bda1d108d5dd99f4a20d24d9c348e91c4db7ab1b749200bded2f839ccbe68f", size = 22253, upload-time = "2020-11-01T01:40:22.204Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/44/6f/7120676b6d73228c96e17f1f794d8ab046fc910d781c8d151120c3f1569e/toml-0.10.2-py2.py3-none-any.whl", hash = "sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b", size = 16588, upload-time = "2020-11-01T01:40:20.672Z" },
+]
+
+[[package]]
 name = "tomli"
 version = "2.2.1"
 source = { registry = "https://pypi.org/simple" }
@@ -7607,6 +7695,76 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/eb/79/72064e6a701c2183016abbbfedaba506d81e30e232a68c9f0d6f6fcd1574/traitlets-5.14.3.tar.gz", hash = "sha256:9ed0579d3502c94b4b3732ac120375cda96f923114522847de4b3bb98b96b6b7", size = 161621, upload-time = "2024-04-19T11:11:49.746Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/00/c0/8f5d070730d7836adc9c9b6408dec68c6ced86b304a9b26a14df072a6e8c/traitlets-5.14.3-py3-none-any.whl", hash = "sha256:b74e89e397b1ed28cc831db7aea759ba6640cb3de13090ca145426688ff1ac4f", size = 85359, upload-time = "2024-04-19T11:11:46.763Z" },
+]
+
+[[package]]
+name = "treescript"
+version = "2.1.0"
+source = { editable = "treescript" }
+dependencies = [
+    { name = "compare-locales" },
+    { name = "mercurial" },
+    { name = "mozilla-version" },
+    { name = "scriptworker" },
+    { name = "scriptworker-client" },
+    { name = "taskcluster" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "check-manifest" },
+    { name = "coverage", version = "7.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "coverage", version = "7.9.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
+    { name = "coveralls" },
+    { name = "hglib" },
+    { name = "json-e" },
+    { name = "mock" },
+    { name = "mypy", version = "1.14.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "mypy", version = "1.16.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
+    { name = "pytest", version = "8.3.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "pytest", version = "8.4.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
+    { name = "pytest-aioresponses" },
+    { name = "pytest-asyncio", version = "0.24.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "pytest-asyncio", version = "0.26.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
+    { name = "pytest-cov", version = "5.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "pytest-cov", version = "6.2.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
+    { name = "pytest-mock" },
+    { name = "pytest-scriptworker-client" },
+    { name = "tox", version = "4.25.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "tox", version = "4.27.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
+    { name = "tox-uv", version = "1.13.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "tox-uv", version = "1.26.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
+    { name = "virtualenv" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "compare-locales" },
+    { name = "mercurial" },
+    { name = "mozilla-version" },
+    { name = "scriptworker" },
+    { name = "scriptworker-client", editable = "scriptworker_client" },
+    { name = "taskcluster" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "check-manifest" },
+    { name = "coverage", specifier = ">=4.2" },
+    { name = "coveralls" },
+    { name = "hglib" },
+    { name = "json-e" },
+    { name = "mock" },
+    { name = "mypy" },
+    { name = "pytest" },
+    { name = "pytest-aioresponses" },
+    { name = "pytest-asyncio" },
+    { name = "pytest-cov" },
+    { name = "pytest-mock" },
+    { name = "pytest-scriptworker-client", editable = "scriptworker_client/packages/pytest-scriptworker-client" },
+    { name = "tox" },
+    { name = "tox-uv" },
+    { name = "virtualenv" },
 ]
 
 [[package]]
