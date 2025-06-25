@@ -34,7 +34,7 @@ tasks:
             command:
                 - sh
                 - -lxce
-                - tox -e ruff-py311
+                - uv run tox -e ruff-py311
 
     ruff-format:
         description: "ruff-format"
@@ -47,7 +47,7 @@ tasks:
             command:
                 - sh
                 - -lxce
-                - tox -e ruff-format
+                - uv run tox -e ruff-format
 
     yamllint:
         description: "yamllint"
@@ -60,4 +60,4 @@ tasks:
             command:
                 - sh
                 - -lxce
-                - tox -e yamllint
+                - uv run tox -e yamllint
