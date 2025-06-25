@@ -1,0 +1,57 @@
+[project]
+name = "treescript"
+version = "2.1.0"
+description = "Tree modifying script"
+url = "https://github.com/mozilla-releng/scriptworker-scripts/"
+license = "MPL-2.0"
+readme = "README.md"
+authors = [
+    { name = "Mozilla Release Engineering", email = "release+python@mozilla.com" }
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+]
+dependencies = [
+    "compare-locales",
+    "mercurial",
+    "mozilla-version",
+    "scriptworker",  # required for docker, even if treescript doesn't import it
+    "scriptworker-client",
+    "taskcluster",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "tox",
+    "tox-uv",
+    "check-manifest",
+    "coverage>=4.2",
+    "coveralls",
+    "hglib",
+    "json-e",
+    "mock",
+    "mypy",
+    "pytest",
+    "pytest-aioresponses",
+    "pytest-asyncio",
+    "pytest-cov",
+    "pytest-mock",
+    "pytest-scriptworker-client",
+    "virtualenv",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build]
+include = [
+    "src",
+]
+
+[tool.hatch.build.targets.wheel.sources]
+"src/" = ""
+
+[project.scripts]
+treescript = "treescript.script:main"
