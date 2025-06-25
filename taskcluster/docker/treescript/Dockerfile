@@ -18,16 +18,8 @@ USER app
 WORKDIR /app
 
 RUN cp -R /app/treescript/docker.d/* /app/docker.d/ \
- && python -m venv /app \
- && cd /app/scriptworker_client \
- && /app/bin/pip install --no-deps -r requirements/base.txt \
- && /app/bin/pip install . \
+ && . /app/.venv/bin/activate \
  && cd /app/treescript \
- && /app/bin/pip install --no-deps -r requirements/base.txt \
- && /app/bin/pip install . \
- && python -m venv /app/configloader_venv \
- && cd /app/configloader \
- && /app/configloader_venv/bin/pip install --no-deps -r requirements/base.txt \
- && /app/configloader_venv/bin/pip install . \
+ && uv pip install . \
  && cd /app \
  && hg clone -r 90302f015ac8dd8877ef3ee24b5a62541142378b https://hg.mozilla.org/hgcustom/version-control-tools /app/version-control-tools

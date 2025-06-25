@@ -109,7 +109,7 @@ export ED25519_PRIVKEY_PATH=$CONFIG_DIR/ed25519_privkey
 export GITHUB_OAUTH_TOKEN=$GITHUB_OAUTH_TOKEN
 export LOGS_DIR=$APP_DIR/logs
 export PROVISIONER_ID=scriptworker-k8s
-export SCRIPTWORKER=$APP_DIR/bin/scriptworker
+export SCRIPTWORKER=$APP_DIR/.venv/bin/scriptworker
 export SIGN_CHAIN_OF_TRUST=false
 if [ "$ENV" == "prod" ]; then
   export SIGN_CHAIN_OF_TRUST=true
@@ -117,7 +117,7 @@ fi
 export TASK_CONFIG=$CONFIG_DIR/worker.json
 export TASK_LOGS_DIR=$ARTIFACTS_DIR/public/logs
 export TASK_MAX_TIMEOUT=7200
-export TASK_SCRIPT=$APP_DIR/bin/${PROJECT_NAME}script
+export TASK_SCRIPT=$APP_DIR/.venv/bin/${PROJECT_NAME}script
 export TEMPLATE_DIR=$APP_DIR/docker.d
 export VERBOSE=true
 export VERIFY_CHAIN_OF_TRUST=true
@@ -150,4 +150,4 @@ $CONFIG_LOADER $TEMPLATE_DIR/worker.yml $CONFIG_DIR/worker.json
 
 
 # unset all of the variables to not potentially leak them
-exec env - $APP_DIR/bin/scriptworker $APP_DIR/configs/scriptworker.json
+exec env - $APP_DIR/.venv/bin/scriptworker $APP_DIR/configs/scriptworker.json
