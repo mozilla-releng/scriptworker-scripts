@@ -34,7 +34,7 @@ dev-dependencies = [
     "pytest-asyncio<1.0",
     "pytest",
     "pytest-cov",
-    "pytest-mock<1.13",
+    "pytest-mock",
     # pytest-random-order?
 ]
 

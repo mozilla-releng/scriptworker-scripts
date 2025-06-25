@@ -75,7 +75,7 @@ dev = [
     { name = "pytest" },
     { name = "pytest-asyncio", specifier = "<1.0" },
     { name = "pytest-cov" },
-    { name = "pytest-mock", specifier = "<1.13" },
+    { name = "pytest-mock" },
     { name = "tox" },
     { name = "tox-uv" },
 ]
@@ -3995,15 +3995,15 @@ wheels = [
 
 [[package]]
 name = "pytest-mock"
-version = "1.12.1"
+version = "3.14.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pytest", version = "8.3.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
     { name = "pytest", version = "8.4.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f2/68/aac61ba78c4fb3a8e81bf64f6ce30192407659721455628cdc2f9370f620/pytest-mock-1.12.1.tar.gz", hash = "sha256:96a0cebc66e09930be2a15b03333d90b59584d3fb011924f81c14b50ee0afbba", size = 23236, upload-time = "2019-11-20T22:07:47.493Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/71/28/67172c96ba684058a4d24ffe144d64783d2a270d0af0d9e792737bddc75c/pytest_mock-3.14.1.tar.gz", hash = "sha256:159e9edac4c451ce77a5cdb9fc5d1100708d2dd4ba3c3df572f14097351af80e", size = 33241, upload-time = "2025-05-26T13:58:45.167Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/5c/d8/dc124532a6b5b42ea817f00097d8c9b9bbd3d49f1a2e6f7648f057a8e191/pytest_mock-1.12.1-py2.py3-none-any.whl", hash = "sha256:e5381be2608e49547f5e47633c5f81241ebf6206d17ce516a7a18d5a917e3859", size = 10343, upload-time = "2019-11-20T22:07:45.859Z" },
+    { url = "https://files.pythonhosted.org/packages/b2/05/77b60e520511c53d1c1ca75f1930c7dd8e971d0c4379b7f4b3f9644685ba/pytest_mock-3.14.1-py3-none-any.whl", hash = "sha256:178aefcd11307d874b4cd3100344e7e2d888d9791a6a1d9bfe90fbc1b74fd1d0", size = 9923, upload-time = "2025-05-26T13:58:43.487Z" },
 ]
 
 [[package]]
