@@ -12,6 +12,7 @@ members = [
     "bouncerscript",
     "configloader",
     "githubscript",
+    "iscript",
     "scriptworker_client",
     "scriptworker_client/packages/pytest-scriptworker-client",
 ]
@@ -19,6 +20,7 @@ members = [
 [tool.uv.sources]
 pytest-scriptworker-client = { workspace = true }
 scriptworker_client = { workspace = true }
+mozbuild = { path = "vendored/mozbuild" }
 
 [tool.black]
 line-length = 160
