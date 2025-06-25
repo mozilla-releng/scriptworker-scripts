@@ -1,0 +1,47 @@
+[project]
+name = "configloader"
+version = "0.0.1"
+description = "Config loader"
+url = "https://github.com/mozilla-releng/scriptworker-scripts/"
+license = "MPL-2.0"
+readme = "README.rst"
+authors = [
+    { name = "Mozilla Release Engineering", email = "release+python@mozilla.com" }
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.11",
+]
+dependencies = [
+    "click",
+    "json-e",
+    "pyyaml",
+    "slugid",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "tox",
+    "tox-uv",
+
+    "check-manifest",
+    "coverage>=4.2",
+    "pytest",
+    "pytest-cov",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build]
+include = [
+    "src",
+]
+
+[tool.hatch.build.targets.wheel.sources]
+"src/" = ""
+
+[project.scripts]
+configloader = "configloader.script:main"
