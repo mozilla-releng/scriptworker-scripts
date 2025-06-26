@@ -71,7 +71,10 @@ tasks:
     pushflatpakscript:
         parent: base
     pushmsixscript:
+        definition: script
         parent: base
+        args:
+            SCRIPT_NAME: pushmsixscript
     signingscript:
         # python:3.11.9 docker image contains osslsigncode 2.5.
         # if the image changes, verify version of osslsigncode and make sure winsign works as well
