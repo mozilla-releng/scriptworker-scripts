@@ -1,9 +1,10 @@
 [project]
-name = "landoscript"
-version = "1.0.0"
-description = "Landoscript scriptworker"
+name = "pushmsixscript"
+version = "0.1.0"
+description = "Taskcluster push msix worker"
 url = "https://github.com/mozilla-releng/scriptworker-scripts/"
 license = "MPL-2.0"
+readme = "README.md"
 authors = [
     { name = "Mozilla Release Engineering", email = "release+python@mozilla.com" }
 ]
@@ -12,28 +13,25 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
 ]
 dependencies = [
-    "aiohttp",
-    "async-timeout",
-    "gql",
-    "mozilla-version",
-    "moz.l10n",
+    "azure-storage-blob",
     "scriptworker",
     "scriptworker-client",
-    "yarl",
+    "taskcluster",
 ]
 
 [tool.uv]
 dev-dependencies = [
     "tox",
     "tox-uv",
+    "check-manifest",
+    "coverage>=4.2b1",
     "coveralls",
-    "coverage",
+    "flake8",
+    "mock",
     "pytest",
-    "pytest-aioresponses",
     "pytest-asyncio",
     "pytest-cov",
-    "pytest-responses",
-    "pytest-scriptworker-client",
+    "requests-mock",
 ]
 
 [build-system]
@@ -49,7 +47,4 @@ include = [
 "src/" = ""
 
 [project.scripts]
-landoscript = "landoscript.script:main"
-
-[tool.coverage.run]
-branch = true
+pushmsixscript = "pushmsixscript.script:main"

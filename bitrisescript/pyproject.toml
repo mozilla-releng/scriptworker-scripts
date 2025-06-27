@@ -1,9 +1,10 @@
 [project]
-name = "landoscript"
-version = "1.0.0"
-description = "Landoscript scriptworker"
+name = "bitrisescript"
+version = "0.1.0"
+description = "Taskcluster worker in charge of scheduling Bitrise workflows"
 url = "https://github.com/mozilla-releng/scriptworker-scripts/"
 license = "MPL-2.0"
+readme = "README.md"
 authors = [
     { name = "Mozilla Release Engineering", email = "release+python@mozilla.com" }
 ]
@@ -13,27 +14,25 @@ classifiers = [
 ]
 dependencies = [
     "aiohttp",
-    "async-timeout",
-    "gql",
-    "mozilla-version",
-    "moz.l10n",
+    "aiohttp_retry >= 2.3",
     "scriptworker",
     "scriptworker-client",
-    "yarl",
 ]
 
 [tool.uv]
 dev-dependencies = [
     "tox",
     "tox-uv",
-    "coveralls",
+    "aioresponses>=0.7.6",
+    "black",
+    "check-manifest",
     "coverage",
+    "flake8",
+    "isort",
     "pytest",
-    "pytest-aioresponses",
-    "pytest-asyncio",
+    "pytest-asyncio>=0.6.0",
     "pytest-cov",
-    "pytest-responses",
-    "pytest-scriptworker-client",
+    "pytest-mock",
 ]
 
 [build-system]
@@ -49,7 +48,4 @@ include = [
 "src/" = ""
 
 [project.scripts]
-landoscript = "landoscript.script:main"
-
-[tool.coverage.run]
-branch = true
+bitrisescript = "bitrisescript.script:main"

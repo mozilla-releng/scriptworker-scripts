@@ -10,3 +10,7 @@ dependencies = ["pytest"]
 
 [project.entry-points.pytest11]
 pytest-scriptworker-client = "pytest_scriptworker_client"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

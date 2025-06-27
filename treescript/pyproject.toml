@@ -1,9 +1,10 @@
 [project]
-name = "landoscript"
-version = "1.0.0"
-description = "Landoscript scriptworker"
+name = "treescript"
+version = "2.1.0"
+description = "Tree modifying script"
 url = "https://github.com/mozilla-releng/scriptworker-scripts/"
 license = "MPL-2.0"
+readme = "README.md"
 authors = [
     { name = "Mozilla Release Engineering", email = "release+python@mozilla.com" }
 ]
@@ -12,28 +13,32 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
 ]
 dependencies = [
-    "aiohttp",
-    "async-timeout",
-    "gql",
+    "compare-locales",
+    "mercurial",
     "mozilla-version",
-    "moz.l10n",
-    "scriptworker",
+    "scriptworker",  # required for docker, even if treescript doesn't import it
     "scriptworker-client",
-    "yarl",
+    "taskcluster",
 ]
 
 [tool.uv]
 dev-dependencies = [
     "tox",
     "tox-uv",
+    "check-manifest",
+    "coverage>=4.2",
     "coveralls",
-    "coverage",
+    "hglib",
+    "json-e",
+    "mock",
+    "mypy",
     "pytest",
     "pytest-aioresponses",
     "pytest-asyncio",
     "pytest-cov",
-    "pytest-responses",
+    "pytest-mock",
     "pytest-scriptworker-client",
+    "virtualenv",
 ]
 
 [build-system]
@@ -49,7 +54,4 @@ include = [
 "src/" = ""
 
 [project.scripts]
-landoscript = "landoscript.script:main"
-
-[tool.coverage.run]
-branch = true
+treescript = "treescript.script:main"

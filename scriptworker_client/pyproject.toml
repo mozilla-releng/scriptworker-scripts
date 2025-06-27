@@ -1,39 +1,43 @@
 [project]
-name = "landoscript"
+name = "scriptworker_client"
 version = "1.0.0"
-description = "Landoscript scriptworker"
+description="Scriptworker *script shared code"
 url = "https://github.com/mozilla-releng/scriptworker-scripts/"
 license = "MPL-2.0"
+readme = "README.md"
 authors = [
     { name = "Mozilla Release Engineering", email = "release+python@mozilla.com" }
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.8",
 ]
+requires-python = ">=3.8"
 dependencies = [
     "aiohttp",
-    "async-timeout",
-    "gql",
-    "mozilla-version",
-    "moz.l10n",
-    "scriptworker",
-    "scriptworker-client",
-    "yarl",
+    "immutabledict",
+    "jsonschema",
+    "PyYAML",
+    "simple-github",
 ]
 
 [tool.uv]
 dev-dependencies = [
     "tox",
     "tox-uv",
-    "coveralls",
+    "mypy",
+    "gql",
     "coverage",
-    "pytest",
+    "flake8",
+    "flake8_docstrings",
+    "mock",
     "pytest-aioresponses",
     "pytest-asyncio",
     "pytest-cov",
-    "pytest-responses",
+    "pytest-mock",
     "pytest-scriptworker-client",
+    "yarl",
+    "types-PyYAML",
 ]
 
 [build-system]
@@ -47,9 +51,3 @@ include = [
 
 [tool.hatch.build.targets.wheel.sources]
 "src/" = ""
-
-[project.scripts]
-landoscript = "landoscript.script:main"
-
-[tool.coverage.run]
-branch = true

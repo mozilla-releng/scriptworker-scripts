@@ -1,9 +1,10 @@
 [project]
-name = "landoscript"
-version = "1.0.0"
-description = "Landoscript scriptworker"
+name = "iscript"
+version = "1.0.1"
+description = "Taskcluster iScript"
 url = "https://github.com/mozilla-releng/scriptworker-scripts/"
 license = "MPL-2.0"
+readme = "README.md"
 authors = [
     { name = "Mozilla Release Engineering", email = "release+python@mozilla.com" }
 ]
@@ -13,27 +14,33 @@ classifiers = [
 ]
 dependencies = [
     "aiohttp",
-    "async-timeout",
-    "gql",
-    "mozilla-version",
-    "moz.l10n",
-    "scriptworker",
+    "arrow>=1.0",
+    "attrs",
+    "macholib",
+    "mozbuild",
+    "pexpect",
+    "requests-hawk",
     "scriptworker-client",
-    "yarl",
+    "taskcluster",
+    # for mozbuild - remove after the following bug is fixed: https://bugzilla.mozilla.org/show_bug.cgi?id=1831648
+    "packaging",
+    "six",
 ]
 
 [tool.uv]
 dev-dependencies = [
     "tox",
     "tox-uv",
-    "coveralls",
+    "check-manifest",
     "coverage",
+    "mock",
+    "mypy",
+    "python-coveralls",
     "pytest",
-    "pytest-aioresponses",
     "pytest-asyncio",
     "pytest-cov",
-    "pytest-responses",
-    "pytest-scriptworker-client",
+    "pytest-mock",
+    "types-requests",
 ]
 
 [build-system]
@@ -49,7 +56,4 @@ include = [
 "src/" = ""
 
 [project.scripts]
-landoscript = "landoscript.script:main"
-
-[tool.coverage.run]
-branch = true
+iscript = "iscript.script:main"

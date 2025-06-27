@@ -196,8 +196,8 @@ def app_dir(tmp_path_factory, configloader):
     os.symlink(configloader, str(app_dir.joinpath("configloader_venv")))
 
     # Create a dummy scriptworker binary
-    scriptworker = app_dir.joinpath("bin", "scriptworker")
-    scriptworker.parent.mkdir()
+    scriptworker = app_dir.joinpath(".venv", "bin", "scriptworker")
+    scriptworker.parent.mkdir(parents=True)
     scriptworker.touch()
     st = scriptworker.stat()
     scriptworker.chmod(st.st_mode | stat.S_IEXEC)

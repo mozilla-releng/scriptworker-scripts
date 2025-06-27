@@ -1,9 +1,10 @@
 [project]
-name = "landoscript"
-version = "1.0.0"
-description = "Landoscript scriptworker"
+name = "bouncerscript"
+version = "3.7.0"
+description = "Taskcluster Bouncer Script"
 url = "https://github.com/mozilla-releng/scriptworker-scripts/"
 license = "MPL-2.0"
+readme = "README.md"
 authors = [
     { name = "Mozilla Release Engineering", email = "release+python@mozilla.com" }
 ]
@@ -12,14 +13,9 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
 ]
 dependencies = [
-    "aiohttp",
-    "async-timeout",
-    "gql",
     "mozilla-version",
-    "moz.l10n",
     "scriptworker",
-    "scriptworker-client",
-    "yarl",
+    "taskcluster",
 ]
 
 [tool.uv]
@@ -27,13 +23,15 @@ dev-dependencies = [
     "tox",
     "tox-uv",
     "coveralls",
+    "coverage>=4.2",
+    "check-manifest",
     "coverage",
+    "mock",
     "pytest",
-    "pytest-aioresponses",
-    "pytest-asyncio",
+    # we use the event_loop fixture
+    "pytest-asyncio<1.0",
     "pytest-cov",
-    "pytest-responses",
-    "pytest-scriptworker-client",
+    "pytest-mock",
 ]
 
 [build-system]
@@ -49,7 +47,5 @@ include = [
 "src/" = ""
 
 [project.scripts]
-landoscript = "landoscript.script:main"
+bouncerscript = "bouncerscript.script:main"
 
-[tool.coverage.run]
-branch = true

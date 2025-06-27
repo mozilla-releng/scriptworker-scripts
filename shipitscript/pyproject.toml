@@ -1,9 +1,10 @@
 [project]
-name = "landoscript"
-version = "1.0.0"
-description = "Landoscript scriptworker"
+name = "shipitscript"
+version = "4.2.3"
+description = "Taskcluster shipit worker"
 url = "https://github.com/mozilla-releng/scriptworker-scripts/"
 license = "MPL-2.0"
+readme = "README.rst"
 authors = [
     { name = "Mozilla Release Engineering", email = "release+python@mozilla.com" }
 ]
@@ -12,28 +13,25 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
 ]
 dependencies = [
-    "aiohttp",
-    "async-timeout",
-    "gql",
-    "mozilla-version",
-    "moz.l10n",
+    "redo",
     "scriptworker",
-    "scriptworker-client",
-    "yarl",
+    "taskcluster",
+    "mozilla-repo-urls",
 ]
 
 [tool.uv]
 dev-dependencies = [
     "tox",
     "tox-uv",
-    "coveralls",
+    "check-manifest",
     "coverage",
+    "coveralls",
+    "mock",
     "pytest",
-    "pytest-aioresponses",
     "pytest-asyncio",
     "pytest-cov",
-    "pytest-responses",
-    "pytest-scriptworker-client",
+    "pytest-mock",
+    "requests-mock",
 ]
 
 [build-system]
@@ -49,7 +47,4 @@ include = [
 "src/" = ""
 
 [project.scripts]
-landoscript = "landoscript.script:main"
-
-[tool.coverage.run]
-branch = true
+shipitscript = "shipitscript.script:main"
