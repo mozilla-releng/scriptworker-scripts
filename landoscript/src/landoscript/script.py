@@ -131,11 +131,24 @@ async def get_status_url_from_earlier_run(session: aiohttp.ClientSession) -> str
         log.warning("Taskcluster environment variables are not set; not trying to resume an earlier run!")
         return
 
+    queue = taskcluster.Queue(options={"rootUrl": root_url})
+    taskStatus = queue.status(task_id)
+    assert taskStatus
+    runs = taskStatus.get("status", {}).get("runs")
+    assert runs is not None
     run_id = int(run_id)
     while run_id > 0:
         run_id -= 1
-        queue = taskcluster.Queue(options={"rootUrl": root_url})
         try:
+            # if the newest, potentially usable task has actually failed outright
+            # don't re-use the status. this ensures that reruns, eg: after a
+            # server side issue with Lando has been resolved, behave as expected.
+            # it is OK to re-use status for other states (typically this would be
+            # "exception", but if a forced rerun happens on a "completed" task
+            # we ought to not to submit a new request either).
+            if runs[run_id]["state"] == "failed":
+                return
+
             # `getArtifact` has built in retries, and automatically raises on failure
             artifactInfo = queue.getArtifact(task_id, run_id, "public/build/lando-status.txt")
             assert artifactInfo
