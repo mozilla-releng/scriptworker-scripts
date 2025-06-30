@@ -71,7 +71,7 @@ def _get_shippable_revision_build_github(parsed_repository_url, last_shipped_rev
 
     pushlog = resp.json()["commits"]
 
-    for commit in pushlog:
+    for commit in reversed(pushlog):
         if is_commit_important_github(commit["commit"]):
             return commit["sha"]
 
