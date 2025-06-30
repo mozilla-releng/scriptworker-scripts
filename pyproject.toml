@@ -8,7 +8,6 @@ members = [
     "addonscript",
     "balrogscript",
     "beetmoverscript",
-    "bitrisescript",
     "bouncerscript",
     "configloader",
     "githubscript",

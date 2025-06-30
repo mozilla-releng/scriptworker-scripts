@@ -3,6 +3,7 @@ name = "bitrisescript"
 version = "0.1.0"
 description = "Taskcluster worker in charge of scheduling Bitrise workflows"
 url = "https://github.com/mozilla-releng/scriptworker-scripts/"
+requires-python = ">=3.11"
 license = "MPL-2.0"
 readme = "README.md"
 authors = [
@@ -34,6 +35,9 @@ dev-dependencies = [
     "pytest-cov",
     "pytest-mock",
 ]
+
+[tool.uv.sources]
+scriptworker-client = { path = "../scriptworker_client" }
 
 [build-system]
 requires = ["hatchling"]
