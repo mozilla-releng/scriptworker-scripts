@@ -1323,17 +1323,17 @@ def test_get_shippable_revision_build_hg(requests_mock, branch, last_shipped_rev
             "789",
             [
                 {
-                    "sha": "789",
-                    "commit": {
-                        "author": {"name": "a_random_person"},
-                        "message": "fix typo in readme DONTBUILD",
-                    },
-                },
-                {
                     "sha": "456",
                     "commit": {
                         "author": {"name": "a_random_person"},
                         "message": "Very important fix",
+                    },
+                },
+                {
+                    "sha": "789",
+                    "commit": {
+                        "author": {"name": "a_random_person"},
+                        "message": "fix typo in readme DONTBUILD",
                     },
                 },
             ],
@@ -1344,17 +1344,17 @@ def test_get_shippable_revision_build_hg(requests_mock, branch, last_shipped_rev
             "789",
             [
                 {
-                    "sha": "789",
-                    "commit": {
-                        "author": {"name": "a_random_person"},
-                        "message": "Another typo DONTBUILD",
-                    },
-                },
-                {
                     "sha": "456",
                     "commit": {
                         "author": {"name": "a_random_person"},
                         "message": "fix typo in readme DONTBUILD",
+                    },
+                },
+                {
+                    "sha": "789",
+                    "commit": {
+                        "author": {"name": "a_random_person"},
+                        "message": "Another typo DONTBUILD",
                     },
                 },
             ],
@@ -1365,17 +1365,17 @@ def test_get_shippable_revision_build_hg(requests_mock, branch, last_shipped_rev
             "789",
             [
                 {
-                    "sha": "789",
-                    "commit": {
-                        "author": {"name": "releng-treescript-dev[bot]"},
-                        "message": "version bump",
-                    },
-                },
-                {
                     "sha": "456",
                     "commit": {
                         "author": {"name": "a_random_person"},
                         "message": "fix typo in readme DONTBUILD",
+                    },
+                },
+                {
+                    "sha": "789",
+                    "commit": {
+                        "author": {"name": "releng-treescript-dev[bot]"},
+                        "message": "version bump",
                     },
                 },
             ],
@@ -1386,10 +1386,10 @@ def test_get_shippable_revision_build_hg(requests_mock, branch, last_shipped_rev
             "abc",
             [
                 {
-                    "sha": "abc",
+                    "sha": "456",
                     "commit": {
                         "author": {"name": "a_random_person"},
-                        "message": "another important fix",
+                        "message": "Very important fix",
                     },
                 },
                 {
@@ -1400,14 +1400,147 @@ def test_get_shippable_revision_build_hg(requests_mock, branch, last_shipped_rev
                     },
                 },
                 {
-                    "sha": "456",
+                    "sha": "abc",
                     "commit": {
                         "author": {"name": "a_random_person"},
-                        "message": "Very important fix",
+                        "message": "another important fix",
                     },
                 },
             ],
             "abc",
+        ),
+        (
+            "3b514402f9b2e510d10d3ec3126a146f0012b558",
+            "670c00103d1338f78bba2c1add46209a4472a40b",
+            [
+                {
+                    "sha": "2c7f67489c04c2ff47c88ce8e572d70e8910119b",
+                    "commit": {
+                        "author": {
+                            "name": "mergify[bot]",
+                        },
+                        "message": "Add FXIOS-12510 [HNT - Search Bar] tapping on search bar experience (backport #27505) (#27560)",
+                    },
+                },
+                {
+                    "sha": "663621e850d641b0cf16f3f25fd93cc7518fe7a3",
+                    "commit": {
+                        "author": {
+                            "name": "mergify[bot]",
+                        },
+                        "message": "Bugfix FXIOS-12640 [Toolbar] Status bar overlay black when translucency is disabled (backport #27559) (#27565)",
+                    },
+                },
+                {
+                    "sha": "73f7554bc243db63342e896c122e90639095d7f3",
+                    "commit": {
+                        "author": {
+                            "name": "mergify[bot]",
+                        },
+                        "message": 'Bugfix FXIOS-12614 [Content Feed] no longer consider "discover" pocket cell (backport #27470) (#27568)',
+                    },
+                },
+                {
+                    "sha": "9ffccd1851cbb5844a4e5e03643f9dc73ca1467f",
+                    "commit": {
+                        "author": {
+                            "name": "mergify[bot]",
+                        },
+                        "message": "Multiple [MTE-4713] - fixes for auto tests (backport #27574) (#27577)",
+                    },
+                },
+                {
+                    "sha": "0ede84a11ff76e94cc0371ec4254a6322a1902a3",
+                    "commit": {
+                        "author": {
+                            "name": "mergify[bot]",
+                        },
+                        "message": "Refactor FXIOS-12649 [Toolbar] Update StatusBarOverlayTests to use correct color tokens (backport #27576) (#27580)",
+                    },
+                },
+                {
+                    "sha": "1fbfffa9614172b299ee8451430b4394a658f6bb",
+                    "commit": {
+                        "author": {
+                            "name": "mergify[bot]",
+                        },
+                        "message": "Add FXIOS-12434 [Homepage Redesign - Stories] Update stories section layout (backport #27512) (#27597)",
+                    },
+                },
+                {
+                    "sha": "da6fd99151f73dafbe285da9ebd89e9f2b140b94",
+                    "commit": {
+                        "author": {
+                            "name": "mergify[bot]",
+                        },
+                        "message": "Bugfix FXIOS-12644 Re-add missing ad click telemetry callsite (backport #27569) (#27602)",
+                    },
+                },
+                {
+                    "sha": "d9f638ec6046eeb00ae85ff57ef1e4cfb67916c8",
+                    "commit": {
+                        "author": {
+                            "name": "mergify[bot]",
+                        },
+                        "message": "Add FXIOS-12445 Add fx-accounts ping and firefox account UID string (backport #27296) (#27595)",
+                    },
+                },
+                {
+                    "sha": "37fa0ba444c378430a3456823dff1960c5368318",
+                    "commit": {
+                        "author": {
+                            "name": "releng-treescript[bot]",
+                        },
+                        "message": "Automatic version bump CLOSED TREE NO BUG a=release",
+                    },
+                },
+                {
+                    "sha": "35d774b7b21ab19dbfa85a7a6cafd2bd0d7bd43c",
+                    "commit": {
+                        "author": {
+                            "name": "mergify[bot]",
+                        },
+                        "message": "Add FXIOS-12504 - [Swipe Tabs Animation] - Implement RTL for swipe new tab (backport #27553) (#27562)",
+                    },
+                },
+                {
+                    "sha": "21d7cc3320a55f3d7fdf1b4a4af917c6aab403b1",
+                    "commit": {
+                        "author": {
+                            "name": "mergify[bot]",
+                        },
+                        "message": "Fixes [MTE-4717] - for history and new tab settings tests on iPad (backport #27608) (#27614)",
+                    },
+                },
+                {
+                    "sha": "8a322df2cda8ce06fc01381132161a75179512d0",
+                    "commit": {
+                        "author": {
+                            "name": "mergify[bot]",
+                        },
+                        "message": "BugFix FXIOS-12488 stutter in the tab animation dismissal (backport #27592) (#27610)",
+                    },
+                },
+                {
+                    "sha": "c128f1d71ab885ae25ee8bfa26cfe106be85850a",
+                    "commit": {
+                        "author": {
+                            "name": "mergify[bot]",
+                        },
+                        "message": "Add FXIOS-12621 [HNT - Search Bar] zero state to search button on toolbar (backport #27563) (#27631)",
+                    },
+                },
+                {
+                    "sha": "670c00103d1338f78bba2c1add46209a4472a40b",
+                    "commit": {
+                        "author": {
+                            "name": "mergify[bot]",
+                        },
+                        "message": "Bugfix FXIOS-12419 - Missing Screenshots issue (backport #27616) (#27653)",
+                    },
+                },
+            ],
+            "670c00103d1338f78bba2c1add46209a4472a40b",
         ),
     ],
 )
