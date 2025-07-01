@@ -89,6 +89,7 @@ def test_extract_metadata(monkeypatch):
     pyaxmlparser_mock.get_package = lambda: 'org.mozilla.firefox'
     pyaxmlparser_mock.get_min_sdk_version = lambda: 16
     pyaxmlparser_mock.get_androidversion_code = lambda: '2015523300'
+    pyaxmlparser_mock.get_androidversion_name = lambda: '129.0'
     monkeypatch.setattr(pyaxmlparser, 'APK', lambda _: pyaxmlparser_mock)
 
     with TemporaryDirectory() as temp_dir:
@@ -101,6 +102,7 @@ def test_extract_metadata(monkeypatch):
             'locales': ('an', 'as', 'bn-IN', 'en-GB', 'en-US'),
             'package_name': 'org.mozilla.firefox',
             'version_code': '2015523300',
+            'version_name': '129.0',
         }
 
 

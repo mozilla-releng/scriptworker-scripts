@@ -146,7 +146,7 @@ async def test_upload_apk(sgs, responses_mock, status, response, expectation):
     with tempfile.NamedTemporaryFile("w") as tmp, expectation as exc:
         tmp.write("1" * 10)
         tmp.flush()
-        res = await sgs.upload_file(str(session_id), tmp.name)
+        res = await sgs.upload_file(str(session_id), tmp.name, "foobar")
 
     responses_mock.assert_called_with(
         url="https://seller.samsungapps.com/galaxyapi/fileUpload",

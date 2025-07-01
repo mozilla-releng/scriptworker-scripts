@@ -261,6 +261,7 @@ def fake_apk_metadata(files, *args, **kwargs):
             "package_name": "org.mozilla.focus",
             "api_level": 21,
             "version_code": "390842050",
+            "version_name": "137.1",
             "architecture": "armeabi-v7a",
             "locales": ("fr", "en"),
         }
@@ -285,6 +286,9 @@ class ExpectedFormData:
             assert (
                 expected_filename is None or "filename" in ty_options
             ), f"Was expecting filename for field {name} but it's missing"
+
+            if "filename" in ty_options and expected_filename is not None:
+                assert ty_options["filename"] == expected_filename
 
         return True
 
@@ -327,7 +331,7 @@ async def test_update_ok(responses, monkeypatch, rollout_rate, submit):
 
     expected_file_upload = (
         ExpectedFormData()
-        .add_field("file", b"laksdjflsakjdf\n", filename="blob")
+        .add_field("file", b"laksdjflsakjdf\n", filename="org.mozilla.focus-armeabi-v7a-137.1.apk")
         .add_field("sessionId", "789")
     )
 

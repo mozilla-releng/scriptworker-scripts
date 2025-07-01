@@ -41,6 +41,7 @@ def extract_metadata(original_apk_path, extract_architecture_metadata, extract_l
         metadata['package_name'] = package_name
         metadata['api_level'] = int(parsed_apk.get_min_sdk_version())
         metadata['version_code'] = parsed_apk.get_androidversion_code()
+        metadata['version_name'] = parsed_apk.get_androidversion_name()
 
         with ZipFile(apk_copy.name) as apk_zip:
             if extract_architecture_metadata:

@@ -57,7 +57,8 @@ class SamsungGalaxyStore:
         for apk in apks:
             fd, metadata = apk
 
-            file_key = await self.upload_file(fd.name)
+            file_name = "{}-{}-{}.apk".format(metadata["package_name"], metadata["architecture"], metadata["version_name"])
+            file_key = await self.upload_file(fd.name, file_name)
             new_binary = {
                 "fileName": os.path.basename(fd.name),
                 "versionCode": metadata["version_code"],
@@ -97,12 +98,12 @@ class SamsungGalaxyStore:
         if submit:
             await self.api.submit_app(content_id)
 
-    async def upload_file(self, file):
+    async def upload_file(self, file, name):
         """
         Uploads a file to the samsung galaxy store and returns its file key
         """
         session_id = (await self.api.create_upload_session_id())["sessionId"]
-        file_upload = await self.api.upload_file(session_id, file)
+        file_upload = await self.api.upload_file(session_id, file, name)
         return file_upload["fileKey"]
 
     async def infer_content_id_from_package_name(self, package_name):
@@ -197,7 +198,7 @@ class SamsungGalaxyApi:
         return await self._request("POST", "/seller/createUploadSessionId")
 
     async def upload_file(
-        self, session_id: str, file_path: str
+        self, session_id: str, file_path: str, name: str
     ) -> Dict[str, Any]:
         """
         Upload  a file required for app submission or for updating one
@@ -209,7 +210,7 @@ class SamsungGalaxyApi:
 
         form = aiohttp.FormData()
         with open(file_path, "rb") as file:
-            form.add_field("file", file)
+            form.add_field("file", file, filename=name)
             form.add_field("sessionId", session_id)
 
             # This API uses a different base URL for some reason
