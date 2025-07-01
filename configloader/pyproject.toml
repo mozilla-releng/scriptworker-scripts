@@ -1,39 +1,34 @@
 [project]
-name = "landoscript"
-version = "1.0.0"
-description = "Landoscript scriptworker"
+name = "configloader"
+version = "0.0.1"
+description = "Config loader"
 url = "https://github.com/mozilla-releng/scriptworker-scripts/"
 license = "MPL-2.0"
+readme = "README.rst"
 authors = [
     { name = "Mozilla Release Engineering", email = "release+python@mozilla.com" }
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.11",
 ]
 dependencies = [
-    "aiohttp",
-    "async-timeout",
-    "gql",
-    "mozilla-version",
-    "moz.l10n",
-    "scriptworker",
-    "scriptworker-client",
-    "yarl",
+    "click",
+    "json-e",
+    "pyyaml",
+    "slugid",
 ]
 
 [tool.uv]
 dev-dependencies = [
     "tox",
     "tox-uv",
-    "coveralls",
-    "coverage",
+
+    "check-manifest",
+    "coverage>=4.2",
     "pytest",
-    "pytest-aioresponses",
-    "pytest-asyncio",
     "pytest-cov",
-    "pytest-responses",
-    "pytest-scriptworker-client",
 ]
 
 [build-system]
@@ -49,7 +44,4 @@ include = [
 "src/" = ""
 
 [project.scripts]
-landoscript = "landoscript.script:main"
-
-[tool.coverage.run]
-branch = true
+configloader = "configloader.script:main"

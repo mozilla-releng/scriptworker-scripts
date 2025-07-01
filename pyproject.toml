@@ -1,3 +1,54 @@
+[project]
+name = "scriptworker-scripts"
+version = "0.0.0"
+requires-python = ">=3.8"
+
+[tool.uv.workspace]
+members = [
+    "addonscript",
+    "balrogscript",
+    "beetmoverscript",
+    "bitrisescript",
+    "bouncerscript",
+    "configloader",
+    "githubscript",
+    "iscript",
+    "landoscript",
+    "notarization_poller",
+    "pushapkscript",
+    "pushflatpakscript",
+    "pushmsixscript",
+    "scriptworker_client",
+    "scriptworker_client/packages/pytest-scriptworker-client",
+    "shipitscript",
+    "signingscript",
+    "treescript",
+]
+
+[tool.uv.sources]
+configloader = { workspace = true }
+pytest-scriptworker-client = { workspace = true }
+scriptworker_client = { workspace = true }
+mozbuild = { path = "vendored/mozbuild" }
+
+[tool.uv]
+dev-dependencies = [
+    "configloader",
+    "tox",
+    "tox-uv",
+    "ruff",
+    "mypy",
+    "yamllint",
+    "pytest",
+    "pytest-xdist",
+]
+
+[dependency-groups]
+docs = [
+    "recommonmark",
+    "sphinx-rtd-theme",
+]
+
 [tool.black]
 line-length = 160
 target-version = ["py38", "py311"]

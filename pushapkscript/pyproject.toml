@@ -1,9 +1,10 @@
 [project]
-name = "landoscript"
-version = "1.0.0"
-description = "Landoscript scriptworker"
+name = "pushapkscript"
+version = "5.0.0"
+description = "Taskcluster pushapk worker"
 url = "https://github.com/mozilla-releng/scriptworker-scripts/"
 license = "MPL-2.0"
+readme = "README.md"
 authors = [
     { name = "Mozilla Release Engineering", email = "release+python@mozilla.com" }
 ]
@@ -12,28 +13,19 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
 ]
 dependencies = [
-    "aiohttp",
-    "async-timeout",
-    "gql",
-    "mozilla-version",
-    "moz.l10n",
+    "mozapkpublisher",
     "scriptworker",
-    "scriptworker-client",
-    "yarl",
 ]
 
 [tool.uv]
 dev-dependencies = [
     "tox",
     "tox-uv",
-    "coveralls",
-    "coverage",
+    "check-manifest",
+    "coverage>=4.2b1",
     "pytest",
-    "pytest-aioresponses",
-    "pytest-asyncio",
     "pytest-cov",
-    "pytest-responses",
-    "pytest-scriptworker-client",
+    "pytest-asyncio",
 ]
 
 [build-system]
@@ -49,7 +41,4 @@ include = [
 "src/" = ""
 
 [project.scripts]
-landoscript = "landoscript.script:main"
-
-[tool.coverage.run]
-branch = true
+pushapkscript = "pushapkscript.script:main"

@@ -37,7 +37,7 @@ task-defaults:
             - sh
             - -lxce
             - >-
-              tox -e {name}-py{python_version}
+              uv run tox -e {name}-py{python_version}
 
 tasks:
     addonscript:

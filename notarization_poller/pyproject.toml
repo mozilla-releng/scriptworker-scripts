@@ -1,39 +1,42 @@
 [project]
-name = "landoscript"
+name = "notarization_poller"
 version = "1.0.0"
-description = "Landoscript scriptworker"
+description = "Taskcluster notarization poller"
 url = "https://github.com/mozilla-releng/scriptworker-scripts/"
 license = "MPL-2.0"
+readme = "README.md"
 authors = [
     { name = "Mozilla Release Engineering", email = "release+python@mozilla.com" }
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
 ]
 dependencies = [
     "aiohttp",
-    "async-timeout",
-    "gql",
-    "mozilla-version",
-    "moz.l10n",
-    "scriptworker",
+    "arrow>=1.0",
+    "async_timeout",
+    "immutabledict",
     "scriptworker-client",
-    "yarl",
+    "taskcluster",
 ]
 
 [tool.uv]
 dev-dependencies = [
     "tox",
     "tox-uv",
-    "coveralls",
+    "check-manifest",
     "coverage",
+    "flake8",
+    "flake8_docstrings",
+    "isort",
+    "mock",
     "pytest",
-    "pytest-aioresponses",
     "pytest-asyncio",
     "pytest-cov",
-    "pytest-responses",
-    "pytest-scriptworker-client",
+    "pytest-mock",
+    "python-coveralls",
 ]
 
 [build-system]
@@ -49,7 +52,4 @@ include = [
 "src/" = ""
 
 [project.scripts]
-landoscript = "landoscript.script:main"
-
-[tool.coverage.run]
-branch = true
+notarization_poller = "notarization_poller.worker:main"

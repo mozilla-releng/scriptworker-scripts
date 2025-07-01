@@ -1,9 +1,10 @@
 [project]
-name = "landoscript"
+name = "addonscript"
 version = "1.0.0"
-description = "Landoscript scriptworker"
+description = "Script to submit unsigned addons to AMO and get signed copies back"
 url = "https://github.com/mozilla-releng/scriptworker-scripts/"
 license = "MPL-2.0"
+readme = "README.md"
 authors = [
     { name = "Mozilla Release Engineering", email = "release+python@mozilla.com" }
 ]
@@ -14,26 +15,27 @@ classifiers = [
 dependencies = [
     "aiohttp",
     "async-timeout",
-    "gql",
-    "mozilla-version",
-    "moz.l10n",
+    "pyjwt",
     "scriptworker",
-    "scriptworker-client",
-    "yarl",
+    "taskcluster",
 ]
 
 [tool.uv]
 dev-dependencies = [
     "tox",
     "tox-uv",
-    "coveralls",
-    "coverage",
+    "aioresponses",
+    "check-manifest",
+    "coverage>=4.2",
+    "freezegun",
+    "mock",
     "pytest",
-    "pytest-aioresponses",
-    "pytest-asyncio",
+    # we use the event_loop fixture
+    "pytest-asyncio<1.0",
+    "pytest",
     "pytest-cov",
-    "pytest-responses",
-    "pytest-scriptworker-client",
+    "pytest-mock",
+    # pytest-random-order?
 ]
 
 [build-system]
@@ -49,7 +51,4 @@ include = [
 "src/" = ""
 
 [project.scripts]
-landoscript = "landoscript.script:main"
-
-[tool.coverage.run]
-branch = true
+addonscript = "addonscript.script:main"

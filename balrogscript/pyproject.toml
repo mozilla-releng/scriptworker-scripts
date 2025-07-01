@@ -1,3 +1,64 @@
+[project]
+name = "balrogscript"
+version = "6.0.3"
+description="Taskcluster Balrog Script"
+url = "https://github.com/mozilla-releng/scriptworker-scripts/"
+license = "MPL-2.0"
+readme = "README.md"
+authors = [
+    { name = "Mozilla Release Engineering", email = "release+python@mozilla.com" }
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+]
+dependencies = [
+    "balrogclient>=1.2",
+    "deepmerge",
+    "idna",
+    "ipaddress",
+    "mar",
+    "pyasn1",
+    "python-dateutil",
+    "redo",
+    "requests",
+    "scriptworker",
+    "scriptworker-client",
+    "taskcluster",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "tox",
+    "tox-uv",
+    "check-manifest",
+    "coverage",
+    "coveralls",
+    "lockfile",
+    "minimock",
+    "mock",
+    "pytest",
+    "pytest-asyncio>=0.6.0",
+    "pytest-cov",
+    "pytest-mock",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build]
+include = [
+  "src",
+  "config_example.json",
+]
+
+[tool.hatch.build.targets.wheel.sources]
+"src/" = ""
+
+[project.scripts]
+balrogscript = "balrogscript.script:main"
+
 [tool.towncrier]
 package = "balrogscript"
 package_dir = "."

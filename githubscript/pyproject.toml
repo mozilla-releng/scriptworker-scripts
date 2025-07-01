@@ -1,9 +1,10 @@
 [project]
-name = "landoscript"
-version = "1.0.0"
-description = "Landoscript scriptworker"
+name = "githubscript"
+version = "0.1.0"
+description = "Taskcluster worker in charge of updating Github and notably Github Releases"
 url = "https://github.com/mozilla-releng/scriptworker-scripts/"
 license = "MPL-2.0"
+readme = "README.md"
 authors = [
     { name = "Mozilla Release Engineering", email = "release+python@mozilla.com" }
 ]
@@ -12,28 +13,22 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
 ]
 dependencies = [
-    "aiohttp",
-    "async-timeout",
-    "gql",
-    "mozilla-version",
-    "moz.l10n",
+    "aiohttp_retry >= 2.3",
+    "github3.py",
     "scriptworker",
     "scriptworker-client",
-    "yarl",
+    "taskcluster",
 ]
 
 [tool.uv]
 dev-dependencies = [
     "tox",
     "tox-uv",
-    "coveralls",
+    "check-manifest",
     "coverage",
     "pytest",
-    "pytest-aioresponses",
-    "pytest-asyncio",
+    "pytest-asyncio>=0.6.0",
     "pytest-cov",
-    "pytest-responses",
-    "pytest-scriptworker-client",
 ]
 
 [build-system]
@@ -49,7 +44,4 @@ include = [
 "src/" = ""
 
 [project.scripts]
-landoscript = "landoscript.script:main"
-
-[tool.coverage.run]
-branch = true
+githubscript = "githubscript.script:main"
