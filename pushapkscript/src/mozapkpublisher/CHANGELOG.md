@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [10.0.1] - 2025-07-01
+
+### Fixed
+
+* Uploading apks to Samsung Galaxy Store will now use a unique file name as the store doesn't like name reuse. This change is transparent as the API never uses the file name to refer to a file.
+
 ## [10.0.0] - 2025-06-18
 
 ### Changed
