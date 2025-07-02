@@ -25,7 +25,6 @@ dev-dependencies = [
     "tox",
     "tox-uv",
 
-    "check-manifest",
     "coverage>=4.2",
     "pytest",
     "pytest-cov",

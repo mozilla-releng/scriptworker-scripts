@@ -24,7 +24,6 @@ dependencies = [
 dev-dependencies = [
     "tox",
     "tox-uv",
-    "check-manifest",
     "coverage",
     "pytest",
     "pytest-asyncio>=0.6.0",

@@ -24,7 +24,6 @@ dev-dependencies = [
     "tox-uv",
     "coveralls",
     "coverage>=4.2",
-    "check-manifest",
     "coverage",
     "mock",
     "pytest",

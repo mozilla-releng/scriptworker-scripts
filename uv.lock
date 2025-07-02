@@ -51,7 +51,6 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "aioresponses" },
-    { name = "check-manifest" },
     { name = "coverage", version = "7.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
     { name = "coverage", version = "7.9.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
     { name = "freezegun" },
@@ -81,7 +80,6 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "aioresponses" },
-    { name = "check-manifest" },
     { name = "coverage", specifier = ">=4.2" },
     { name = "freezegun" },
     { name = "mock" },
@@ -765,7 +763,6 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "check-manifest" },
     { name = "coverage", version = "7.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
     { name = "coverage", version = "7.9.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
     { name = "coveralls" },
@@ -803,7 +800,6 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "check-manifest" },
     { name = "coverage" },
     { name = "coveralls" },
     { name = "lockfile" },
@@ -836,7 +832,6 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "check-manifest" },
     { name = "coverage", version = "7.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
     { name = "coverage", version = "7.9.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
     { name = "mock" },
@@ -869,7 +864,6 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "check-manifest" },
     { name = "coverage" },
     { name = "mock" },
     { name = "pytest" },
@@ -910,7 +904,6 @@ dev = [
     { name = "aioresponses" },
     { name = "black", version = "24.8.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
     { name = "black", version = "25.1.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
-    { name = "check-manifest" },
     { name = "coverage", version = "7.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
     { name = "coverage", version = "7.9.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
     { name = "flake8", version = "5.0.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.8.1'" },
@@ -943,7 +936,6 @@ requires-dist = [
 dev = [
     { name = "aioresponses", specifier = ">=0.7.6" },
     { name = "black" },
-    { name = "check-manifest" },
     { name = "coverage" },
     { name = "flake8" },
     { name = "isort" },
@@ -1134,7 +1126,6 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "check-manifest" },
     { name = "coverage", version = "7.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
     { name = "coverage", version = "7.9.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
     { name = "coveralls" },
@@ -1161,7 +1152,6 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "check-manifest" },
     { name = "coverage" },
     { name = "coverage", specifier = ">=4.2" },
     { name = "coveralls" },
@@ -1306,23 +1296,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/50/2a/699388b5e489726991132441b55aff0691dd73c49105ef220408a5ab98d6/brotlicffi-1.1.0.0-pp39-pypy39_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:3de0cf28a53a3238b252aca9fed1593e9d36c1d116748013339f0949bfc84112", size = 378629, upload-time = "2023-09-14T14:22:35.9Z" },
     { url = "https://files.pythonhosted.org/packages/4a/3f/58254e7fbe6011bf043e4dcade0e16995a9f82b731734fad97220d201f42/brotlicffi-1.1.0.0-pp39-pypy39_pp73-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:6be5ec0e88a4925c91f3dea2bb0013b3a2accda6f77238f76a34a1ea532a1cb0", size = 385712, upload-time = "2023-09-14T14:22:37.767Z" },
     { url = "https://files.pythonhosted.org/packages/40/16/2a29a625a6f74d13726387f83484dfaaf6fcdaafaadfbe26a0412ae268cc/brotlicffi-1.1.0.0-pp39-pypy39_pp73-win_amd64.whl", hash = "sha256:d9eb71bb1085d996244439154387266fd23d6ad37161f6f52f1cd41dd95a3808", size = 361747, upload-time = "2023-09-14T14:22:39.368Z" },
-]
-
-[[package]]
-name = "build"
-version = "1.2.2.post1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "colorama", marker = "os_name == 'nt'" },
-    { name = "importlib-metadata", version = "8.5.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
-    { name = "importlib-metadata", version = "8.7.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9' and python_full_version < '3.10.2'" },
-    { name = "packaging" },
-    { name = "pyproject-hooks" },
-    { name = "tomli", marker = "python_full_version < '3.11'" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/7d/46/aeab111f8e06793e4f0e421fcad593d547fb8313b50990f31681ee2fb1ad/build-1.2.2.post1.tar.gz", hash = "sha256:b36993e92ca9375a219c99e606a122ff365a760a2d4bba0caa09bd5278b608b7", size = 46701, upload-time = "2024-10-06T17:22:25.251Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/84/c2/80633736cd183ee4a62107413def345f7e6e3c01563dbca1417363cf957e/build-1.2.2.post1-py3-none-any.whl", hash = "sha256:1d61c0887fa860c01971625baae8bdd338e517b836a2f70dd1f7aa3a6b2fc5b5", size = 22950, upload-time = "2024-10-06T17:22:23.299Z" },
 ]
 
 [[package]]
@@ -1517,21 +1490,6 @@ wheels = [
 ]
 
 [[package]]
-name = "check-manifest"
-version = "0.50"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "build" },
-    { name = "setuptools", version = "75.3.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
-    { name = "setuptools", version = "80.9.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
-    { name = "tomli", marker = "python_full_version < '3.11'" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/a8/ab/7607952f2c8d34c4124309dd3ea17c256fd3420a4ade01322daf9402b0b5/check_manifest-0.50.tar.gz", hash = "sha256:d300f9f292986aa1a30424af44eb45c5644e0a810e392e62d553b24bb3393494", size = 44827, upload-time = "2024-10-09T08:10:01.71Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/71/55/92207fa9b92ac2ade5593b1280f804f2590a680b7fe96775eb26074eec6b/check_manifest-0.50-py3-none-any.whl", hash = "sha256:6ab3e3aa72a008da3314b432f4c768c9647b4d6d8032f9e1a4672a572118e48c", size = 20385, upload-time = "2024-10-09T08:09:59.963Z" },
-]
-
-[[package]]
 name = "click"
 version = "8.1.8"
 source = { registry = "https://pypi.org/simple" }
@@ -1612,7 +1570,6 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "check-manifest" },
     { name = "coverage", version = "7.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
     { name = "coverage", version = "7.9.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
     { name = "pytest", version = "8.3.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
@@ -1635,7 +1592,6 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "check-manifest" },
     { name = "coverage", specifier = ">=4.2" },
     { name = "pytest" },
     { name = "pytest-cov" },
@@ -2212,7 +2168,7 @@ version = "1.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "typing-extensions", version = "4.13.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
-    { name = "typing-extensions", version = "4.14.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9' and python_full_version < '3.13'" },
+    { name = "typing-extensions", version = "4.14.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9' and python_full_version < '3.11'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/0b/9f/a65090624ecf468cdca03533906e7c69ed7588582240cfe7cc9e770b50eb/exceptiongroup-1.3.0.tar.gz", hash = "sha256:b241f5885f560bc56a59ee63ca4c6a8bfa46ae4ad651af316d4e81817bb9fd88", size = 29749, upload-time = "2025-05-10T17:42:51.123Z" }
 wheels = [
@@ -2745,7 +2701,6 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "check-manifest" },
     { name = "coverage", version = "7.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
     { name = "coverage", version = "7.9.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
     { name = "pytest", version = "8.3.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
@@ -2771,7 +2726,6 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "check-manifest" },
     { name = "coverage" },
     { name = "pytest" },
     { name = "pytest-asyncio", specifier = ">=0.6.0" },
@@ -3381,11 +3335,10 @@ name = "importlib-metadata"
 version = "8.7.0"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version == '3.10.*'",
     "python_full_version == '3.9.*'",
 ]
 dependencies = [
-    { name = "zipp", version = "3.23.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9' and python_full_version < '3.11'" },
+    { name = "zipp", version = "3.23.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.9.*'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/76/66/650a33bd90f786193e4de4b3ad86ea60b53c89b669a5c7be931fac31cdb0/importlib_metadata-8.7.0.tar.gz", hash = "sha256:d13b81ad223b890aa16c5471f2ac3056cf76c5f10f82d6f9292f0b415f389000", size = 56641, upload-time = "2025-04-27T15:29:01.736Z" }
 wheels = [
@@ -3552,7 +3505,6 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "check-manifest" },
     { name = "coverage", version = "7.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
     { name = "coverage", version = "7.9.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
     { name = "mock" },
@@ -3591,7 +3543,6 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "check-manifest" },
     { name = "coverage" },
     { name = "mock" },
     { name = "mypy" },
@@ -5221,7 +5172,6 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "check-manifest" },
     { name = "coverage", version = "7.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
     { name = "coverage", version = "7.9.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
     { name = "flake8", version = "5.0.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.8.1'" },
@@ -5257,7 +5207,6 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "check-manifest" },
     { name = "coverage" },
     { name = "flake8" },
     { name = "flake8-docstrings" },
@@ -6064,7 +6013,6 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "check-manifest" },
     { name = "coverage", version = "7.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
     { name = "coverage", version = "7.9.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
     { name = "pytest", version = "8.3.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
@@ -6087,7 +6035,6 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "check-manifest" },
     { name = "coverage", specifier = ">=4.2b1" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
@@ -6107,7 +6054,6 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "check-manifest" },
     { name = "coverage", version = "7.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
     { name = "coverage", version = "7.9.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
     { name = "coveralls" },
@@ -6140,7 +6086,6 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "check-manifest" },
     { name = "coverage", specifier = ">=4.2b1" },
     { name = "coveralls" },
     { name = "mock" },
@@ -6169,7 +6114,6 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "check-manifest" },
     { name = "coverage", version = "7.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
     { name = "coverage", version = "7.9.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
     { name = "coveralls" },
@@ -6200,7 +6144,6 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "check-manifest" },
     { name = "coverage", specifier = ">=4.2b1" },
     { name = "coveralls" },
     { name = "flake8" },
@@ -6707,15 +6650,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/19/fd/437901c891f58a7b9096511750247535e891d2d5a5a6eefbc9386a2b41d5/pyproject_api-1.9.1.tar.gz", hash = "sha256:43c9918f49daab37e302038fc1aed54a8c7a91a9fa935d00b9a485f37e0f5335", size = 22710, upload-time = "2025-05-12T14:41:58.025Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/ef/e6/c293c06695d4a3ab0260ef124a74ebadba5f4c511ce3a4259e976902c00b/pyproject_api-1.9.1-py3-none-any.whl", hash = "sha256:7d6238d92f8962773dd75b5f0c4a6a27cce092a14b623b811dba656f3b628948", size = 13158, upload-time = "2025-05-12T14:41:56.217Z" },
-]
-
-[[package]]
-name = "pyproject-hooks"
-version = "1.2.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/e7/82/28175b2414effca1cdac8dc99f76d660e7a4fb0ceefa4b4ab8f5f6742925/pyproject_hooks-1.2.0.tar.gz", hash = "sha256:1e859bd5c40fae9448642dd871adf459e5e2084186e8d2c2a79a824c970da1f8", size = 19228, upload-time = "2024-09-29T09:24:13.293Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/bd/24/12818598c362d7f300f18e74db45963dbcb85150324092410c8b49405e42/pyproject_hooks-1.2.0-py3-none-any.whl", hash = "sha256:9e5c6bfa8dcc30091c74b0cf803c81fdd29d94f01992a7707bc97babb1141913", size = 10216, upload-time = "2024-09-29T09:24:11.978Z" },
 ]
 
 [[package]]
@@ -7673,35 +7607,6 @@ docs = [
 ]
 
 [[package]]
-name = "setuptools"
-version = "75.3.2"
-source = { registry = "https://pypi.org/simple" }
-resolution-markers = [
-    "python_full_version >= '3.8.1' and python_full_version < '3.9'",
-    "python_full_version < '3.8.1'",
-]
-sdist = { url = "https://files.pythonhosted.org/packages/5c/01/771ea46cce201dd42cff043a5eea929d1c030fb3d1c2ee2729d02ca7814c/setuptools-75.3.2.tar.gz", hash = "sha256:3c1383e1038b68556a382c1e8ded8887cd20141b0eb5708a6c8d277de49364f5", size = 1354489, upload-time = "2025-03-12T00:02:19.004Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/15/65/3f0dba35760d902849d39d38c0a72767794b1963227b69a587f8a336d08c/setuptools-75.3.2-py3-none-any.whl", hash = "sha256:90ab613b6583fc02d5369cbca13ea26ea0e182d1df2d943ee9cbe81d4c61add9", size = 1251198, upload-time = "2025-03-12T00:02:17.554Z" },
-]
-
-[[package]]
-name = "setuptools"
-version = "80.9.0"
-source = { registry = "https://pypi.org/simple" }
-resolution-markers = [
-    "python_full_version >= '3.13'",
-    "python_full_version == '3.12.*'",
-    "python_full_version == '3.11.*'",
-    "python_full_version == '3.10.*'",
-    "python_full_version == '3.9.*'",
-]
-sdist = { url = "https://files.pythonhosted.org/packages/18/5d/3bf57dcd21979b887f014ea83c24ae194cfcd12b9e0fda66b957c69d1fca/setuptools-80.9.0.tar.gz", hash = "sha256:f36b47402ecde768dbfafc46e8e4207b4360c654f1f3bb84475f0a28628fb19c", size = 1319958, upload-time = "2025-05-27T00:56:51.443Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/a3/dc/17031897dae0efacfea57dfd3a82fdd2a2aeb58e0ff71b77b87e44edc772/setuptools-80.9.0-py3-none-any.whl", hash = "sha256:062d34222ad13e0cc312a4c02d73f059e86a4acbfbdea8f8f76b28c99f306922", size = 1201486, upload-time = "2025-05-27T00:56:49.664Z" },
-]
-
-[[package]]
 name = "shipitscript"
 version = "4.2.3"
 source = { editable = "shipitscript" }
@@ -7715,7 +7620,6 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "check-manifest" },
     { name = "coverage", version = "7.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
     { name = "coverage", version = "7.9.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
     { name = "coveralls" },
@@ -7744,7 +7648,6 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "check-manifest" },
     { name = "coverage" },
     { name = "coveralls" },
     { name = "mock" },
@@ -7778,7 +7681,6 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "check-manifest" },
     { name = "coverage", version = "7.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
     { name = "coverage", version = "7.9.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
     { name = "coveralls" },
@@ -7813,7 +7715,6 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "check-manifest" },
     { name = "coverage" },
     { name = "coveralls" },
     { name = "mock" },
@@ -8465,7 +8366,6 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "check-manifest" },
     { name = "coverage", version = "7.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
     { name = "coverage", version = "7.9.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
     { name = "coveralls" },
@@ -8502,7 +8402,6 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "check-manifest" },
     { name = "coverage", specifier = ">=4.2" },
     { name = "coveralls" },
     { name = "hglib" },
@@ -9132,7 +9031,6 @@ name = "zipp"
 version = "3.23.0"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version == '3.10.*'",
     "python_full_version == '3.9.*'",
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/e3/02/0f2892c661036d50ede074e376733dca2ae7c6eb617489437771209d4180/zipp-3.23.0.tar.gz", hash = "sha256:a07157588a12518c9d4034df3fbbee09c814741a33ff63c05fa29d26a2404166", size = 25547, upload-time = "2025-06-08T17:06:39.4Z" }

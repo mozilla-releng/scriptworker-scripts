@@ -39,7 +39,6 @@ dev-dependencies = [
     "pytest-asyncio>=0.6.0",
     "pytest-cov",
     "pytest-mock",
-    "check-manifest",
 ]
 
 [build-system]

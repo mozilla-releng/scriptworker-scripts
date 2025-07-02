@@ -31,7 +31,6 @@ dependencies = [
 dev-dependencies = [
     "tox",
     "tox-uv",
-    "check-manifest",
     "coverage",
     "mock",
     "mypy",

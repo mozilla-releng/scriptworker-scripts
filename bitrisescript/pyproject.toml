@@ -25,7 +25,6 @@ dev-dependencies = [
     "tox-uv",
     "aioresponses>=0.7.6",
     "black",
-    "check-manifest",
     "coverage",
     "flake8",
     "isort",

@@ -23,7 +23,6 @@ dependencies = [
 dev-dependencies = [
     "tox",
     "tox-uv",
-    "check-manifest",
     "coverage>=4.2b1",
     "coveralls",
     "flake8",
