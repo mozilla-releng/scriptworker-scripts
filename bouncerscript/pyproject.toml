@@ -22,7 +22,6 @@ dependencies = [
 dev-dependencies = [
     "tox",
     "tox-uv",
-    "coveralls",
     "coverage>=4.2",
     "coverage",
     "mock",

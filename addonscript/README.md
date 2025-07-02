@@ -1,7 +1,7 @@
 Addonscript
 ==============
 
-[![Build Status](https://travis-ci.org/mozilla-releng/addonscript.svg?branch=master)](https://travis-ci.org/mozilla-releng/addonscript) [![Coverage Status](https://coveralls.io/repos/github/mozilla-releng/addonscript/badge.svg?branch=master)](https://coveralls.io/github/mozilla-releng/addonscript?branch=master)
+[![Build Status](https://travis-ci.org/mozilla-releng/addonscript.svg?branch=master)](https://travis-ci.org/mozilla-releng/addonscript)
 
 This is designed to be run from scriptworker, but runs perfectly fine as a standalone script.
 

@@ -1,7 +1,7 @@
 Shipitscript
 ============
 
-|Build Status| |Coverage Status|
+|Build Status|
 
 
 Deployment
@@ -69,7 +69,5 @@ this repository.
 
 .. |Build Status| image:: https://travis-ci.org/mozilla-releng/shipitscript.svg?branch=master
    :target: https://travis-ci.org/mozilla-releng/shipitscript
-.. |Coverage Status| image:: https://coveralls.io/repos/github/mozilla-releng/shipitscript/badge.svg?branch=master
-   :target: https://coveralls.io/github/mozilla-releng/shipitscript?branch=master
 .. _`mozilla/shipitscript`: https://hub.docker.com/r/mozilla/shipitscript
 

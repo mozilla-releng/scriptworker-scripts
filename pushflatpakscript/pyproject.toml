@@ -22,7 +22,6 @@ dev-dependencies = [
     "tox",
     "tox-uv",
     "coverage>=4.2b1",
-    "coveralls",
     "mock",
     "pytest",
     "pytest-asyncio",

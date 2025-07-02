@@ -1,6 +1,6 @@
 # pushmsixscript
 
-[![Build Status](https://travis-ci.org/mozilla-releng/pushmsixscript.svg?branch=master)](https://travis-ci.org/mozilla-releng/pushmsixscript) [![Coverage Status](https://coveralls.io/repos/github/mozilla-releng/pushmsixscript/badge.svg?branch=master)](https://coveralls.io/github/mozilla-releng/pushmsixscript?branch=master)
+[![Build Status](https://travis-ci.org/mozilla-releng/pushmsixscript.svg?branch=master)](https://travis-ci.org/mozilla-releng/pushmsixscript)
 
 Main script that is aimed to be run with [scriptworker](https://github.com/mozilla-releng/scriptworker) (but runs perfectly fine as a standalone script).
 
