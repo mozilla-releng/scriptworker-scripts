@@ -25,7 +25,6 @@ dev-dependencies = [
     "tox",
     "tox-uv",
     "aioresponses",
-    "check-manifest",
     "coverage>=4.2",
     "freezegun",
     "mock",

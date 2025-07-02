@@ -23,7 +23,6 @@ dependencies = [
 dev-dependencies = [
     "tox",
     "tox-uv",
-    "check-manifest",
     "coverage",
     "coveralls",
     "mock",
