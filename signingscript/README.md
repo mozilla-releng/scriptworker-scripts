@@ -1,7 +1,7 @@
 Signingscript
 ==============
 
-[![Build Status](https://travis-ci.org/mozilla-releng/signingscript.svg?branch=master)](https://travis-ci.org/mozilla-releng/signingscript) [![Coverage Status](https://coveralls.io/repos/github/mozilla-releng/signingscript/badge.svg?branch=master)](https://coveralls.io/github/mozilla-releng/signingscript?branch=master)
+[![Build Status](https://travis-ci.org/mozilla-releng/signingscript.svg?branch=master)](https://travis-ci.org/mozilla-releng/signingscript)
 
 This is designed to be run from scriptworker, but runs perfectly fine as a standalone script.
 

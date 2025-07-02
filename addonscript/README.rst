@@ -1,7 +1,7 @@
 Addonscript
 ===========
 
-|Build Status| |Coverage Status|
+|Build Status|
 
 This is designed to be run from scriptworker, but runs perfectly fine as
 a standalone script.
@@ -34,5 +34,3 @@ The easiest way to do this is to run ``pin.sh``:
 
 .. |Build Status| image:: https://travis-ci.org/mozilla-releng/addonscript.svg?branch=master
    :target: https://travis-ci.org/mozilla-releng/addonscript
-.. |Coverage Status| image:: https://coveralls.io/repos/github/mozilla-releng/addonscript/badge.svg?branch=master
-   :target: https://coveralls.io/github/mozilla-releng/addonscript?branch=master

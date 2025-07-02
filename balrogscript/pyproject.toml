@@ -32,7 +32,6 @@ dev-dependencies = [
     "tox",
     "tox-uv",
     "coverage",
-    "coveralls",
     "lockfile",
     "minimock",
     "mock",

@@ -1,7 +1,6 @@
 Beetmoverscript README
 
 [![Build Status](https://travis-ci.org/mozilla-releng/beetmoverscript.svg?branch=master)](https://travis-ci.org/mozilla-releng/beetmoverscript)
-[![Coverage Status](https://coveralls.io/repos/github/mozilla-releng/beetmoverscript/badge.svg?branch=master)](https://coveralls.io/github/mozilla-releng/beetmoverscript?branch=master)
 
 
 ## deploy a new version to staging

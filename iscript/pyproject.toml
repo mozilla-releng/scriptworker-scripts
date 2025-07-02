@@ -34,7 +34,6 @@ dev-dependencies = [
     "coverage",
     "mock",
     "mypy",
-    "python-coveralls",
     "pytest",
     "pytest-asyncio",
     "pytest-cov",

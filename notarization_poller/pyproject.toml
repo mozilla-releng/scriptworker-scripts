@@ -35,7 +35,6 @@ dev-dependencies = [
     "pytest-asyncio",
     "pytest-cov",
     "pytest-mock",
-    "python-coveralls",
 ]
 
 [build-system]
