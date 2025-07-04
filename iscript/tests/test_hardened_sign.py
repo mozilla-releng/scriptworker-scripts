@@ -35,7 +35,10 @@ def symlink_upstream(config, task):
         os.symlink(data_dir, upstream_dir)
 
 
-hs_config = [{"deep": True, "runtime": True, "force": True, "entitlements": "https://foo.bar", "globs": ["/"]}]
+hs_config = [
+    {"deep": True, "runtime": True, "force": True, "entitlements": "https://foo.bar", "libconstraints": "https://foo.bar/libconstraints", "globs": ["/"]}
+]
+hs_config_no_libconstraints = [{"deep": True, "runtime": True, "force": True, "entitlements": "https://foo.bar", "globs": ["/"]}]
 
 
 @pytest.mark.asyncio
@@ -88,21 +91,25 @@ def test_copy_provisioning_profile_fail(tmpdir):
 
 
 def test_build_sign_command(tmpdir):
-    file_map = {hs_config[0]["entitlements"]: "filepath"}
+    file_map = {hs_config[0]["entitlements"]: "entitlements-filename.xml", hs_config[0]["libconstraints"]: "libconstraints-filename.xml"}
     hs.build_sign_command(tmpdir, "12345identity", "keychainpath", hs_config[0], file_map)
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "create_pkg,provision_profile",
+    "create_pkg,provision_profile,hardened_sign_config",
     (
-        (False, None),
-        (True, None),
-        (False, {"profile_name": "comexamplehelloworld.provisionprofile", "target_path": "/Contents/embedded.provisionprofile"}),
-        (True, {"profile_name": "comexamplehelloworld.provisionprofile", "target_path": "/Contents/embedded.provisionprofile"}),
+        (False, None, hs_config),
+        (True, None, hs_config),
+        (False, {"profile_name": "comexamplehelloworld.provisionprofile", "target_path": "/Contents/embedded.provisionprofile"}, hs_config),
+        (True, {"profile_name": "comexamplehelloworld.provisionprofile", "target_path": "/Contents/embedded.provisionprofile"}, hs_config),
+        (False, None, hs_config_no_libconstraints),
+        (True, None, hs_config_no_libconstraints),
+        (False, {"profile_name": "comexamplehelloworld.provisionprofile", "target_path": "/Contents/embedded.provisionprofile"}, hs_config_no_libconstraints),
+        (True, {"profile_name": "comexamplehelloworld.provisionprofile", "target_path": "/Contents/embedded.provisionprofile"}, hs_config_no_libconstraints),
     ),
 )
-async def test_sign_hardened_behavior(mocker, tmpdir, create_pkg, provision_profile):
+async def test_sign_hardened_behavior(mocker, tmpdir, create_pkg, provision_profile, hardened_sign_config):
     artifact_dir = os.path.join(str(tmpdir), "artifact")
     work_dir = os.path.join(str(tmpdir), "work")
     config = {
@@ -137,7 +144,7 @@ async def test_sign_hardened_behavior(mocker, tmpdir, create_pkg, provision_prof
                 {"taskId": "task-identifer", "paths": ["public/build/example.tar.gz"], "formats": []},
             ],
             "behavior": "mac_sign_hardened",
-            "hardened-sign-config": hs_config,
+            "hardened-sign-config": hardened_sign_config,
         },
     }
     symlink_upstream(config, task)
@@ -149,7 +156,7 @@ async def test_sign_hardened_behavior(mocker, tmpdir, create_pkg, provision_prof
             pass
 
     async def mock_download_signing_resources(config, folder):
-        return {config[0]["entitlements"]: "entitlements-filename.xml"}
+        return {hs_config[0]["entitlements"]: "entitlements-filename.xml", hs_config[0]["libconstraints"]: "libconstraints-filename.xml"}
 
     orig_run_command = hs.run_command
 
