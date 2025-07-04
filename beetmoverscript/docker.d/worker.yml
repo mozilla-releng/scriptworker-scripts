@@ -184,14 +184,14 @@ clouds:
             product_buckets:
               appservices: 'moz-fx-productdelivery-pr-38b5-productdelivery'
         'COT_PRODUCT == "translations" && (ENV == "dev" || ENV == "fake-prod")':
-          dep:
+          development:
             credentials: { "$eval": "GCS_DEP_CREDS" }
             fail_task_on_error: True
             enabled: True
             product_buckets:
               translations: 'moz-fx-translations-data--5f91-stage-translations-data'
         'COT_PRODUCT == "translations" && ENV == "prod"':
-          release:
+          production:
             credentials: { "$eval": "GCS_RELEASE_CREDS" }
             fail_task_on_error: True
             enabled: True
@@ -382,7 +382,7 @@ clouds:
 
         # There are no AWS buckets for translations
         'COT_PRODUCT == "translations"':
-          dep:
+          development:
             fail_task_on_error: True
             enabled: False
             credentials:
