@@ -30,13 +30,9 @@ POLL_INTERVAL=5
 
 started=$(date +%s)
 
-echo "Sending SIGUSR1 signal to process id $SCRIPTWORKER_PID"
-
-kill -s USR1 $SCRIPTWORKER_PID
-
+echo "Sending SIGUSR1 to process id $SCRIPTWORKER_PID and waiting for it to stop..."
 while true; do
-    echo "checking status..."
-    kill -0 $SCRIPTWORKER_PID
+    kill -s USR1 $SCRIPTWORKER_PID
     status=$?
 
     if [ $status -ne 0 ]; then
@@ -52,6 +48,5 @@ while true; do
         exit 1
     fi
 
-    echo "Sleeping for $POLL_INTERVAL"
     sleep $POLL_INTERVAL
 done
