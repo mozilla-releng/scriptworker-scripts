@@ -47,85 +47,36 @@ Testing
 
 Testing takes a few steps to set up.  Here's how:
 
-### docker-signing-server
+### autograph
 
-To test, you will need to point at a signing server.  Since production signing servers have restricted access and sensitive keys, it's easiest to point at a docker-signing-server instance locally during development.
+To test, you'll most likely need a local autograph instance.
+You can start one with the following command: `docker run -p 8000:8000 mozilla/autograph:latest`
 
-To do so:
+You also need to create an `autograph_config.json`, for a `shippable-l10n-signing-linux64` task it should look like this:
 
-    git clone https://github.com/escapewindow/docker-signing-server
-    cd docker-signing-server
-    # Follow ./README.md to set up and run the docker instance
-
-Remember the path to `./fake_ca/ca.crt` ; this will be the file that signingscript will use to verify the SSL connection.
-
-### virtualenv
-
-First, you need `python>=3.8.0`.
-
-Next, create a python36 virtualenv, and install signingscript:
-
-    # create the virtualenv in ./venv3
-    virtualenv3 venv3
-    # activate it
-    . venv3/bin/activate
-    # install signingscript from pypi
-    pip install signingscript
-
-If you want to use local clones of [signingscript](https://github.com/mozilla-releng/signingscript), [signtool](https://github.com/mozilla-releng/signtool), and/or [scriptworker](https://github.com/mozilla-releng/scriptworker), you can
-
-    python setup.py develop
-
-in each of the applicable directories after, or instead of the `pip install` command.
-
-### password json
-
-You'll need a password json file.  The format is
-
-    {
-      "BASE_CERT_SCOPE:dep-signing": [
-        ["IPADDRESS:PORT", "USERNAME", "PASSWORD", ["SIGNING_FORMAT1", "SIGNING_FORMAT2"...]],
-        ["SECOND_IPADDRESS:PORT", "USERNAME", "PASSWORD", ["SIGNING_FORMAT1", "SIGNING_FORMAT2"...]],
-        ...
-      ],
-      "BASE_CERT_SCOPE:nightly-signing": [
-        ["IPADDRESS:PORT", "USERNAME", "PASSWORD", ["SIGNING_FORMAT1", "SIGNING_FORMAT2"...]],
-        ["SECOND_IPADDRESS:PORT", "USERNAME", "PASSWORD", ["SIGNING_FORMAT1", "SIGNING_FORMAT2"...]],
-        ...
-      ],
-      "BASE_CERT_SCOPE:release-signing": [
-        ["IPADDRESS:PORT", "USERNAME", "PASSWORD", ["SIGNING_FORMAT1", "SIGNING_FORMAT2"...]],
-        ["SECOND_IPADDRESS:PORT", "USERNAME", "PASSWORD", ["SIGNING_FORMAT1", "SIGNING_FORMAT2"...]],
-        ...
-      ]
-    }
-
-This stripped down version will work with docker-signing-server:
-
-    {
-      "project:releng:signing:cert:dep-signing": [
-        ["127.0.0.1:9110", "user", "pass", ["gpg"]]
-      ]
-    }
-
-The user/pass for the docker-signing-server are `user` and `pass` for super sekrit security.
+```json
+{
+    "project:releng:signing:cert:release-signing": [
+        ["http://127.0.0.1:8002", "alice", "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu", ["gcp_prod_autograph_omnija", "gcp_prod_autograph_langpack"], "extensions-ecdsa"],
+        ["http://127.0.0.1:8002", "alice", "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu", ["gcp_prod_autograph_gpg"], "randompgp"],
+    ]
+}
+```
 
 ### config json
 
 The config json looks like this (comments are not valid json, but I'm inserting comments for clarity.  Don't include the comments in the file!):
 
-
+```json
     {
       // path to the password json you created above
-      "autograph_configs": "/src/signing/signingscript/example_server_config.json",
+      "autograph_configs": "autograph.json",
 
-      // the work directory path.  task.json will live here, as well as downloaded binaries
-      // this should be an absolute path.
-      "work_dir": "/src/signing/work_dir",
+      // the work directory path.  task.json will live here, as well // as downloaded binaries. You can use `uv run create_test_workdir // <task-id>` to create it
+      "work_dir": "work",
 
       // the artifact directory path.  the signed binaries will be copied here for scriptworker to upload
-      // this should be an absolute path.
-      "artifact_dir": "/src/signing/artifact_dir",
+      "artifact_dir": "artifact_dir",
 
       // how many seconds should the signing token be valid for?
       "token_duration_seconds": 1200,
@@ -133,7 +84,14 @@ The config json looks like this (comments are not valid json, but I'm inserting 
       // enable debug logging
       "verbose": true,
 
+      // This should be the path to a random file, it doesn't matter for testing. An empty file is fine.
+      "gpg_pubkey": "foo",
     }
+```
+
+### signingscript
+
+Running the script itself is fairly easy, `uv run signingscript config.json`
 
 #### directories and file naming
 If you aren't running through scriptworker, you need to manually create the directories that `work_dir` and `artifact_dir` point to.  It's better to use new directories for these rather than cluttering and potentially overwriting an existing directory.  Once you set up scriptworker, the `work_dir` and `artifact_dir` will be regularly wiped and recreated.
