@@ -16,9 +16,7 @@ USER app
 
 RUN cp -R /app/pushapkscript/docker.d/* /app/docker.d/ \
  && . /app/.venv/bin/activate \
- && cd /app/pushapkscript \
- && uv pip install . \
- && cd /app \
+ && uv sync --no-dev --active --frozen --package pushapkscript \
  && curl -L https://github.com/google/bundletool/releases/download/1.15.4/bundletool-all-1.15.4.jar -o /app/bundletool.jar \
  && echo "e5f54597dbb5211f050e8ddd03d4d731a9b4dfa5684c7687928b654a8ddc212a bundletool.jar" > shasum \
  && sha256sum --check --status shasum

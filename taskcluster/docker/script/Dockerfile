@@ -8,7 +8,6 @@ FROM $DOCKER_IMAGE_PARENT
 # %include $SCRIPT_NAME
 ADD --chown=app:app topsrcdir/$SCRIPT_NAME /app/$SCRIPT_NAME
 
-RUN cd /app/$SCRIPT_NAME \
- && ([ -d docker.d ] && cp -R docker.d/* /app/docker.d/) \
+RUN ([ -d /app/$SCRIPT_NAME/docker.d ] && cp -R /app/$SCRIPT_NAME/docker.d/* /app/docker.d/) \
  && . /app/.venv/bin/activate \
- && uv pip install .
+ &&  uv sync --no-dev --active --frozen --package $SCRIPT_NAME

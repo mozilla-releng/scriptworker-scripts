@@ -17,20 +17,19 @@ ADD --chown=app:app topsrcdir/configloader /app/configloader
 ADD --chown=app:app topsrcdir/docker.d /app/docker.d
 # %include .dockerignore
 ADD --chown=app:app topsrcdir/.dockerignore /app/.dockerignore
+# %include uv.lock
+ADD --chown=app:app topsrcdir/uv.lock /app/uv.lock
+# %include pyproject.toml
+ADD --chown=app:app topsrcdir/pyproject.toml /app/pyproject.toml
 
 USER app
 WORKDIR /app
 
-# Install scriptworker_client and configloader
+# Install configloader and create app venv
 RUN uv venv --python ${PYTHON_VERSION} /app/.venv \
- && . /app/.venv/bin/activate \
- && cd /app/scriptworker_client \
- && uv pip install . \
- && deactivate \
  && uv venv /app/configloader_venv \
  && . /app/configloader_venv/bin/activate \
- && cd /app/configloader \
- && uv pip install . \
+ &&  uv sync --no-dev --active --frozen --package configloader \
  && deactivate
 
 CMD ["/app/docker.d/init.sh"]

@@ -37,8 +37,5 @@ WORKDIR /app
 # Install signingscript + widevine
 RUN cp -R /app/signingscript/docker.d/* /app/docker.d/ \
  && . /app/.venv/bin/activate \
- && cd /app/vendored/mozbuild \
- && uv pip install . \
- && cd /app/signingscript \
- && uv pip install . \
+ && uv sync --no-dev --active --frozen --package signingscript \
  && ln -sf /etc/widevine.py $(/app/.venv/bin/python -c "import site; print(site.getsitepackages()[0])")/widevine.py
