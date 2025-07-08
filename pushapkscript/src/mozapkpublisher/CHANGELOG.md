@@ -2,6 +2,16 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [11.0.0] - 2025-07-08
+
+### Changed
+
+* `mozapkpublisher.common.apk.extractor.extract_metadata` will now always extract architecture metatadata, the `extract_architecture_metadata` argument got dropped.
+
+### Fixed
+
+* Publishing to the samsung galaxy store will now work even if `--skip-check-ordered-version-codes` is passed to `push_apk`
+
 ## [10.0.1] - 2025-07-01
 
 ### Fixed
