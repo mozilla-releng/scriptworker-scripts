@@ -94,12 +94,39 @@ def test_extract_metadata(monkeypatch):
 
     with TemporaryDirectory() as temp_dir:
         apk_file = _create_apk_with_all_metadata(temp_dir)
-        assert extract_metadata(apk_file, True, True, True) == {
+        assert extract_metadata(apk_file, True, True) == {
             'api_level': 16,
             'architecture': 'x86',
             'firefox_build_id': '20171112125738',
             'firefox_version': '57.0',
             'locales': ('an', 'as', 'bn-IN', 'en-GB', 'en-US'),
+            'package_name': 'org.mozilla.firefox',
+            'version_code': '2015523300',
+            'version_name': '129.0',
+        }
+
+        assert extract_metadata(apk_file, True, False) == {
+            'api_level': 16,
+            'architecture': 'x86',
+            'locales': ('an', 'as', 'bn-IN', 'en-GB', 'en-US'),
+            'package_name': 'org.mozilla.firefox',
+            'version_code': '2015523300',
+            'version_name': '129.0',
+        }
+
+        assert extract_metadata(apk_file, False, True) == {
+            'api_level': 16,
+            'architecture': 'x86',
+            'firefox_build_id': '20171112125738',
+            'firefox_version': '57.0',
+            'package_name': 'org.mozilla.firefox',
+            'version_code': '2015523300',
+            'version_name': '129.0',
+        }
+
+        assert extract_metadata(apk_file, False, False) == {
+            'api_level': 16,
+            'architecture': 'x86',
             'package_name': 'org.mozilla.firefox',
             'version_code': '2015523300',
             'version_name': '129.0',

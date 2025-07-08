@@ -35,8 +35,7 @@ def extract_and_check_apks_metadata(
     skip_check_ordered_version_codes,
 ):
     apks_metadata = {
-        apk: extract_metadata(apk.name, not skip_check_ordered_version_codes,
-                              not skip_check_same_locales and not skip_check_multiple_locales,
+        apk: extract_metadata(apk.name, not skip_check_same_locales and not skip_check_multiple_locales,
                               not skip_checks_fennec)
         for apk in apks
     }
