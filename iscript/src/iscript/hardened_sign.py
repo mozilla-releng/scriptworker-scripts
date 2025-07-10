@@ -33,20 +33,28 @@ from scriptworker_client.utils import run_command
 log = logging.getLogger(__name__)
 
 
-async def download_signing_resources(hardened_sign_config, folder):
+async def download_signing_resources(hardened_sign_config, folder: Path):
     """Caches all external resources needed for a signing task"""
-    # Get unique entitlement urls
-    entitlement_urls = set()
-    for cfg in hardened_sign_config:
-        if not cfg.get("entitlements", None):
-            continue
-        entitlement_urls.add(cfg["entitlements"])
+    # Get unique entitlement/libconstraint urls
+    resource_urls = set()
+
+    # Collect urls from config
+    for resource_key in ("entitlements", "libconstraints"):
+        for cfg in hardened_sign_config:
+            if not cfg.get(resource_key, None):
+                continue
+            resource_urls.add(cfg[resource_key])
+
     # Async download and set url -> file location mapping
     url_map = {}
     futures = []
-    for url in entitlement_urls:
+    file_counter = 0
+    for url in resource_urls:
         filename = url.split("/")[-1]
-        dest = folder / filename
+        # Prevent overwriting files with same name
+        dest = folder / f"{file_counter}-{filename}"
+        file_counter += 1
+        assert not dest.exists(), f"File {dest} already exists, cannot overwrite"
         url_map[url] = dest
         log.info(f"Downloading resource: {filename} from {url}")
         futures.append(
@@ -125,6 +133,11 @@ def build_sign_command(app_path, identity, keychain, config, file_map):
     if config.get("runtime"):
         cmd.append("--options")
         cmd.append("runtime")
+    # Library constraints
+    if config.get("libconstraints"):
+        cmd.append("--enforce-constraint-validity")
+        cmd.append("--library-constraint")
+        cmd.append(file_map[config["libconstraints"]])
     # Entitlements
     if config.get("entitlements"):
         cmd.append("--entitlements")
