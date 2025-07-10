@@ -19,7 +19,6 @@ WORKDIR /app
 
 RUN cp -R /app/treescript/docker.d/* /app/docker.d/ \
  && . /app/.venv/bin/activate \
- && cd /app/treescript \
- && uv pip install . \
+ && uv sync --no-dev --active --frozen --package treescript \
  && cd /app \
  && hg clone -r 90302f015ac8dd8877ef3ee24b5a62541142378b https://hg.mozilla.org/hgcustom/version-control-tools /app/version-control-tools
