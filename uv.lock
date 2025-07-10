@@ -4651,7 +4651,7 @@ wheels = [
 
 [[package]]
 name = "mozapkpublisher"
-version = "10.0.1"
+version = "11.0.0"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.13'",
@@ -4667,9 +4667,9 @@ dependencies = [
     { name = "pyjwt", version = "2.10.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "requests", marker = "python_full_version >= '3.11'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/97/82/7230071f5c315677547531ad8902e7ec6c3b49ffd462f2b3fa4fc922d77a/mozapkpublisher-10.0.1.tar.gz", hash = "sha256:d12289cc21cf65a227a36c0f32e780f1fa7943674c8cdb00006ab112327d3dda", size = 111513, upload-time = "2025-07-01T10:00:00.117Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/72/7b/7df691595f8d659cf7e7b9d782e6ec73b31fa57896637d38065d74f50662/mozapkpublisher-11.0.0.tar.gz", hash = "sha256:1e7801b01f373d7011267096c838914fa6c296a9164a67294a728dba82198bb8", size = 111610, upload-time = "2025-07-08T12:44:44.9Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/8e/16/ec9b2c59d26d17fbcc18857be9e392256c9e2e4cb4da456634cd48902ce9/mozapkpublisher-10.0.1-py3-none-any.whl", hash = "sha256:a45045ac149b42afd3533dfeb362c57b0a95d555bfda7d016985d7a603b6d0d6", size = 63722, upload-time = "2025-07-01T09:59:58.66Z" },
+    { url = "https://files.pythonhosted.org/packages/66/82/4bc6fa0ba76d2950e6fe03f944fd56899a37c62f7fe9678beb4ecf850287/mozapkpublisher-11.0.0-py3-none-any.whl", hash = "sha256:392c6f02cc0ce87ca6cfe41c7925e5a7727fc30be98731ef19879fc6a8f7ffd9", size = 63735, upload-time = "2025-07-08T12:44:43.046Z" },
 ]
 
 [[package]]
@@ -6000,7 +6000,7 @@ version = "5.0.0"
 source = { editable = "pushapkscript" }
 dependencies = [
     { name = "mozapkpublisher", version = "7.0.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
-    { name = "mozapkpublisher", version = "10.0.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "mozapkpublisher", version = "11.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "scriptworker" },
 ]
 
