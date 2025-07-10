@@ -33,7 +33,7 @@ from scriptworker_client.utils import run_command
 log = logging.getLogger(__name__)
 
 
-async def download_signing_resources(hardened_sign_config, folder):
+async def download_signing_resources(hardened_sign_config, folder: Path):
     """Caches all external resources needed for a signing task"""
     # Get unique entitlement/libconstraint urls
     resource_urls = set()
@@ -48,9 +48,13 @@ async def download_signing_resources(hardened_sign_config, folder):
     # Async download and set url -> file location mapping
     url_map = {}
     futures = []
+    file_counter = 0
     for url in resource_urls:
         filename = url.split("/")[-1]
-        dest = folder / filename
+        # Prevent overwriting files with same name
+        dest = folder / f"{file_counter}-{filename}"
+        file_counter += 1
+        assert not dest.exists(), f"File {dest} already exists, cannot overwrite"
         url_map[url] = dest
         log.info(f"Downloading resource: {filename} from {url}")
         futures.append(
