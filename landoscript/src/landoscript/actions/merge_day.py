@@ -99,7 +99,7 @@ async def run(
             # perform merge
             # `theirs` strategy means that the repo being modified will have its tree updated to match that
             # of the `target`.
-            merge_msg = f"Update {to_branch} to {from_branch}"
+            merge_msg = f"Promote {from_branch} to {to_branch}"
             actions.append({"action": "merge-onto", "target": end_revision, "strategy": "theirs", "commit_message": merge_msg})
     else:
         if merge_old_head:
