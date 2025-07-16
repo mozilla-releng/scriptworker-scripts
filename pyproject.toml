@@ -1,7 +1,7 @@
 [project]
 name = "scriptworker-scripts"
 version = "0.0.0"
-requires-python = ">=3.8"
+requires-python = ">=3.11"
 
 [tool.uv.workspace]
 members = [
@@ -51,7 +51,7 @@ docs = [
 
 [tool.black]
 line-length = 160
-target-version = ["py38", "py311"]
+target-version = ["py311"]
 include = '\.(wsgi|pyi?)$'
 exclude = '''
 /(

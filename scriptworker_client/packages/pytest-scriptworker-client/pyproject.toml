@@ -5,7 +5,6 @@ description = "scriptworker_client test fixtures"
 authors = [
     { name = "Ben Hearsum", email = "ben@mozilla.com" }
 ]
-requires-python = ">=3.8"
 dependencies = ["pytest"]
 
 [project.entry-points.pytest11]

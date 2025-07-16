@@ -15,10 +15,6 @@ tasks:
         definition: base-test
         args:
             PYTHON_VERSION: "3.11.9"
-    python38:
-        definition: base-test
-        args:
-            PYTHON_VERSION: "3.8.3"
 
     # Used by push-image kind
     skopeo: {}
