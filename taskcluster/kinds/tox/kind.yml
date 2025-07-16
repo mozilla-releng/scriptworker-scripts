@@ -62,7 +62,7 @@ tasks:
         resources:
             - bouncerscript
     configloader:
-        python-versions: [38, 311]
+        python-versions: [311]
         resources:
             - configloader
     githubscript:
@@ -88,7 +88,7 @@ tasks:
             - signingscript/docker.d
             - treescript/docker.d
     iscript:
-        python-versions: [38]
+        python-versions: [311]
         resources:
             - iscript
             - scriptworker_client
@@ -97,11 +97,6 @@ tasks:
         python-versions: [311]
         resources:
             - landoscript
-            - scriptworker_client
-    notarization_poller:
-        python-versions: [38]
-        resources:
-            - notarization_poller
             - scriptworker_client
     pushapkscript:
         python-versions: [311]
@@ -120,7 +115,7 @@ tasks:
         resources:
             - pushmsixscript
     scriptworker_client:
-        python-versions: [38, 311]
+        python-versions: [311]
         resources:
             - scriptworker_client
     shipitscript:
