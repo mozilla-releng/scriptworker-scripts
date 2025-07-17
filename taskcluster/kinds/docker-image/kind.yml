@@ -15,6 +15,7 @@ tasks:
         definition: base-test
         args:
             PYTHON_VERSION: "3.11.9"
+            UV_VERSION: "0.7.15"
 
     # Used by push-image kind
     skopeo: {}
@@ -22,6 +23,7 @@ tasks:
     base:
         args:
             PYTHON_VERSION: "3.11.9"
+            UV_VERSION: "0.7.15"
     addonscript:
         definition: script
         parent: base
