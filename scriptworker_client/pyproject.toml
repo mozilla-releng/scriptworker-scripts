@@ -27,8 +27,6 @@ dev-dependencies = [
     "mypy",
     "gql",
     "coverage",
-    "flake8",
-    "flake8_docstrings",
     "mock",
     "pytest-aioresponses",
     "pytest-asyncio",

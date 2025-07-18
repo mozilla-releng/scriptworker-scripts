@@ -241,7 +241,6 @@ async def sign_single_files(config, sign_config, all_paths):
 
 
 async def _do_sign_file(top_dir, abs_file, file_, sign_command, app_path_len, app_executable):
-    """Avoid flake8 complaining about sign_app being too complex."""
     # Deal with inner .app's in sign_app, not here.
     if top_dir[app_path_len:].count(".app") > 0:
         log.debug("Skipping %s because it's part of an inner app.", abs_file)

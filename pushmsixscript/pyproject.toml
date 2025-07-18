@@ -24,7 +24,6 @@ dev-dependencies = [
     "tox",
     "tox-uv",
     "coverage>=4.2b1",
-    "flake8",
     "mock",
     "pytest",
     "pytest-asyncio",

@@ -108,9 +108,7 @@ def get_branch(task, default=None):
     """
     branch = task.get("payload", {}).get("branch", default)
     if branch and branch.startswith(_GIT_REF_HEADS):
-        # fmt: off
-        branch = branch[len(_GIT_REF_HEADS):]   # Black and flake8 don't agree on this line
-        # fmt: on
+        branch = branch[len(_GIT_REF_HEADS) :]
     return branch
 
 
