@@ -2,8 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-FROM ghcr.io/astral-sh/uv:0.7.15-bookworm
 ARG PYTHON_VERSION
+ARG UV_VERSION
+
+FROM ghcr.io/astral-sh/uv:$UV_VERSION AS uv
+FROM python:$PYTHON_VERSION
+
+COPY --from=uv /uv /bin
 
 RUN ln -s /app/docker.d/healthcheck /bin/healthcheck \
  && groupadd --gid 10001 app \
@@ -26,7 +31,7 @@ USER app
 WORKDIR /app
 
 # Install configloader and create app venv
-RUN uv venv --python ${PYTHON_VERSION} /app/.venv \
+RUN uv venv /app/.venv \
  && uv venv /app/configloader_venv \
  && . /app/configloader_venv/bin/activate \
  &&  uv sync --no-dev --active --frozen --package configloader \

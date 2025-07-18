@@ -2,14 +2,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-FROM ghcr.io/astral-sh/uv:0.7.15-bookworm
-ARG  PYTHON_VERSION
+ARG PYTHON_VERSION
+ARG UV_VERSION
 
-ENV UV_PYTHON_INSTALL_DIR=/python
-ENV UV_PYTHON_PREFERENCE=only-managed
+FROM ghcr.io/astral-sh/uv:$UV_VERSION AS uv
+FROM python:$PYTHON_VERSION
+
+COPY --from=uv /uv /bin
+
 ENV UV_LINK_MODE=copy
-ENV UV_PYTHON=${PYTHON_VERSION}
-RUN uv python install ${UV_PYTHON}
 
 # Add worker user
 RUN mkdir /builds && \
