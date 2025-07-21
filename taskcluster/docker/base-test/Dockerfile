@@ -13,11 +13,10 @@ COPY --from=uv /uv /bin
 ENV UV_LINK_MODE=copy
 
 # Add worker user
-RUN mkdir /builds && \
-    groupadd -g 1000 -o worker && \
+RUN groupadd -g 1000 -o worker && \
     useradd -d /builds/worker -s /bin/bash -m worker -g 1000 -o -u 1000 && \
     mkdir /builds/worker/artifacts && \
-    chown worker:worker /builds/worker/artifacts
+    chown -R worker:worker /builds
 
 RUN ln -s /app/docker.d/healthcheck /bin/healthcheck
 
