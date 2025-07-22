@@ -149,7 +149,7 @@ async def test_rerun_previous_lando_job_succeeded(monkeypatch, aioresponses, res
 
 @pytest.mark.asyncio
 async def test_rerun_previous_lando_job_failed(monkeypatch, aioresponses, responses, github_installation_responses, context):
-    """A rerun that finds a lando job that succeeded should return failure
+    """A rerun that finds a lando job that failed should return failure
     and do nothing else."""
     monkeypatch.setenv("TASKCLUSTER_ROOT_URL", "https://tc")
     monkeypatch.setenv("TASK_ID", "task_id")
