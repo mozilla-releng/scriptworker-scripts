@@ -10,6 +10,7 @@ from scriptworker.utils import calculate_sleep_time
 import taskcluster
 from landoscript import lando, treestatus
 from landoscript.actions import android_l10n_import, android_l10n_sync, l10n_bump, merge_day, tag, version_bump
+from landoscript.errors import LandoscriptError, MergeConflictError
 from scriptworker_client.github import extract_github_repo_owner_and_name
 from scriptworker_client.github_client import GithubClient
 from scriptworker_client.utils import retry_async
@@ -123,7 +124,7 @@ async def process_actions(session, context, owner, repo, public_artifact_dir, br
     return lando_actions
 
 
-async def get_status_url_from_earlier_run(session: aiohttp.ClientSession) -> str | None:
+async def get_status_url_from_earlier_run(session: aiohttp.ClientSession) -> lando.LandoStatus | None:
     root_url = os.environ.get("TASKCLUSTER_ROOT_URL")
     task_id = os.environ.get("TASK_ID")
     run_id = os.environ.get("RUN_ID")
@@ -150,7 +151,7 @@ async def get_status_url_from_earlier_run(session: aiohttp.ClientSession) -> str
                 return
 
             # `getArtifact` has built in retries, and automatically raises on failure
-            artifactInfo = queue.getArtifact(task_id, run_id, "public/build/lando-status.txt")
+            artifactInfo = queue.getArtifact(task_id, run_id, "public/build/lando-status.json")
             assert artifactInfo
             url = artifactInfo.get("url")
             assert url
@@ -162,7 +163,8 @@ async def get_status_url_from_earlier_run(session: aiohttp.ClientSession) -> str
                 retry_exceptions=aiohttp.ClientResponseError,
                 sleeptime_callback=calculate_sleep_time,
             )
-            return (await resp.content.read()).decode()
+            info = await resp.json()
+            return lando.LandoStatus(status_url=info["url"], failure_reason=info["failure_reason"])
         except taskcluster.TaskclusterRestFailure as e:
             if e.status_code >= 500:
                 log.error("taskcluster is unavailable...cannot continue!")
@@ -198,11 +200,11 @@ async def async_main(context):
         os.makedirs(public_artifact_dir)
 
         # check for status url in earlier run
-        status_url = await get_status_url_from_earlier_run(session)
+        lando_status = await get_status_url_from_earlier_run(session)
 
-        if status_url:
-            log.info(f"Polling status url from earlier run: {status_url}")
-            await lando.poll_until_complete(session, lando_token, config["poll_time"], status_url)
+        if lando_status and lando_status.status_url and lando_status.failure_reason != "merge_conflict":
+            log.info(f"Polling status url from earlier run: {lando_status.status_url}")
+            await lando.poll_until_complete(session, lando_token, config["poll_time"], lando_status.status_url)
         else:
             lando_actions = await process_actions(session, context, owner, repo, public_artifact_dir, branch)
 
@@ -218,10 +220,27 @@ async def async_main(context):
                     lando.print_actions(lando_actions)
 
                     status_url = await lando.submit(session, lando_api, lando_token, lando_repo, lando_actions, config.get("sleeptime_callback"))
-                    with open(os.path.join(public_artifact_dir, "lando-status.txt"), "w+") as f:
-                        f.write(status_url)
+                    status = {"url": status_url, "failure_reason": ""}
+                    # write initial status out, to ensure that an URL is present immediately
+                    with open(os.path.join(public_artifact_dir, "lando-status.json"), "w+") as f:
+                        f.write(json.dumps(status))
 
-                    await lando.poll_until_complete(session, lando_token, config["poll_time"], status_url)
+                    try:
+                        await lando.poll_until_complete(session, lando_token, config["poll_time"], status_url)
+                    except Exception as e:
+                        # update status if we had an error
+                        if isinstance(e, MergeConflictError):
+                            status["failure_reason"] = "merge_conflict"
+                        elif isinstance(e, LandoscriptError):
+                            status["failure_reason"] = "landoscript_error"
+                        else:
+                            status["failure_reason"] = "unknown"
+
+                        # re-write status to ensure any updated error is written out
+                        with open(os.path.join(public_artifact_dir, "lando-status.json"), "w+") as f:
+                            f.write(json.dumps(status))
+
+                        raise
             else:
                 log.info("No lando actions to submit!")
 
