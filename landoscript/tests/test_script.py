@@ -1,3 +1,4 @@
+import json
 from aiohttp import ClientResponseError
 import pytest
 from scriptworker.client import STATUSES, TaskVerificationError
@@ -19,7 +20,13 @@ from .test_tag import assert_tag_response
 def assert_success(artifact_dir, req, commit_msg_strings, initial_values, expected_bumps, has_actions=True):
     if has_actions:
         assert (artifact_dir / "public/build/lando-actions.json").exists()
-        assert (artifact_dir / "public/build/lando-status.txt").exists()
+        lando_status = artifact_dir / "public/build/lando-status.json"
+        assert lando_status.exists()
+        with open(lando_status) as ls:
+            status = json.loads(ls.read())
+            assert "url" in status
+            # for successes, this will be present but empty
+            assert "failure_reason" in status
 
     assert "json" in req.kwargs
     assert "actions" in req.kwargs["json"]

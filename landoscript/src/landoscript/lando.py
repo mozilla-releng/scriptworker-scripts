@@ -1,6 +1,7 @@
 import asyncio
 import datetime
 import logging
+from dataclasses import dataclass
 from typing import Any, Callable, Tuple
 
 from aiohttp import ClientResponseError, ClientSession
@@ -13,6 +14,12 @@ log = logging.getLogger(__name__)
 
 
 LandoAction = dict[str, str]
+
+
+@dataclass
+class LandoStatus:
+    status_url: str
+    failure_reason: str
 
 
 def create_commit_action(commitmsg: str, diff: str) -> LandoAction:
