@@ -41,6 +41,11 @@ dev-dependencies = [
     "types-requests",
 ]
 
+[project.optional-dependencies]
+scriptworker = [
+    "scriptworker",
+]
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"

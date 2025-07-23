@@ -1600,6 +1600,11 @@ dependencies = [
     { name = "taskcluster" },
 ]
 
+[package.optional-dependencies]
+scriptworker = [
+    { name = "scriptworker" },
+]
+
 [package.dev-dependencies]
 dev = [
     { name = "coverage" },
@@ -1624,10 +1629,12 @@ requires-dist = [
     { name = "packaging" },
     { name = "pexpect" },
     { name = "requests-hawk" },
+    { name = "scriptworker", marker = "extra == 'scriptworker'" },
     { name = "scriptworker-client", editable = "scriptworker_client" },
     { name = "six" },
     { name = "taskcluster" },
 ]
+provides-extras = ["scriptworker"]
 
 [package.metadata.requires-dev]
 dev = [
