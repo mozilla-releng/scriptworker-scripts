@@ -27,7 +27,7 @@ RUN ["/usr/local/go/bin/go", "build", \
     "./cmd/umoci"]
 
 
-FROM debian:buster
+FROM debian:bookworm
 
 # %include-run-task
 

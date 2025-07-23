@@ -27,7 +27,7 @@ def set_task_requirements(config, tasks):
     for task in tasks:
         name = task["name"]
         # dependencies
-        task.setdefault("dependencies", {}).update({"image": f"build-docker-image-{name}"})
+        task.setdefault("dependencies", {}).update({"image": f"docker-image-{name}"})
         task["run-on-git-branches"].extend((f"^dev\-{name}$", f"^production\-{name}$"))
         yield task
 

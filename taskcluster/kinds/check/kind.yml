@@ -27,7 +27,6 @@ tasks:
         description: "ruff-py311"
         run:
             using: run-task
-            cache-dotcache: false
             checkout:
                 scriptworker: {}
             cwd: '{checkout}'
@@ -40,7 +39,6 @@ tasks:
         description: "ruff-format"
         run:
             using: run-task
-            cache-dotcache: false
             checkout:
                 scriptworker: {}
             cwd: '{checkout}'
@@ -53,7 +51,6 @@ tasks:
         description: "yamllint"
         run:
             using: run-task
-            cache-dotcache: false
             checkout:
                 scriptworker: {}
             cwd: '{checkout}'
