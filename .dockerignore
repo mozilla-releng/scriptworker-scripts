@@ -30,7 +30,7 @@ coverage.xml
 docs/
 
 # Human readable content
-**/*.rst
+# **/*.rst
 # githubscript and pushapkscript need README.md files
 # **/*.md
 
