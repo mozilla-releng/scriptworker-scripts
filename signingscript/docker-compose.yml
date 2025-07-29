@@ -1,0 +1,30 @@
+services:
+  base:
+    build:
+      args:
+        UV_VERSION: 0.7.15
+        PYTHON_VERSION: 3.11.9
+      context: ../taskcluster/docker/base
+      additional_contexts:
+        scratch: ../
+  signingscript:
+    build:
+      args:
+        DOCKER_IMAGE_PARENT: base
+      context: ../taskcluster/docker/signingscript
+      additional_contexts:
+        base: service:base
+        signingscript/scratch: ../
+  autograph:
+    image: mozilla/autograph:latest
+    expose:
+      - "8000"
+    # volumes:
+    #   - autographtmp:/tmp/
+    logging:
+      driver: none
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/__heartbeat__"]
+      interval: 2s
+      timeout: 5s
+      retries: 3

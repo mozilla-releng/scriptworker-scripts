@@ -2,13 +2,20 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+ARG DOCKER_IMAGE_PARENT
+
 FROM $DOCKER_IMAGE_PARENT
 
+COPY --from=signingscript/scratch . /topsrcdir/
+
 # %include signingscript
-ADD --chown=app:app topsrcdir/signingscript /app/signingscript
+# ADD --chown=app:app topsrcdir/signingscript /app/signingscript
 
 # %include vendored
-ADD --chown=app:app topsrcdir/vendored /app/vendored
+# ADD --chown=app:app topsrcdir/vendored /app/vendored
+
+RUN cp -R /topsrcdir/signingscript/ /app/signingscript/
+RUN cp -R /topsrcdir/vendored/ /app/vendored/
 
 # Root for installs
 USER root
