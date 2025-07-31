@@ -183,14 +183,18 @@ clouds:
             enabled: True
             product_buckets:
               appservices: 'moz-fx-productdelivery-pr-38b5-productdelivery'
-        'COT_PRODUCT == "translations" && (ENV == "dev" || ENV == "fake-prod")':
+        'COT_PRODUCT == "translations" && ENV == "dev"':
           development:
             credentials: { "$eval": "GCS_DEP_CREDS" }
             fail_task_on_error: True
             enabled: True
             product_buckets:
               translations: 'moz-fx-translations-data--5f91-stage-translations-data'
-        'COT_PRODUCT == "translations" && ENV == "prod"':
+        # translations is an L1 only project, so despite this value, this is actually
+        # the real production pool. a bunch of assumptions in the scriptworker-scripts
+        # repository, and the lack of CoT keys on L1 workers prevents us from setting
+        # this appropriately.
+        'COT_PRODUCT == "translations" && (ENV == "fake-prod" || ENV == "prod")':
           production:
             credentials: { "$eval": "GCS_RELEASE_CREDS" }
             fail_task_on_error: True
