@@ -195,6 +195,15 @@ clouds:
         # repository, and the lack of CoT keys on L1 workers prevents us from setting
         # this appropriately.
         'COT_PRODUCT == "translations" && (ENV == "fake-prod" || ENV == "prod")':
+          # we need to be able to upload to both `development` and `production`
+          # buckets on these workers, eg: so we can test changes to upload logic
+          # without using dev workers
+          development:
+            credentials: { "$eval": "GCS_DEP_CREDS" }
+            fail_task_on_error: True
+            enabled: True
+            product_buckets:
+              translations: 'moz-fx-translations-data--5f91-stage-translations-data'
           production:
             credentials: { "$eval": "GCS_RELEASE_CREDS" }
             fail_task_on_error: True
