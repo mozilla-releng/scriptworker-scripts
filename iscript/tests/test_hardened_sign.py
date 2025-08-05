@@ -39,7 +39,7 @@ hs_config = [
     {"deep": True, "runtime": True, "force": True, "entitlements": "https://foo.bar", "libconstraints": "https://foo.bar/libconstraints", "globs": ["/"]}
 ]
 hs_config_no_libconstraints = [{"deep": True, "runtime": True, "force": True, "entitlements": "https://foo.bar", "globs": ["/"]}]
-
+hs_config_with_identifier = [hs_config[0] | {"identifier": "foo.bar.baz"}]
 
 @pytest.mark.asyncio
 async def test_download_signing_resources(mocker):
@@ -107,6 +107,8 @@ def test_build_sign_command(tmpdir):
         (True, None, hs_config_no_libconstraints),
         (False, {"profile_name": "comexamplehelloworld.provisionprofile", "target_path": "/Contents/embedded.provisionprofile"}, hs_config_no_libconstraints),
         (True, {"profile_name": "comexamplehelloworld.provisionprofile", "target_path": "/Contents/embedded.provisionprofile"}, hs_config_no_libconstraints),
+        (False, None, hs_config_with_identifier),
+        (True, None, hs_config_with_identifier),
     ),
 )
 async def test_sign_hardened_behavior(mocker, tmpdir, create_pkg, provision_profile, hardened_sign_config):
@@ -163,6 +165,11 @@ async def test_sign_hardened_behavior(mocker, tmpdir, create_pkg, provision_prof
     async def mock_run_command(cmd, **kwargs):
         if cmd[0] != "codesign":
             return orig_run_command(cmd, **kwargs)
+
+        if "identifier" in hardened_sign_config[0]:
+            assert "--identifier" in cmd
+        else:
+            assert "--identifier" not in cmd
 
         # Verify the codesign arguments
         assert "--sign" in cmd
