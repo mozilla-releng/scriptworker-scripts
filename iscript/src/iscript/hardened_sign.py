@@ -129,6 +129,10 @@ def build_sign_command(app_path, identity, keychain, config, file_map):
     if config.get("requirements"):
         cmd.append("--requirements")
         cmd.append(config["requirements"])
+    # Explicit codesign identifier
+    if config.get("identifier"):
+        cmd.append("--identifier")
+        cmd.append(config["identifier"])
     # --options
     if config.get("runtime"):
         cmd.append("--options")
