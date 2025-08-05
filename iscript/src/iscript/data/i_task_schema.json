@@ -131,6 +131,9 @@
                   "libconstraints": {
                     "type": "string"
                   },
+                  "identifier": {
+                    "type": "string"
+                  },
                   "globs": {
                     "type": "array",
                     "minItems": 1,
