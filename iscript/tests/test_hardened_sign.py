@@ -41,6 +41,7 @@ hs_config = [
 hs_config_no_libconstraints = [{"deep": True, "runtime": True, "force": True, "entitlements": "https://foo.bar", "globs": ["/"]}]
 hs_config_with_identifier = [hs_config[0] | {"identifier": "foo.bar.baz"}]
 
+
 @pytest.mark.asyncio
 async def test_download_signing_resources(mocker):
     mocker.patch.object(hs, "retry_async", new=noop_async)
