@@ -1220,7 +1220,7 @@ async def test_notarize_3_behavior(mocker, tmpdir, create_pkg):
             "upstreamArtifacts": [
                 {
                     "taskId": "task1",
-                    "formats": [],
+                    "formats": ["macapp"],
                     "paths": ["public/build/1/target.tar.gz", "public/build/2/target.tar.gz", "public/build/1/target.pkg", "public/build/2/target.pkg"],
                 },
                 {"taskId": "task2", "paths": ["public/build/3/target.tar.gz", "public/build/3/target.tar.gz"], "formats": []},

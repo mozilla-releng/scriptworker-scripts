@@ -28,9 +28,39 @@ from iscript.mac import (
 from iscript.util import get_sign_config
 from scriptworker_client.aio import download_file, raise_future_exceptions, retry_async
 from scriptworker_client.exceptions import DownloadError
-from scriptworker_client.utils import run_command
+from scriptworker_client.utils import get_artifact_path, run_command
 
 log = logging.getLogger(__name__)
+
+
+def get_upstream_signing_resources(hardened_sign_config, task_id, work_dir):
+    """Get the signing resources from the task payload for a specific upstream task"""
+
+    resource_paths = []
+    # Collect paths
+    for resource_key in ("entitlements", "libconstraints"):
+        for cfg in hardened_sign_config:
+            if not cfg.get(resource_key, None):
+                continue
+            if cfg[resource_key].startswith("http"):
+                # URL resource - skip
+                continue
+            if "//" in cfg[resource_key] or cfg[resource_key].startswith("/"):
+                # Raise if illegal path
+                raise IScriptError(f"Illegal path in signing resource: {cfg[resource_key]}")
+            resource_paths.append(cfg[resource_key])
+
+    # Map out paths to their absolute locations
+    signing_resources = {}
+    for resource_path in resource_paths:
+        # Resolve the path relative to the work directory
+        abs_path = Path(get_artifact_path(task_id, resource_path, work_dir=work_dir))
+        if not abs_path.exists():
+            raise IScriptError(f"Signing resource {abs_path} does not exist")
+        if not abs_path.is_file():
+            raise IScriptError(f"Signing resource {abs_path} is not a file")
+        signing_resources[resource_path] = abs_path.resolve()
+    return signing_resources
 
 
 async def download_signing_resources(hardened_sign_config, folder: Path):
@@ -42,6 +72,9 @@ async def download_signing_resources(hardened_sign_config, folder: Path):
     for resource_key in ("entitlements", "libconstraints"):
         for cfg in hardened_sign_config:
             if not cfg.get(resource_key, None):
+                continue
+            if not cfg[resource_key].startswith("http"):
+                # Not an URL - skip
                 continue
             resource_urls.add(cfg[resource_key])
 
@@ -107,7 +140,7 @@ def copy_provisioning_profile(pprofile, app_path, config):
         raise IScriptError("Illegal directory traversal resolving provisioning profile destination")
     # If profile already exists in app, then replace
     if destination.exists():
-        log.warn(f"Profile already exist. Replacing {str(destination)}")
+        log.warning(f"Profile already exist. Replacing {str(destination)}")
     copy2(source_file, destination)
     log.debug(f"Copied {source_file} to {destination}")
 
@@ -174,7 +207,7 @@ async def sign_hardened_behavior(config, task, create_pkg=False, **kwargs):
     os.mkdir(tempdir)
 
     hardened_sign_config = task["payload"]["hardened-sign-config"]
-    sign_config_files = await download_signing_resources(hardened_sign_config, tempdir)
+    external_config_files = await download_signing_resources(hardened_sign_config, tempdir)
 
     non_langpack_apps = []
     for app in get_app_paths(config, task):
@@ -213,6 +246,10 @@ async def sign_hardened_behavior(config, task, create_pkg=False, **kwargs):
 
     # sign apps concurrently
     for app in non_langpack_apps:
+        # Upstream config files need to be fetched for each app
+        #  as we could have multiple upstream signable builds from different tasks
+        upstream_config_files = get_upstream_signing_resources(hardened_sign_config, app.upstream_task_id, config["work_dir"])
+        sign_config_files = {**external_config_files, **upstream_config_files}
         for config_settings in hardened_sign_config:
             check_globs(app.app_path, config_settings["globs"])
             command = build_sign_command(

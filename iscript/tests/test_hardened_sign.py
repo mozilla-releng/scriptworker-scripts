@@ -47,6 +47,22 @@ async def test_download_signing_resources(mocker):
     await hs.download_signing_resources(hs_config, Path("fakefolder"))
 
 
+def test_get_upstream_signing_resources(tmpdir):
+    task_id = "task1"
+    for path in ["public/build/entitlements.xml", "public/build/libconstraints.xml"]:
+        target_path = Path(tmpdir) / "cot" / task_id / path
+        target_path.parent.mkdir(parents=True, exist_ok=True)
+        target_path.touch()
+    cfg = [
+        {"entitlements": "public/build/entitlements.xml", "libconstraints": "https://moz.c/public/build/libconstraints.xml"},
+        {"entitlements": "public/build/entitlements.xml", "libconstraints": "public/build/libconstraints.xml"},
+    ]
+    resources = hs.get_upstream_signing_resources(cfg, task_id, tmpdir)
+    # entitlements are the same, so shouldn't be duplicated - only 2 upstream files should exist
+    assert len(resources) == 2
+    assert all(p.exists() for _, p in resources.items())
+
+
 def test_check_globs():
     globs = ["doesntexist/*", "/*"]
     hs.check_globs(TEST_DATA_DIR, globs)
@@ -141,7 +157,7 @@ async def test_sign_hardened_behavior(mocker, tmpdir, create_pkg, provision_prof
         ],
         "payload": {
             "upstreamArtifacts": [
-                {"taskId": "task-identifer", "paths": ["public/build/example.tar.gz"], "formats": []},
+                {"taskId": "task-identifer", "paths": ["public/build/example.tar.gz"], "formats": ["macapp"]},
             ],
             "behavior": "mac_sign_hardened",
             "hardened-sign-config": hardened_sign_config,
