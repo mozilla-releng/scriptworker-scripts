@@ -42,7 +42,7 @@ def get_upstream_signing_resources(hardened_sign_config, task_id, work_dir):
         for cfg in hardened_sign_config:
             if not cfg.get(resource_key, None):
                 continue
-            if cfg[resource_key].startswith("http"):
+            if cfg[resource_key].startswith(("http://", "https://")):
                 # URL resource - skip
                 continue
             if "//" in cfg[resource_key] or cfg[resource_key].startswith("/"):
@@ -73,7 +73,7 @@ async def download_signing_resources(hardened_sign_config, folder: Path):
         for cfg in hardened_sign_config:
             if not cfg.get(resource_key, None):
                 continue
-            if not cfg[resource_key].startswith("http"):
+            if not cfg[resource_key].startswith(("http://", "https://")):
                 # Not an URL - skip
                 continue
             resource_urls.add(cfg[resource_key])
