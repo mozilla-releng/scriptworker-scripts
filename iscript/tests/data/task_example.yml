@@ -1,0 +1,105 @@
+provisionerId: scriptworker-prov-v1
+workerType: dep-gecko-signing-mac14m2
+taskQueueId: scriptworker-prov-v1/dep-gecko-signing-mac14m2
+schedulerId: gecko-level-3
+projectId: none
+taskGroupId: YgSHAHUoQAilCkPhwpJRtQ
+dependencies:
+  - HsPqAp5cTzCZyGVBBBNc-w
+requires: all-completed
+routes:
+  - tc-treeherder.v2.mozilla-central.320fe0da2b9f0462e2afaa418ce3560763ecadb2
+priority: medium
+retries: 5
+created: '2025-07-30T09:36:09.857Z'
+deadline: '2025-07-31T09:36:09.857Z'
+expires: '2025-10-28T09:36:09.857Z'
+scopes:
+  - project:releng:signing:cert:dep-signing
+payload:
+  behavior: mac_sign_and_pkg_hardened
+  maxRunTime: 600
+  upstreamArtifacts:
+    - paths:
+        - public/build/target.dmg
+      taskId: HsPqAp5cTzCZyGVBBBNc-w
+      formats:
+        - macapp
+        - gcp_prod_autograph_widevine
+      taskType: build
+  hardened-sign-config:
+    - deep: false
+      force: true
+      globs:
+        - /Contents/MacOS/plugin-container.app
+      runtime: true
+      entitlements: >-
+        https://hg.mozilla.org/mozilla-central/raw-file/320fe0da2b9f0462e2afaa418ce3560763ecadb2/security/mac/hardenedruntime/developer/plugin-container.xml
+    - deep: false
+      force: true
+      globs:
+        - /Contents/MacOS/media-plugin-helper.app
+      runtime: true
+      entitlements: >-
+        https://hg.mozilla.org/mozilla-central/raw-file/320fe0da2b9f0462e2afaa418ce3560763ecadb2/security/mac/hardenedruntime/developer/media-plugin-helper.xml
+    - deep: false
+      force: true
+      globs:
+        - /Contents/MacOS/crashhelper
+        - /Contents/MacOS/crashreporter.app
+        - >-
+          /Contents/MacOS/updater.app/Contents/Frameworks/UpdateSettings.framework
+        - /Contents/MacOS/updater.app
+        - /Contents/Library/LaunchServices/org.mozilla.updater
+        - /Contents/MacOS/pingsender
+        - /Contents/MacOS/nmhproxy
+        - /Contents/Frameworks/ChannelPrefs.framework
+      runtime: true
+      entitlements: >-
+        https://hg.mozilla.org/mozilla-central/raw-file/320fe0da2b9f0462e2afaa418ce3560763ecadb2/security/mac/hardenedruntime/developer/utility.xml
+    - deep: false
+      force: true
+      globs:
+        - /Contents/MacOS/XUL
+        - /Contents/MacOS/*.dylib
+        - /Contents/Resources/gmp-clearkey/*/*.dylib
+      runtime: true
+    - deep: false
+      force: true
+      globs:
+        - /
+      runtime: true
+      entitlements: >-
+        https://hg.mozilla.org/mozilla-central/raw-file/320fe0da2b9f0462e2afaa418ce3560763ecadb2/security/mac/hardenedruntime/developer/browser.xml
+  requirements-plist-url: >-
+    https://hg.mozilla.org/mozilla-central/raw-file/320fe0da2b9f0462e2afaa418ce3560763ecadb2/build/package/mac_osx/requirements.plist
+metadata:
+  name: build-mac-signing-macosx64/debug
+  owner: example@mozilla.com
+  source: >-
+    https://hg.mozilla.org/mozilla-central/file/320fe0da2b9f0462e2afaa418ce3560763ecadb2/taskcluster/kinds/build-mac-signing
+  description: >-
+    Signing of locale(s) 'en-US' for build 'macosx64/debug' ([Treeherder
+    job](https://treeherder.mozilla.org/#/jobs?repo=mozilla-central&revision=320fe0da2b9f0462e2afaa418ce3560763ecadb2&selectedTaskRun=Z9pwgnVkQcy9LTNKp1MUfA))
+tags:
+  os: macosx
+  kind: build-mac-signing
+  label: build-mac-signing-macosx64/debug
+  project: mozilla-central
+  retrigger: 'false'
+  trust-domain: gecko
+  createdForUser: example@mozilla.com
+  worker-implementation: scriptworker
+extra:
+  index:
+    rank: 1753867527
+  parent: YgSHAHUoQAilCkPhwpJRtQ
+  treeherder:
+    tier: 1
+    symbol: BMS
+    jobKind: build
+    machine:
+      platform: osx-cross
+    collection:
+      debug: true
+  treeherder-platform: osx-cross/debug

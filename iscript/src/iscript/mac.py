@@ -68,6 +68,7 @@ class App(object):
     target_bundle_path = attr.ib(default="")
     target_pkg_path = attr.ib(default="")
     formats = attr.ib(default="")
+    upstream_task_id = attr.ib(default="")
     artifact_prefix = attr.ib(default="")
 
     def check_required_attrs(self, required_attrs):
@@ -478,9 +479,18 @@ def get_app_paths(config, task):
     all_paths = []
     for upstream_artifact_info in task["payload"]["upstreamArtifacts"]:
         for subpath in upstream_artifact_info["paths"]:
-            orig_path = get_artifact_path(upstream_artifact_info["taskId"], subpath, work_dir=config["work_dir"])
             formats = upstream_artifact_info["formats"]
-            app = App(orig_path=orig_path, formats=formats, artifact_prefix=_get_artifact_prefix(subpath))
+            if not formats:
+                # Signing resources don't have a signing format
+                continue
+            orig_path = get_artifact_path(upstream_artifact_info["taskId"], subpath, work_dir=config["work_dir"])
+
+            app = App(
+                orig_path=orig_path,
+                formats=formats,
+                artifact_prefix=_get_artifact_prefix(subpath),
+                upstream_task_id=upstream_artifact_info["taskId"],
+            )
             if "mac_geckodriver" in formats or "mac_single_file" in formats:
                 app.single_file_globs = upstream_artifact_info.get("singleFileGlobs", ["geckodriver"])
             all_paths.append(app)

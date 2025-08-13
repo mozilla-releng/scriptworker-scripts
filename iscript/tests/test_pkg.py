@@ -59,7 +59,7 @@ async def test_sign_pkg_behavior(mocker, tmpdir):
         ],
         "payload": {
             "upstreamArtifacts": [
-                {"taskId": "task-identifer", "paths": ["public/build/example.tar.gz", "public/build/example.pkg"], "formats": []},
+                {"taskId": "task-identifer", "paths": ["public/build/example.tar.gz", "public/build/example.pkg"], "formats": ["mac_single_file"]},
             ]
         },
     }

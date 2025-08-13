@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # coding=utf-8
 
-from pathlib import Path
+import itertools
 import os
-import pytest
-import copy
+from pathlib import Path
 from shutil import copy2
+
+import pytest
 
 import iscript.hardened_sign as hs
 from iscript.exceptions import IScriptError
@@ -27,24 +28,57 @@ async def fail_async(*args, **kwargs):
 
 
 def symlink_upstream(config, task):
-    data_dir = os.path.join(os.path.dirname(__file__), "data")
+    data_dir = Path(__file__).parent / "data"
     work_dir = config["work_dir"]
     for artifact in task["payload"]["upstreamArtifacts"]:
-        upstream_dir = os.path.join(work_dir, "cot", artifact["taskId"], "public", "build")
-        makedirs(os.path.dirname(upstream_dir))
-        os.symlink(data_dir, upstream_dir)
+        upstream_dir = Path(work_dir) / "cot" / artifact["taskId"]
+        if not artifact.get("formats"):
+            # for path in artifact["paths"]:
+            #     (upstream_dir / path).touch()
+            continue
+        for path in artifact["paths"]:
+            filename = path.split("/")[-1]
+            makedirs((upstream_dir / path).parent)
+            copy2(data_dir / filename, upstream_dir / path)
+            # Path(upstream_dir / path).hardlink_to(data_dir / path)
 
 
-hs_config = [
-    {"deep": True, "runtime": True, "force": True, "entitlements": "https://foo.bar", "libconstraints": "https://foo.bar/libconstraints", "globs": ["/"]}
-]
-hs_config_no_libconstraints = [{"deep": True, "runtime": True, "force": True, "entitlements": "https://foo.bar", "globs": ["/"]}]
+_base_hs = {"deep": True, "runtime": True, "force": True, "globs": ["/"]}
+hs_config = [{**_base_hs, "entitlements": "https://foo.bar", "libconstraints": "https://foo.bar/libconstraints"}]
+hs_config_no_libconstraints = [{**_base_hs, "entitlements": "https://foo.bar"}]
+hs_config_upstream = [{**_base_hs, "entitlements": "public/build/entitlements.xml", "libconstraints": "public/build/libconstraints.xml"}]
+hs_config_mixed = [{**_base_hs, "entitlements": "https://foo.bar", "libconstraints": "public/build/libconstraints.xml"}]
 
 
 @pytest.mark.asyncio
 async def test_download_signing_resources(mocker):
     mocker.patch.object(hs, "retry_async", new=noop_async)
     await hs.download_signing_resources(hs_config, Path("fakefolder"))
+
+
+@pytest.mark.parametrize(
+    "entitlements,libconstraints",
+    list(
+        itertools.product(
+            ["public/build/entitlements.xml", "https://moz.c/public/build/entitlements.xml"],  # entitlements
+            ["public/build/libconstraints.xml", "https://moz.c/public/build/libconstraints.xml"],  # libconstraints
+        )
+    ),
+)
+def test_get_upstream_signing_resources(tmpdir, entitlements, libconstraints):
+    task_id = "task1"
+    for path in ["public/build/entitlements.xml", "public/build/libconstraints.xml"]:
+        target_path = Path(tmpdir) / "cot" / task_id / path
+        target_path.parent.mkdir(parents=True, exist_ok=True)
+        target_path.touch()
+    # Test with more than one record
+    cfg = [{"entitlements": entitlements, "libconstraints": libconstraints}, {"entitlements": entitlements, "libconstraints": libconstraints}]
+    resources = hs.get_upstream_signing_resources(cfg, task_id, tmpdir)
+    # Should only return resources that are not url
+    assert len(resources) == sum(not e.startswith("https://") for e in (entitlements, libconstraints))
+    for key, path in resources.items():
+        assert path.exists()
+        assert key in [entitlements, libconstraints]
 
 
 def test_check_globs():
@@ -107,11 +141,21 @@ def test_build_sign_command(tmpdir):
         (True, None, hs_config_no_libconstraints),
         (False, {"profile_name": "comexamplehelloworld.provisionprofile", "target_path": "/Contents/embedded.provisionprofile"}, hs_config_no_libconstraints),
         (True, {"profile_name": "comexamplehelloworld.provisionprofile", "target_path": "/Contents/embedded.provisionprofile"}, hs_config_no_libconstraints),
+        (False, None, hs_config_upstream),
+        (True, None, hs_config_upstream),
+        (False, {"profile_name": "comexamplehelloworld.provisionprofile", "target_path": "/Contents/embedded.provisionprofile"}, hs_config_upstream),
+        (True, {"profile_name": "comexamplehelloworld.provisionprofile", "target_path": "/Contents/embedded.provisionprofile"}, hs_config_upstream),
+        (False, None, hs_config_mixed),
+        (True, None, hs_config_mixed),
+        (False, {"profile_name": "comexamplehelloworld.provisionprofile", "target_path": "/Contents/embedded.provisionprofile"}, hs_config_mixed),
+        (True, {"profile_name": "comexamplehelloworld.provisionprofile", "target_path": "/Contents/embedded.provisionprofile"}, hs_config_mixed),
     ),
 )
 async def test_sign_hardened_behavior(mocker, tmpdir, create_pkg, provision_profile, hardened_sign_config):
     artifact_dir = os.path.join(str(tmpdir), "artifact")
     work_dir = os.path.join(str(tmpdir), "work")
+    makedirs(artifact_dir)
+    makedirs(work_dir)
     config = {
         "artifact_dir": artifact_dir,
         "work_dir": work_dir,
@@ -141,7 +185,8 @@ async def test_sign_hardened_behavior(mocker, tmpdir, create_pkg, provision_prof
         ],
         "payload": {
             "upstreamArtifacts": [
-                {"taskId": "task-identifer", "paths": ["public/build/example.tar.gz"], "formats": []},
+                {"taskId": "task1", "paths": ["public/build/example.tar.gz"], "formats": ["macapp"]},
+                {"taskId": "task2", "paths": ["public/build/entitlements.xml", "public/build/libconstraints.xml"], "formats": []},
             ],
             "behavior": "mac_sign_hardened",
             "hardened-sign-config": hardened_sign_config,
@@ -155,8 +200,14 @@ async def test_sign_hardened_behavior(mocker, tmpdir, create_pkg, provision_prof
         with open(os.path.join(pprofile_dir, provision_profile["profile_name"]), "w"):
             pass
 
-    async def mock_download_signing_resources(config, folder):
-        return {hs_config[0]["entitlements"]: "entitlements-filename.xml", hs_config[0]["libconstraints"]: "libconstraints-filename.xml"}
+    def mock_get_upstream_signing_resources(*_):
+        res = {hardened_sign_config[0]["entitlements"]: "public/build/entitlements.xml"}
+        if libconstraints := hardened_sign_config[0].get("libconstraints", None):
+            res[libconstraints] = "public/build/libconstraints.xml"
+        return res
+
+    async def mock_download_signing_resources(*_):
+        return mock_get_upstream_signing_resources(None, None, None)
 
     orig_run_command = hs.run_command
 
@@ -171,6 +222,8 @@ async def test_sign_hardened_behavior(mocker, tmpdir, create_pkg, provision_prof
         pass
 
     mocker.patch.object(hs, "download_signing_resources", new=mock_download_signing_resources)
+    # These functions return the exact same type of data
+    mocker.patch.object(hs, "get_upstream_signing_resources", new=mock_get_upstream_signing_resources)
     mocker.patch.object(hs, "unlock_keychain", new=noop_async)
     mocker.patch.object(hs, "update_keychain_search_path", new=noop_async)
     mocker.patch.object(hs, "get_sign_config", return_value=config["mac_config"]["dep"])
