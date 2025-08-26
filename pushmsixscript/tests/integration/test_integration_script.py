@@ -81,7 +81,7 @@ def test_script_can_push_msix(monkeypatch, config, channel, publish_mode, raises
         "applicationPackages": [{"minimumDirectXVersion": 1, "minimumSystemRam": 1024}],
         "packageDeliveryOptions": {"packageRollout": {"isPackageRollout": False}},
     }
-    mocked_response = {}
+    mocked_response = {"status": "PreProcessing"}
     status_code = 200
     with requests_mock.Mocker() as m:
         url = f"{login_url}/{tenant_id}/oauth2/token"

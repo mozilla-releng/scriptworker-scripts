@@ -522,7 +522,8 @@ def test_commit_submission(status_code, raises):
     "status_code, raises, mocked_response, exc",
     (
         (200, False, {"status": "CommitStarted"}, None),
-        (200, False, {"status": "Done"}, None),
+        (200, False, {"status": "PreProcessing"}, None),
+        (200, False, {"status": "PendingCommit"}, None),
         (200, True, {"status": "CommitFailed"}, TaskError),
         (404, True, {}, requests.exceptions.HTTPError),
         (503, True, {}, requests.exceptions.HTTPError),
@@ -546,7 +547,7 @@ def test_get_submission_status(status_code, raises, mocked_response, exc):
             else:
                 status = microsoft_store._get_submission_status(CONFIG, channel, session, submission_id, headers)
                 assert status == mocked_response
-                if mocked_response.get("status") != "CommitStarted":
+                if mocked_response.get("status") in ("PreProcessing", "CommitFailed"):
                     status = microsoft_store._wait_for_commit_completion(CONFIG, channel, session, submission_id, headers)
                     assert status
 
@@ -554,12 +555,12 @@ def test_get_submission_status(status_code, raises, mocked_response, exc):
 @pytest.mark.parametrize(
     "submission_response, raises, exc",
     (
-        # TODO: Confirm the status for a complete submission
-        ({"status": "Complete"}, False, None),
+        ({"status": "PreProcessing"}, False, None),
         # Max polling attempts
         ({"status": "CommitStarted"}, True, TimeoutError),
+        ({"status": "PendingCommit"}, True, TimeoutError),
         # Failed
-        ({"status": "Failed"}, True, TaskError),
+        ({"status": "CommitFailed"}, True, TaskError),
     ),
 )
 def test_wait_for_commit_completion(monkeypatch, submission_response, raises, exc):
@@ -576,7 +577,7 @@ def test_wait_for_commit_completion(monkeypatch, submission_response, raises, ex
 @pytest.mark.parametrize(
     "status_code, raises, mocked_response",
     (
-        (200, False, {"status": "Done"}),
+        (200, False, {"status": "PreProcessing"}),
         (404, True, {}),
         (503, True, {}),
     ),

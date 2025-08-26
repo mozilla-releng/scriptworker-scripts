@@ -273,7 +273,7 @@ def _wait_for_commit_completion(config, channel, session, submission_id, headers
     log.info(response_json.get("status"))
     attempts = 1
     # TODO: Confirm what the status is for a complete submission!
-    while response_json.get("status") == "CommitStarted":
+    while response_json.get("status") not in ("PreProcessing", "CommitFailed"):
         if attempts > COMMIT_POLL_MAX_ATTEMPTS:
             log.error(
                 "This task reached the max polling attempts for a submission and may "
