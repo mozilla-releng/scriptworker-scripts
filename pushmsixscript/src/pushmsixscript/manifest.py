@@ -46,7 +46,7 @@ def verify_msix(file_path):
             version = config.get("App", "Version", fallback="unknown")
             build_id = config.get("App", "BuildId", fallback="unknown")
             code_name = config.get("App", "CodeName", fallback=config.get("App", "Name", fallback="unknown"))
-            log.info(f"Firefox version: {version}")
-            log.info(f"Firefox build id: {build_id}")
-            log.info(f"Firefox code name: {code_name}")
+            log.info(f"App version: {version}")
+            log.info(f"App build id: {build_id}")
+            log.info(f"App code name: {code_name}")
     return True
