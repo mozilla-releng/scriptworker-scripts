@@ -14,7 +14,7 @@ def test_get_msix_channel_without_payload_raises():
 @pytest.mark.parametrize("raises, channel", ((False, "release"), (False, "mock"), (True, "bogus")))
 def test_get_msix_channel_dep(raises, channel):
     task = {"scopes": [], "payload": {"channel": channel}}
-    config = {"push_to_store": False}
+    config = {"push_to_store": False, "taskcluster_scope_prefix": "project:releng:microsoftstore:"}
     if raises:
         with pytest.raises(TaskVerificationError):
             get_msix_channel(config, task)
@@ -32,7 +32,7 @@ def test_get_msix_channel_dep(raises, channel):
 )
 def test_get_msix_channel_prod(raises, scopes, channel):
     task = {"scopes": scopes, "payload": {"channel": channel}}
-    config = {"push_to_store": True}
+    config = {"push_to_store": True, "taskcluster_scope_prefix": "project:releng:microsoftstore:"}
     if raises:
         with pytest.raises(TaskVerificationError):
             get_msix_channel(config, task)
@@ -52,5 +52,5 @@ def test_get_msix_channel_prod(raises, scopes, channel):
     ),
 )
 def test_is_allowed_to_push_to_microsoft_store(channel, push_to_store, expected):
-    config = {"push_to_store": push_to_store}
+    config = {"push_to_store": push_to_store, "taskcluster_scope_prefix": "project:releng:microsoftstore:"}
     assert is_allowed_to_push_to_microsoft_store(config, channel) == expected
