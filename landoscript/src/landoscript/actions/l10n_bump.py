@@ -23,9 +23,11 @@ class PlatformConfig:
     platforms: list[str]
     path: str
 
+
 @dataclass(frozen=True)
 class IgnoreConfig:
     ignore_rules: dict[str, list[str]] = field(default_factory=dict)
+
 
 @dataclass(frozen=True)
 class L10nBumpInfo:
