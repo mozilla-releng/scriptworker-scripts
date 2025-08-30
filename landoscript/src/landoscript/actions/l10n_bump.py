@@ -25,13 +25,18 @@ class PlatformConfig:
 
 
 @dataclass(frozen=True)
+class IgnoreConfig:
+    ignore_rules: dict[str, list[str]] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
 class L10nBumpInfo:
     path: str
     name: str
     l10n_repo_url: str
     l10n_repo_target_branch: str
     platform_configs: list[PlatformConfig]
-    ignore_config: dict[str, list[str]] = field(default_factory=dict)
+    ignore_config: IgnoreConfig = field(default_factory=IgnoreConfig)
 
     @classmethod
     def from_payload_data(cls, payload_data) -> Self:
@@ -118,7 +123,7 @@ async def run(
     return lando_actions
 
 
-def build_platform_dict(ignore_config, platform_configs: list[PlatformConfig], orig_platform_files):
+def build_platform_dict(ignore_config: IgnoreConfig, platform_configs: list[PlatformConfig], orig_platform_files):
     """Build a dictionary of locale to list of platforms.
 
     Args:
@@ -144,7 +149,7 @@ def build_platform_dict(ignore_config, platform_configs: list[PlatformConfig], o
                 continue
             existing_platforms = set(platform_dict.get(locale, {}).get("platforms", []))
             platforms = set(platform_config.platforms)
-            ignore_platforms = set(ignore_config.get(locale, []))
+            ignore_platforms = set(ignore_config.ignore_rules.get(locale, []))
             platforms = (platforms | existing_platforms) - ignore_platforms
             platform_dict[locale] = {"platforms": sorted(list(platforms))}
     log.info("Built platform_dict:\n%s" % pprint.pformat(platform_dict))
@@ -152,7 +157,7 @@ def build_platform_dict(ignore_config, platform_configs: list[PlatformConfig], o
 
 
 # build_revision_dict_github {{{1
-def build_revision_dict(ignore_config, platform_configs: list[PlatformConfig], orig_platform_files, revision) -> dict:
+def build_revision_dict(ignore_config: IgnoreConfig, platform_configs: list[PlatformConfig], orig_platform_files, revision) -> dict:
     """Add l10n revision information to the ``platform_dict``. All locales will
     be bumped to head revision of the branch given in `l10n_repo_target_branch`
     in the repository that `client` is configured with.
