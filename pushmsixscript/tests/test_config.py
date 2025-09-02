@@ -19,6 +19,7 @@ COMMON_CONTEXT = {
     "BETA_APPLICATION_ID": "fake-beta-app-id",
     "RELEASE_APPLICATION_ID": "fake-release-app-id",
     "RELEASE_ROLLOUT_PERCENTAGE": 25.0,
+    "TASKCLUSTER_SCOPE_PREFIX": "project:releng:microsoftstore:",
 }
 
 

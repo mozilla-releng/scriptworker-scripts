@@ -21,10 +21,12 @@ case $COT_PRODUCT in
   firefox)
     export BETA_APPLICATION_ID=9NZW26FRNDLN
     export RELEASE_APPLICATION_ID=9NZVDKPMR9RD
+    export TASKCLUSTER_SCOPE_PREFIX=project:releng:microsoftstore:
     ;;
   thunderbird)
     export BETA_APPLICATION_ID=9PFQWVMSS45P
     export RELEASE_APPLICATION_ID=9PM5VM1S3VMQ
+    export TASKCLUSTER_SCOPE_PREFIX=project:comm:thunderbird:releng:microsoftstore:
     ;;
   *)
     echo "FAIL: Unsupported product: ${COT_PRODUCT}" >&2
