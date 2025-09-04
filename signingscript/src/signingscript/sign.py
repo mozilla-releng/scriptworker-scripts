@@ -1361,17 +1361,9 @@ async def sign_authenticode_file(context, orig_path, fmt, *, authenticode_commen
     cafile_key = "authenticode_ca"
     cert_key = "authenticode_cert"
 
-    if fmt in ("autograph_authenticode_ev", "gcp_prod_autograph_authenticode_ev", "stage_autograph_authenticode_ev"):
+    if fmt in ("gcp_prod_autograph_authenticode_ev_202412", "stage_autograph_authenticode_ev_202412"):
         cafile_key = f"{cafile_key}_ev"
         cert_key = f"{cert_key}_ev"
-
-    if "202404" in fmt:
-        cafile_key += "_202404"
-        cert_key += "_202404"
-
-    if "202412" in fmt:
-        cafile_key += "_202412"
-        cert_key += "_202412"
 
     if keyid:
         # Sometimes a given keyid may chain up to a shared intermediate, and
