@@ -1308,7 +1308,7 @@ async def test_authenticode_sign_ev(tmpdir, mocker, context, keyid):
     mocker.patch.object(winsign.sign, "sign_file", mocked_winsign)
     mocker.patch.object(sign, "sign_hash_with_autograph", mocked_autograph)
 
-    fmt = "autograph_authenticode_ev"
+    fmt = "gcp_prod_autograph_authenticode_ev_202412"
     if keyid:
         fmt = f"{fmt}:{keyid}"
     result = await sign.sign_authenticode(context, test_file, fmt)
