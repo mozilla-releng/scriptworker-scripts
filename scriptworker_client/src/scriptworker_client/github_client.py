@@ -192,7 +192,7 @@ class GithubClient:
 
         return repo["object"]["oid"]
 
-    async def get_file_listing(self, path: str = "", branch: Optional[str] = None, depth_per_query=10) -> List[str]:
+    async def get_file_listing(self, paths: Union[str, List[str]] = "", branch: Optional[str] = None, depth_per_query=10) -> Dict[str, List[str]]:
         """Get the recursive file and directory listings of the given path on
         the given branch, `depth_per_query` levels deep at a time.
 
@@ -210,19 +210,9 @@ class GithubClient:
 
         branch = branch or "HEAD"
 
-        query = Template(
-            dedent(
-                """
-            query RepoFiles {
-              repository(owner: "$owner", name: "$repo") {
-                object(expression: "$branch:$path") {
-                  $file_expr
-                }
-              }
-            }
-                """
-            )
-        )
+        if isinstance(paths, str):
+            paths = [paths]
+
         leaf_expr = dedent(
             """
                     ... on Tree {
@@ -252,20 +242,42 @@ class GithubClient:
         for _ in range(depth_per_query - 1):
             file_expr = recursive_expr.substitute(obj_expr=file_expr)
 
-        str_query = query.substitute(owner=self.owner, repo=self.repo, branch=branch, path=path, file_expr=file_expr)
+        # Build multiple path queries with aliases
+        object_queries = []
+        for i, path in enumerate(paths):
+            alias = f"path{i}"
+            object_queries.append(f'{alias}: object(expression: "{branch}:{path}") {{ {file_expr} }}')
+
+        query = Template(
+            dedent(
+                """
+            query RepoFiles {
+              repository(owner: "$owner", name: "$repo") {
+                $objects
+              }
+            }
+                """
+            )
+        )
+
+        str_query = query.substitute(owner=self.owner, repo=self.repo, branch=branch, path=path, objects="\\n".join(object_queries))
+
         # Fetch all of the file listings in `path` up to `depth_per_query`
         resp = await self._client.execute(str_query)
 
-        # Process the returing entries
-        entries = resp["repository"]["object"].get("entries")
-        files, refetches = self._process_file_listings(entries, prefix=Path(path))
-        # Any subtrees that were not fully traversed will be returned in `refetches`
-        # We need to refetch data starting at each of these subtrees to ensure we
-        # don't miss anything.
-        for refetch in refetches:
-            files.extend(await self.get_file_listing(str(refetch), branch, depth_per_query))
+        results: Dict[str, List[str]] = {}
+        repo_data = resp["repository"]
 
-        return files
+        for i, path in enumerate(paths):
+            alias = f"path{i}"
+            entries = repo_data[alias].get("entries")
+            files, refetches = self._process_file_listings(entries, prefix=Path(path))
+            for refetch in refetches:
+                val = await self.get_file_listing(str(refetch), branch, depth_per_query)
+                files.extend(val[str(refetch)])
+            results[path] = files
+
+        return results
 
     def _process_file_listings(self, entries: List[Dict[str, Any]], prefix: Path = Path("")) -> Tuple[List[str], List[Path]]:
         """Process the `entries` from a response from a `get_file_listings` query.
