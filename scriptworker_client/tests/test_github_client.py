@@ -286,11 +286,11 @@ async def test_get_repository_files(aioresponses, github_client):
     branch = "main"
     expected = {
         "": [
-        "file1",
-        "file2",
-        "a/b/bfile1",
-        "a/b/c/d/e/deepfile1",
-      ]
+            "file1",
+            "file2",
+            "a/b/bfile1",
+            "a/b/c/d/e/deepfile1",
+        ]
     }
 
     # we expect more than one request because of the deeply nested file
@@ -378,7 +378,7 @@ async def test_get_repository_files(aioresponses, github_client):
         "query": Template(
             strip_ignored_characters(
                 dedent(
-                f"""
+                    f"""
             query RepoFiles {{
               repository(owner: "$owner", name: "$repo") {{
                 path0: object(expression: "main:") {{
@@ -416,7 +416,8 @@ async def test_get_repository_files(aioresponses, github_client):
               }}
             }}
             """
-            )),
+                )
+            ),
         ).substitute(owner=github_client.owner, repo=github_client.repo)
     }
     second_request["query"] = strip_ignored_characters(second_request["query"])
@@ -424,7 +425,7 @@ async def test_get_repository_files(aioresponses, github_client):
         "query": Template(
             strip_ignored_characters(
                 dedent(
-                f"""
+                    f"""
             query RepoFiles {{
               repository(owner: "$owner", name: "$repo") {{
                 path0: object(expression: "main:a/b/c/d") {{
@@ -462,7 +463,8 @@ async def test_get_repository_files(aioresponses, github_client):
               }}
             }}
             """
-            )),
+                )
+            ),
         ).substitute(owner=github_client.owner, repo=github_client.repo)
     }
 
@@ -471,7 +473,7 @@ async def test_get_repository_files(aioresponses, github_client):
 async def test_get_repository_files_with_initial_subtree(aioresponses, github_client):
     branch = "main"
     expected = {
-        "a/b/c":  ["a/b/c/d/e/deepfile1"],
+        "a/b/c": ["a/b/c/d/e/deepfile1"],
     }
 
     # we expect more than one request because of the deeply nested file
@@ -525,12 +527,13 @@ async def test_get_repository_files_with_initial_subtree(aioresponses, github_cl
     key = ("POST", URL(GITHUB_GRAPHQL_ENDPOINT))
     first_request = aioresponses.requests[key][-2][1]["json"]
     second_request = aioresponses.requests[key][-1][1]["json"]
-    
-    first_request["query"] = strip_ignored_characters(first_request["query"] )
+
+    first_request["query"] = strip_ignored_characters(first_request["query"])
     assert first_request == {
         "query": Template(
-            strip_ignored_characters(dedent(
-                f"""
+            strip_ignored_characters(
+                dedent(
+                    f"""
             query RepoFiles {{
               repository(owner: "$owner", name: "$repo") {{
                 path0: object(expression: "main:a/b/c") {{
@@ -552,14 +555,16 @@ async def test_get_repository_files_with_initial_subtree(aioresponses, github_cl
                 }}
             }}
             """
-            ))
+                )
+            )
         ).substitute(owner=github_client.owner, repo=github_client.repo)
     }
     second_request["query"] = strip_ignored_characters(second_request["query"])
     assert second_request == {
         "query": Template(
-           strip_ignored_characters(dedent(
-                f"""
+            strip_ignored_characters(
+                dedent(
+                    f"""
             query RepoFiles {{
               repository(owner: "$owner", name: "$repo") {{
                 path0: object(expression: "main:a/b/c/d/e") {{
@@ -581,6 +586,7 @@ async def test_get_repository_files_with_initial_subtree(aioresponses, github_cl
               }}
             }}
             """
-            ))
+                )
+            )
         ).substitute(owner=github_client.owner, repo=github_client.repo)
     }
