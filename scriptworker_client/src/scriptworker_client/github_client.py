@@ -192,7 +192,7 @@ class GithubClient:
 
         return repo["object"]["oid"]
 
-    async def get_file_listing(self, paths: Union[str, List[str]] = "", branch: Optional[str] = None, depth_per_query=10) -> Dict[str, List[str]]:
+    async def get_file_listing(self, paths: Union[str, List[str]] = "", branch: Optional[str] = None, depth_per_query=10) -> List[str]:
         """Get the recursive file and directory listings of the given path on
         the given branch, `depth_per_query` levels deep at a time.
 
@@ -209,6 +209,10 @@ class GithubClient:
         """
 
         branch = branch or "HEAD"
+
+        if isinstance(paths, list):
+            if len(paths) == 0:
+                return []
 
         if isinstance(paths, str):
             paths = [paths]
@@ -243,6 +247,8 @@ class GithubClient:
             file_expr = recursive_expr.substitute(obj_expr=file_expr)
 
         # Build multiple path queries with aliases
+        # Use aliases here because `path` may contain characters not allowed in keys.
+        # This ensures we avoid invalid identifiers and makes lookups safe.
         object_queries = []
         for i, path in enumerate(paths):
             alias = f"path{i}"
@@ -260,24 +266,30 @@ class GithubClient:
             )
         )
 
-        str_query = query.substitute(owner=self.owner, repo=self.repo, branch=branch, path=path, objects="\\n".join(object_queries))
+        str_query = query.substitute(owner=self.owner, repo=self.repo, branch=branch, path=path, objects="\n".join(object_queries))
 
         # Fetch all of the file listings in `path` up to `depth_per_query`
         resp = await self._client.execute(str_query)
 
-        results: Dict[str, List[str]] = {}
+        files = []
+        refetches = []
         repo_data = resp["repository"]
 
         for i, path in enumerate(paths):
             alias = f"path{i}"
-            entries = repo_data[alias].get("entries")
-            files, refetches = self._process_file_listings(entries, prefix=Path(path))
-            for refetch in refetches:
-                val = await self.get_file_listing(str(refetch), branch, depth_per_query)
-                files.extend(val[str(refetch)])
-            results[path] = files
+            node = repo_data.get(alias)
+            if not node:
+                continue
+            entries = node.get("entries")
+            files_, refetches_ = self._process_file_listings(entries, prefix=Path(path))
+            refetches.extend(refetches_)
+            files.extend(files_)
 
-        return results
+        if refetches:
+            refetch_flies = await self.get_file_listing(refetches, branch, depth_per_query)
+            files.extend(refetch_flies)
+
+        return files
 
     def _process_file_listings(self, entries: List[Dict[str, Any]], prefix: Path = Path("")) -> Tuple[List[str], List[Path]]:
         """Process the `entries` from a response from a `get_file_listings` query.
