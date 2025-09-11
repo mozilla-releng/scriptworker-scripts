@@ -285,11 +285,11 @@ async def test_get_branch_head_oid_branch_not_found(aioresponses, github_client)
 async def test_get_repository_files(aioresponses, github_client):
     branch = "main"
     expected = [
-            "file1",
-            "file2",
-            "a/b/bfile1",
-            "a/b/c/d/e/deepfile1",
-        ]
+        "file1",
+        "file2",
+        "a/b/bfile1",
+        "a/b/c/d/e/deepfile1",
+    ]
 
     # we expect more than one request because of the deeply nested file
     aioresponses.post(
@@ -470,9 +470,7 @@ async def test_get_repository_files(aioresponses, github_client):
 @pytest.mark.asyncio
 async def test_get_repository_files_with_initial_subtree(aioresponses, github_client):
     branch = "main"
-    expected = [
-        "a/b/c/d/e/deepfile1"
-      ]
+    expected = ["a/b/c/d/e/deepfile1"]
 
     # we expect more than one request because of the deeply nested file
     aioresponses.post(
