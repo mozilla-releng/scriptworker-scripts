@@ -18,6 +18,7 @@ COMMON_CONTEXT = {
     "CLIENT_SECRET": "fake-secret",
     "BETA_APPLICATION_ID": "fake-beta-app-id",
     "RELEASE_APPLICATION_ID": "fake-release-app-id",
+    "ESR_APPLICATION_ID": "fake-esr-app-id",
     "RELEASE_ROLLOUT_PERCENTAGE": 25.0,
     "TASKCLUSTER_SCOPE_PREFIX": "project:releng:microsoftstore:",
 }
@@ -50,6 +51,14 @@ def test_fake_prod():
     _validate_config(context)
 
 
-def test_prod():
-    context = {"ENV": "prod"}
+def test_prod_firefox():
+    context = {"ENV": "prod",
+               "COT_PRODUCT": "firefox"}
     _validate_config(context)
+
+
+def test_prod_thunderbird():
+    context = {"ENV": "prod",
+               "COT_PRODUCT": "thunderbird"}
+    _validate_config(context)
+
