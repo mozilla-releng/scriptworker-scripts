@@ -282,7 +282,7 @@ class GithubClient:
                 continue
             entries = node.get("entries")
             files_, refetches_ = self._process_file_listings(entries, prefix=Path(path))
-            refetches.extend(refetches_)
+            refetches.extend([str(refch) for refch in refetches_])
             files.extend(files_)
 
         if refetches:
