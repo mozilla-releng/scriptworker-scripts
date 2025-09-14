@@ -422,7 +422,7 @@ async def test_success(
         {
             "data": {
                 "repository": {
-                    "object": {
+                    "path0": {
                         "entries": [
                             {
                                 "name": "components",
@@ -460,7 +460,7 @@ async def test_success(
         {
             "data": {
                 "repository": {
-                    "object": {
+                    "path0": {
                         "entries": [
                             {
                                 "name": "main",
@@ -542,6 +542,7 @@ async def test_success(
     )
 
     context.task = {"payload": payload, "scopes": scopes}
+    print('contextt', context)
     await async_main(context)
 
     expected_bumps = {k: v for k, v in expected_values.items() if initial_values.get(k) != v}
