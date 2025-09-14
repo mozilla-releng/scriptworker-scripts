@@ -7,6 +7,7 @@ from textwrap import dedent
 import pytest
 from aioresponses import CallbackResult
 from gql.transport.exceptions import TransportQueryError
+from graphql import strip_ignored_characters
 from simple_github.client import GITHUB_GRAPHQL_ENDPOINT
 from yarl import URL
 
@@ -298,7 +299,7 @@ async def test_get_repository_files(aioresponses, github_client):
         payload={
             "data": {
                 "repository": {
-                    "object": {
+                    "path0": {
                         "entries": [
                             {
                                 "name": "file1",
@@ -355,7 +356,7 @@ async def test_get_repository_files(aioresponses, github_client):
         payload={
             "data": {
                 "repository": {
-                    "object": {"entries": [{"name": "e", "type": "tree", "object": {"entries": [{"name": "deepfile1", "type": "blob", "object": {}}]}}]}
+                    "path0": {"entries": [{"name": "e", "type": "tree", "object": {"entries": [{"name": "deepfile1", "type": "blob", "object": {}}]}}]}
                 }
             }
         },
@@ -370,13 +371,14 @@ async def test_get_repository_files(aioresponses, github_client):
     first_request = aioresponses.requests[key][-2][1]["json"]
     second_request = aioresponses.requests[key][-1][1]["json"]
 
+    first_request["query"] = strip_ignored_characters(first_request["query"])
     assert first_request == {
         "query": Template(
-            dedent(
+            strip_ignored_characters(
                 f"""
             query RepoFiles {{
               repository(owner: "$owner", name: "$repo") {{
-                object(expression: "main:") {{
+                path0: object(expression: "main:") {{
                   ... on Tree {{
                     entries {{
                       name
@@ -411,16 +413,17 @@ async def test_get_repository_files(aioresponses, github_client):
               }}
             }}
             """
-            ).strip(),
+            ),
         ).substitute(owner=github_client.owner, repo=github_client.repo)
     }
+    second_request["query"] = strip_ignored_characters(second_request["query"])
     assert second_request == {
         "query": Template(
-            dedent(
+            strip_ignored_characters(
                 f"""
             query RepoFiles {{
               repository(owner: "$owner", name: "$repo") {{
-                object(expression: "main:a/b/c/d") {{
+                path0: object(expression: "main:a/b/c/d") {{
                   ... on Tree {{
                     entries {{
                       name
@@ -455,7 +458,7 @@ async def test_get_repository_files(aioresponses, github_client):
               }}
             }}
             """
-            ).strip(),
+            ),
         ).substitute(owner=github_client.owner, repo=github_client.repo)
     }
 
@@ -474,7 +477,7 @@ async def test_get_repository_files_with_initial_subtree(aioresponses, github_cl
         payload={
             "data": {
                 "repository": {
-                    "object": {
+                    "path0": {
                         "entries": [
                             {
                                 "name": "d",
@@ -500,7 +503,7 @@ async def test_get_repository_files_with_initial_subtree(aioresponses, github_cl
         payload={
             "data": {
                 "repository": {
-                    "object": {
+                    "path0": {
                         "entries": [
                             {"name": "deepfile1", "type": "blob", "object": {}},
                         ]
@@ -519,13 +522,15 @@ async def test_get_repository_files_with_initial_subtree(aioresponses, github_cl
     first_request = aioresponses.requests[key][-2][1]["json"]
     second_request = aioresponses.requests[key][-1][1]["json"]
 
+    first_request["query"] = strip_ignored_characters(first_request["query"])
+
     assert first_request == {
         "query": Template(
-            dedent(
+            strip_ignored_characters(
                 f"""
             query RepoFiles {{
               repository(owner: "$owner", name: "$repo") {{
-                object(expression: "main:a/b/c") {{
+                path0: object(expression: "main:a/b/c") {{
                   ... on Tree {{
                     entries {{
                       name
@@ -544,16 +549,18 @@ async def test_get_repository_files_with_initial_subtree(aioresponses, github_cl
               }}
             }}
             """
-            ).strip(),
+            ),
         ).substitute(owner=github_client.owner, repo=github_client.repo)
     }
+
+    second_request["query"] = strip_ignored_characters(second_request["query"])
     assert second_request == {
         "query": Template(
-            dedent(
+            strip_ignored_characters(
                 f"""
             query RepoFiles {{
               repository(owner: "$owner", name: "$repo") {{
-                object(expression: "main:a/b/c/d/e") {{
+                path0: object(expression: "main:a/b/c/d/e") {{
                   ... on Tree {{
                     entries {{
                       name
@@ -572,6 +579,6 @@ async def test_get_repository_files_with_initial_subtree(aioresponses, github_cl
               }}
             }}
             """
-            ).strip(),
+            ),
         ).substitute(owner=github_client.owner, repo=github_client.repo)
     }

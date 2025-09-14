@@ -35,6 +35,7 @@ dev-dependencies = [
     "pytest-scriptworker-client",
     "yarl",
     "types-PyYAML",
+    "graphql-core"
 ]
 
 [build-system]

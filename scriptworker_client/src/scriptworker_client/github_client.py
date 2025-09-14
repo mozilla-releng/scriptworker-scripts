@@ -21,6 +21,10 @@ class UnknownBranchError(Exception):
     pass
 
 
+class EmptyPathError(Exception):
+    pass
+
+
 class GithubClient:
     def __init__(self, github_config, owner, repo):
         with open(github_config["privkey_file"]) as fh:
@@ -192,12 +196,12 @@ class GithubClient:
 
         return repo["object"]["oid"]
 
-    async def get_file_listing(self, path: str = "", branch: Optional[str] = None, depth_per_query=10) -> List[str]:
+    async def get_file_listing(self, paths: Union[str, List[str]] = "", branch: Optional[str] = None, depth_per_query=5, paths_per_query=5) -> List[str]:
         """Get the recursive file and directory listings of the given path on
         the given branch, `depth_per_query` levels deep at a time.
 
         Args:
-            path (str): The path, relative to the root of the repository, to
+            paths (str or List[str]): The path, relative to the root of the repository, to
                 fetch file listings for. Fetches the listings for the entire
                 repository if not given.
             branch (str): The branch to find file listings for. If not given,
@@ -206,23 +210,26 @@ class GithubClient:
                 with each request to the GraphQL API. Repositories containing
                 very large numbers of files or directories will need to use
                 lower `depth_per_query` values to avoid timeouts.
+            paths_per_query (int): The maximum number of paths included
+                in a single GraphQL request. Lower values reduce the risk of
+                timeouts when querying repositories with a very large number of
+                files or directories , but higher values will decrease the number
+                of total GraphQL queries issued.
         """
 
         branch = branch or "HEAD"
 
-        query = Template(
-            dedent(
-                """
-            query RepoFiles {
-              repository(owner: "$owner", name: "$repo") {
-                object(expression: "$branch:$path") {
-                  $file_expr
-                }
-              }
-            }
-                """
-            )
-        )
+        if isinstance(paths, list) and not len(paths):
+            raise EmptyPathError("Empty path lists are not supported.")
+
+        if isinstance(paths, str):
+            paths = [paths]
+
+        excess_paths = []
+        if len(paths) > paths_per_query:
+            excess_paths = paths[paths_per_query:]
+            paths = paths[:paths_per_query]
+
         leaf_expr = dedent(
             """
                     ... on Tree {
@@ -252,18 +259,51 @@ class GithubClient:
         for _ in range(depth_per_query - 1):
             file_expr = recursive_expr.substitute(obj_expr=file_expr)
 
-        str_query = query.substitute(owner=self.owner, repo=self.repo, branch=branch, path=path, file_expr=file_expr)
+        # Use aliases here because `path` may contain characters not allowed in keys.
+        # This ensures we avoid invalid identifiers and makes lookups safe.
+        object_queries = []
+        for i, path in enumerate(paths):
+            alias = f"path{i}"
+            object_queries.append(f'{alias}: object(expression: "{branch}:{path}") {{ {file_expr} }}')
+
+        query = Template(
+            dedent(
+                """
+            query RepoFiles {
+              repository(owner: "$owner", name: "$repo") {
+                $objects
+              }
+            }
+                """
+            )
+        )
+
+        str_query = query.substitute(owner=self.owner, repo=self.repo, objects="\n".join(object_queries))
+
         # Fetch all of the file listings in `path` up to `depth_per_query`
         resp = await self._client.execute(str_query)
 
         # Process the returing entries
-        entries = resp["repository"]["object"].get("entries")
-        files, refetches = self._process_file_listings(entries, prefix=Path(path))
         # Any subtrees that were not fully traversed will be returned in `refetches`
         # We need to refetch data starting at each of these subtrees to ensure we
         # don't miss anything.
-        for refetch in refetches:
-            files.extend(await self.get_file_listing(str(refetch), branch, depth_per_query))
+
+        files = []
+        refetches = excess_paths
+        repo_data = resp["repository"]
+        for i, path in enumerate(paths):
+            alias = f"path{i}"
+            node = repo_data.get(alias)
+            if not node:
+                continue
+            entries = node.get("entries")
+            files_, refetches_ = self._process_file_listings(entries, prefix=Path(path))
+            refetches.extend([str(reftch) for reftch in refetches_])
+            files.extend(files_)
+
+        if refetches:
+            refetch_files = await self.get_file_listing(refetches, branch, depth_per_query)
+            files.extend(refetch_files)
 
         return files
 
