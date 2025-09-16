@@ -52,16 +52,10 @@ def test_fake_prod():
 
 
 def test_prod_firefox():
-    context = {
-        "ENV": "prod",
-        "COT_PRODUCT": "firefox"
-    }
+    context = {"ENV": "prod", "COT_PRODUCT": "firefox"}
     _validate_config(context)
 
 
 def test_prod_thunderbird():
-    context = {
-        "ENV": "prod",
-        "COT_PRODUCT": "thunderbird"
-    }
+    context = {"ENV": "prod", "COT_PRODUCT": "thunderbird"}
     _validate_config(context)
