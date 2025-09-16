@@ -11,6 +11,10 @@ application_ids:
   then:
     beta: { "$eval": "BETA_APPLICATION_ID" }
     release: { "$eval": "RELEASE_APPLICATION_ID" }
+    esr:
+      $if: 'COT_PRODUCT == "thunderbird"'
+      then: { "$eval": "ESR_APPLICATION_ID" }
+      else: ''
   else: {}
 taskcluster_scope_prefix: { "$eval": "TASKCLUSTER_SCOPE_PREFIX" }
 release_rollout_percentage: { "$eval": "RELEASE_ROLLOUT_PERCENTAGE" }

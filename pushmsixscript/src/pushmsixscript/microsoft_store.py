@@ -233,7 +233,7 @@ def _craft_new_submission_request_and_upload_file_names(config, channel, submiss
     # Partner Center user must cancel certification, edit the submission, and then
     # re-submit. Specification of a common rollout % may reduce the need for manual
     # intervention.
-    if channel == "release":
+    if channel == "release" or channel == "esr":
         if "release_rollout_percentage" in config:
             delivery_options = submission_request.setdefault("packageDeliveryOptions", {})
             package_rollout = delivery_options.setdefault("packageRollout", {})
