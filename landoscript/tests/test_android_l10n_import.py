@@ -422,7 +422,7 @@ async def test_success(
         {
             "data": {
                 "repository": {
-                    "object": {
+                    "path0": {
                         "entries": [
                             {
                                 "name": "components",
@@ -460,7 +460,7 @@ async def test_success(
         {
             "data": {
                 "repository": {
-                    "object": {
+                    "path0": {
                         "entries": [
                             {
                                 "name": "main",
