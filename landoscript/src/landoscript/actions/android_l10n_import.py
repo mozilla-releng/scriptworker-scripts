@@ -64,7 +64,7 @@ async def run(
             if "**" in contents["paths"][0]["reference"]:
                 # localized file paths contain globs; we need that directory
                 # structure to determine the files we need to fetch
-                force_paths = await l10n_github_client.get_file_listing(str(src_file_prefix), depth_per_query=4)
+                force_paths = await l10n_github_client.get_file_listing(str(src_file_prefix), depth_per_query=4, paths_per_query=100)
             else:
                 force_paths = []
 
