@@ -7,8 +7,8 @@ import shutil
 import tempfile
 
 from compare_locales import paths
-
 from scriptworker_client.utils import run_command
+
 from treescript.exceptions import CheckoutError
 from treescript.gecko import mercurial as vcs
 from treescript.util.task import (

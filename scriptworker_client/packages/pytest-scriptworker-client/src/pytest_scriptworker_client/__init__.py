@@ -3,9 +3,8 @@ from pathlib import Path
 
 import pytest
 import pytest_asyncio
-from simple_github.client import GITHUB_API_ENDPOINT
-
 from scriptworker_client.github_client import GithubClient
+from simple_github.client import GITHUB_API_ENDPOINT
 
 here = Path(__file__).parent
 

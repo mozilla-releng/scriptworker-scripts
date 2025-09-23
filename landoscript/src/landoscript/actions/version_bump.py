@@ -7,13 +7,13 @@ from gql.transport.exceptions import TransportError
 from mozilla_version.gecko import GeckoVersion
 from mozilla_version.version import BaseVersion
 from scriptworker.exceptions import TaskVerificationError
+from scriptworker_client.github_client import GithubClient
 
 from landoscript.errors import LandoscriptError
 from landoscript.lando import LandoAction, create_commit_action
 from landoscript.util.diffs import diff_contents
 from landoscript.util.log import log_file_contents
 from landoscript.util.version import find_what_version_parser_to_use
-from scriptworker_client.github_client import GithubClient
 
 log = logging.getLogger(__name__)
 

@@ -2,6 +2,7 @@ import logging
 import os
 
 from scriptworker_client.exceptions import TaskVerificationError
+
 from treescript.exceptions import TreeScriptError
 from treescript.gecko import mercurial as vcs
 from treescript.gecko.android_l10n import android_l10n_import, android_l10n_sync

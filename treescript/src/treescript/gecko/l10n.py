@@ -18,6 +18,7 @@ from scriptworker_client.exceptions import DownloadError
 from scriptworker_client.github import extract_github_repo_owner_and_name
 from scriptworker_client.github_client import GithubClient, UnknownBranchError
 from scriptworker_client.utils import load_json_or_yaml
+
 from treescript.exceptions import TaskVerificationError, TreeScriptError
 from treescript.gecko import mercurial as vcs
 from treescript.util.task import CLOSED_TREE_MSG, DONTBUILD_MSG, get_dontbuild, get_ignore_closed_tree, get_l10n_bump_info

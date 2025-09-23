@@ -12,6 +12,7 @@ from aiohttp import ClientSession
 from mozilla_version.gecko import GeckoVersion
 from mozilla_version.version import BaseVersion
 from scriptworker.client import TaskVerificationError
+from scriptworker_client.github_client import GithubClient, defaultdict
 
 from landoscript.actions import l10n_bump, tag, version_bump
 from landoscript.errors import LandoscriptError
@@ -19,7 +20,6 @@ from landoscript.lando import LandoAction, create_commit_action
 from landoscript.util.diffs import diff_contents
 from landoscript.util.log import log_file_contents
 from landoscript.util.version import find_what_version_parser_to_use
-from scriptworker_client.github_client import GithubClient, defaultdict
 
 log = logging.getLogger(__name__)
 

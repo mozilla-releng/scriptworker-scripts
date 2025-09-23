@@ -6,13 +6,13 @@ from pathlib import Path
 from typing import Self
 
 import tomllib
+from scriptworker_client.github import extract_github_repo_owner_and_name
+from scriptworker_client.github_client import GithubClient
 
 from landoscript.errors import LandoscriptError
 from landoscript.lando import LandoAction, create_commit_action
 from landoscript.util.diffs import diff_contents
 from landoscript.util.l10n import L10nFile, getL10nFilesFromToml
-from scriptworker_client.github import extract_github_repo_owner_and_name
-from scriptworker_client.github_client import GithubClient
 
 log = logging.getLogger(__name__)
 

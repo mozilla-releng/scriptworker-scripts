@@ -4,11 +4,12 @@
 import logging
 import os
 
+from scriptworker_client.client import sync_main
+from scriptworker_client.exceptions import TaskError
+
 from githubscript.github import release
 from githubscript.release_config import get_release_config
 from githubscript.task import check_action_is_allowed, extract_common_scope_prefix, get_action, get_github_project
-from scriptworker_client.client import sync_main
-from scriptworker_client.exceptions import TaskError
 
 log = logging.getLogger(__name__)
 

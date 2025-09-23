@@ -9,6 +9,10 @@ from glob import glob
 from pathlib import Path
 from shutil import copy2
 
+from scriptworker_client.aio import download_file, raise_future_exceptions, retry_async
+from scriptworker_client.exceptions import DownloadError
+from scriptworker_client.utils import get_artifact_path, run_command
+
 from iscript.autograph import sign_langpacks
 from iscript.exceptions import IScriptError
 from iscript.mac import (
@@ -26,9 +30,6 @@ from iscript.mac import (
     update_keychain_search_path,
 )
 from iscript.util import get_sign_config
-from scriptworker_client.aio import download_file, raise_future_exceptions, retry_async
-from scriptworker_client.exceptions import DownloadError
-from scriptworker_client.utils import get_artifact_path, run_command
 
 log = logging.getLogger(__name__)
 

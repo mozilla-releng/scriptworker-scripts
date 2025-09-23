@@ -7,6 +7,9 @@ import plistlib
 from pathlib import Path
 from shutil import copy2, copytree
 
+from scriptworker_client.aio import retry_async
+from scriptworker_client.utils import run_command
+
 from iscript.exceptions import IScriptError
 from iscript.hardened_sign import sign_hardened_behavior
 from iscript.mac import (
@@ -20,8 +23,6 @@ from iscript.mac import (
     update_keychain_search_path,
 )
 from iscript.util import get_sign_config
-from scriptworker_client.aio import retry_async
-from scriptworker_client.utils import run_command
 
 log = logging.getLogger(__name__)
 
