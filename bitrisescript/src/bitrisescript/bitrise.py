@@ -6,10 +6,10 @@ from pprint import pformat
 from typing import Any, Optional
 
 from aiohttp_retry import RetryClient
-
-from bitrisescript.exceptions import BitriseBuildException
 from scriptworker_client.exceptions import TaskVerificationError
 from scriptworker_client.utils import get_single_item_from_sequence
+
+from bitrisescript.exceptions import BitriseBuildException
 
 BITRISE_API_URL = "https://api.bitrise.io/v0.1"
 

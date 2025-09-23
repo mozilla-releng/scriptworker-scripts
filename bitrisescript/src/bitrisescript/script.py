@@ -6,9 +6,10 @@ import logging
 import os
 import signal
 
+from scriptworker_client.client import sync_main
+
 from bitrisescript.bitrise import BitriseClient, find_running_build, get_running_builds, run_build, wait_and_download_workflow_log
 from bitrisescript.task import get_artifact_dir, get_bitrise_app, get_bitrise_workflows, get_build_params
-from scriptworker_client.client import sync_main
 
 log = logging.getLogger(__name__)
 

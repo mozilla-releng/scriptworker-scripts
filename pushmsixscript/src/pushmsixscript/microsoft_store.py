@@ -9,9 +9,9 @@ from copy import copy
 
 import requests
 from azure.storage.blob import BlobClient
+from scriptworker_client.exceptions import TaskError, TimeoutError
 
 from pushmsixscript import task
-from scriptworker_client.exceptions import TaskError, TimeoutError
 
 log = logging.getLogger(__name__)
 

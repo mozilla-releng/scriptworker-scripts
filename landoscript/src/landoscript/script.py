@@ -6,14 +6,14 @@ import aiohttp
 import scriptworker.client
 from scriptworker.exceptions import TaskVerificationError
 from scriptworker.utils import calculate_sleep_time
+from scriptworker_client.github import extract_github_repo_owner_and_name
+from scriptworker_client.github_client import GithubClient
+from scriptworker_client.utils import retry_async
 
 import taskcluster
 from landoscript import lando, treestatus
 from landoscript.actions import android_l10n_import, android_l10n_sync, l10n_bump, merge_day, tag, version_bump
 from landoscript.errors import LandoscriptError, MergeConflictError
-from scriptworker_client.github import extract_github_repo_owner_and_name
-from scriptworker_client.github_client import GithubClient
-from scriptworker_client.utils import retry_async
 
 log = logging.getLogger(__name__)
 

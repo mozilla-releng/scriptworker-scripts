@@ -8,8 +8,8 @@ from typing import Dict, List, Tuple, Type
 from mozilla_version.ios import MobileIosVersion
 from mozilla_version.mobile import MobileVersion
 from mozilla_version.version import BaseVersion
-
 from scriptworker_client.github_client import GithubClient
+
 from treescript.exceptions import TaskVerificationError, TreeScriptError
 from treescript.util.task import DONTBUILD_MSG, get_branch, get_dontbuild, get_version_bump_info, should_push
 

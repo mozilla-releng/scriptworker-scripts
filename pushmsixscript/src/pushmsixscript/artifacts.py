@@ -1,5 +1,6 @@
-from scriptworker_client import artifacts
 from scriptworker_client.exceptions import TaskVerificationError
+
+from scriptworker_client import artifacts
 
 
 def get_msix_file_paths(config, task):

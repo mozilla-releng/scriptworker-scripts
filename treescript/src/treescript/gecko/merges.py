@@ -9,8 +9,8 @@ from datetime import date
 
 import attr
 from mozilla_version.gecko import GeckoVersion
-
 from scriptworker_client.utils import makedirs
+
 from treescript.exceptions import TreeScriptError
 from treescript.gecko.l10n import l10n_bump, l10n_bump_github
 from treescript.gecko.mercurial import commit, get_revision, run_hg_command

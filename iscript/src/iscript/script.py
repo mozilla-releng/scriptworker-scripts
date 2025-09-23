@@ -4,6 +4,9 @@
 import logging
 import os
 
+from scriptworker_client.client import sync_main
+from scriptworker_client.utils import run_command
+
 from iscript.exceptions import IScriptError
 from iscript.hardened_sign import sign_hardened_behavior
 from iscript.mac import (
@@ -17,8 +20,6 @@ from iscript.mac import (
 from iscript.macvpn import vpn_behavior
 from iscript.pkg import sign_pkg_behavior
 from iscript.util import get_sign_config
-from scriptworker_client.client import sync_main
-from scriptworker_client.utils import run_command
 
 log = logging.getLogger(__name__)
 
