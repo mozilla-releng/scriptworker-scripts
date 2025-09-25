@@ -196,7 +196,7 @@ class GithubClient:
 
         return repo["object"]["oid"]
 
-    async def get_file_listing(self, paths: Union[str, List[str]] = "", branch: Optional[str] = None, depth_per_query=10, paths_per_query=1) -> List[str]:
+    async def get_file_listing(self, paths: Union[str, List[str]] = "", branch: Optional[str] = None, depth_per_query=5, paths_per_query=25) -> List[str]:
         """Get the recursive file and directory listings of the given path on
         the given branch, `depth_per_query` levels deep at a time.
 
