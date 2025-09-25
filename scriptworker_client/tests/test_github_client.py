@@ -491,7 +491,7 @@ async def test_get_file_listing_paths_per_query_inheritance(aioresponses, github
                                 "type": "blob",
                             }
                         ]
-                    }
+                    },
                 }
             }
         },
@@ -518,7 +518,7 @@ async def test_get_file_listing_paths_per_query_inheritance(aioresponses, github
                                 "type": "blob",
                             }
                         ]
-                    }
+                    },
                 }
             }
         },
@@ -545,13 +545,7 @@ async def test_get_file_listing_paths_per_query_inheritance(aioresponses, github
 
     result = await github_client.get_file_listing(paths=paths, branch=branch, paths_per_query=2)
 
-    expected = [
-        "dir1/file1.txt",
-        "dir2/file2.txt",
-        "dir3/file3.txt",
-        "dir4/file4.txt",
-        "dir5/file5.txt"
-    ]
+    expected = ["dir1/file1.txt", "dir2/file2.txt", "dir3/file3.txt", "dir4/file4.txt", "dir5/file5.txt"]
     assert sorted(result) == sorted(expected)
 
     # Verify all 3 requests were made (this demonstrates paths_per_query is inherited)
