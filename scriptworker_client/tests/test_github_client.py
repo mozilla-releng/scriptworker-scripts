@@ -464,6 +464,95 @@ async def test_get_repository_files(aioresponses, github_client):
 
 
 @pytest.mark.asyncio
+async def test_get_file_listing_paths_per_query_inheritance(aioresponses, github_client):
+    """Test that paths_per_query parameter is properly inherited in recursive calls."""
+    branch = "main"
+    paths = ["dir1", "dir2", "dir3", "dir4", "dir5"]  # More than paths_per_query=2, so we need to split
+
+    # First call: processes first 2 paths (dir1, dir2)
+    aioresponses.post(
+        GITHUB_GRAPHQL_ENDPOINT,
+        status=200,
+        payload={
+            "data": {
+                "repository": {
+                    "path0": {
+                        "entries": [
+                            {
+                                "name": "file1.txt",
+                                "type": "blob",
+                            }
+                        ]
+                    },
+                    "path1": {
+                        "entries": [
+                            {
+                                "name": "file2.txt",
+                                "type": "blob",
+                            }
+                        ]
+                    },
+                }
+            }
+        },
+    )
+    # Second call: processes excess paths with paths_per_query=2 (dir3, dir4)
+    aioresponses.post(
+        GITHUB_GRAPHQL_ENDPOINT,
+        status=200,
+        payload={
+            "data": {
+                "repository": {
+                    "path0": {
+                        "entries": [
+                            {
+                                "name": "file3.txt",
+                                "type": "blob",
+                            }
+                        ]
+                    },
+                    "path1": {
+                        "entries": [
+                            {
+                                "name": "file4.txt",
+                                "type": "blob",
+                            }
+                        ]
+                    },
+                }
+            }
+        },
+    )
+    # Third call: processes remaining excess path (dir5) with paths_per_query=2
+    aioresponses.post(
+        GITHUB_GRAPHQL_ENDPOINT,
+        status=200,
+        payload={
+            "data": {
+                "repository": {
+                    "path0": {
+                        "entries": [
+                            {
+                                "name": "file5.txt",
+                                "type": "blob",
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+    )
+
+    result = await github_client.get_file_listing(paths=paths, branch=branch, paths_per_query=2)
+
+    expected = ["dir1/file1.txt", "dir2/file2.txt", "dir3/file3.txt", "dir4/file4.txt", "dir5/file5.txt"]
+    assert sorted(result) == sorted(expected)
+
+    # Verify all 3 requests were made (this demonstrates paths_per_query is inherited)
+    assert len(aioresponses.requests[("POST", URL(GITHUB_GRAPHQL_ENDPOINT))]) == 3
+
+
+@pytest.mark.asyncio
 async def test_get_repository_files_with_initial_subtree(aioresponses, github_client):
     branch = "main"
     expected = [
