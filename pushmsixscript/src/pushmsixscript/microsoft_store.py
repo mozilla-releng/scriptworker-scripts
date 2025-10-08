@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 
 # When committing a new submission, poll for completion, with
 # this many attempts, waiting this long between attempts.
-COMMIT_POLL_MAX_ATTEMPTS = 40
+COMMIT_POLL_MAX_ATTEMPTS = 60
 COMMIT_POLL_WAIT_SECONDS = 30
 # Max requests retries
 MAX_RETRIES = 5
