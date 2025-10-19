@@ -58,6 +58,12 @@ def get_files_payload(file_contents={}):
             hash_ = "a" + hashlib.md5(file.encode()).hexdigest()
             if contents is None:
                 payload["data"]["repository"][hash_] = None
+            elif isinstance(contents, dict):
+                payload["data"]["repository"][hash_] = {
+                    "mode": contents.get("mode"),
+                    "text": contents.get("text")
+                }
+
             else:
                 payload["data"]["repository"][hash_] = {"text": contents}
     else:

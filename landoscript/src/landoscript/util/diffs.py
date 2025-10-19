@@ -3,7 +3,7 @@ from difflib import unified_diff
 NO_NEWLINE_SUFFIX = "\\ No newline at end of file"
 
 
-def diff_contents(orig, modified, file):
+def diff_contents(orig, modified, file, mode=None):
     """Create a git-style unified diff of `orig` and `modified` with the filename `file`."""
     add_remove_metadata = ""
     if orig:
@@ -14,7 +14,7 @@ def diff_contents(orig, modified, file):
         # orig does not exist yet; ie: it will be added
         orig_contents = ""
         fromfile = "/dev/null"
-        add_remove_metadata = "new file mode 100644\n"
+        add_remove_metadata = f"new file mode {mode or 100644}\n"
     if modified:
         # modified exists already
         modified_contents = modified.splitlines()
@@ -23,7 +23,7 @@ def diff_contents(orig, modified, file):
         # modified does not exist yet; ie: it will be added
         modified_contents = ""
         tofile = "/dev/null"
-        add_remove_metadata = "deleted file mode 100644\n"
+        add_remove_metadata = f"deleted file mode {mode or 100644}\n"
 
     diff_lines = [line for line in unified_diff(orig_contents, modified_contents, fromfile=fromfile, tofile=tofile, lineterm="")]
     if not diff_lines:

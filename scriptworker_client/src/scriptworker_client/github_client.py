@@ -93,7 +93,7 @@ class GithubClient:
 
         await retry_async(_execute, attempts=3, retry_exceptions=(TransportQueryError,), sleeptime_kwargs={"delay_factor": 0})
 
-    async def get_files(self, files: Union[str, List[str]], branch: Optional[str] = None, files_per_request: int = 200) -> Dict[str, Union[str, None]]:
+    async def get_files(self, files: Union[str, List[str]], branch: Optional[str] = None, files_per_request: int = 200, mode: Optional[str] = None) -> Dict[str, Union[str, Dict[str, Optional[str]]]]:
         """Get the contents of the specified files.
 
         Args:
@@ -127,10 +127,18 @@ class GithubClient:
             dedent(
                 """
             $name: object(expression: "$branch:$file") {
-              ... on Blob {
-                text
-              }
+              ... on Tree {
+              entries {
+                    name
+                    mode
+                    object {
+                        ... on Blob {
+                            text
+                        }
+                    }
+                }
             }
+        }
             """
             )
         )
@@ -140,7 +148,7 @@ class GithubClient:
         # file paths to their hashes, and use the hashes as the key names
         # in the query.
         aliases = {}
-        ret: Dict[str, Union[str, None]] = {}
+        ret: Dict[str, Union[str, Dict[str, Optional[str]]]] = {}
 
         # yields the starting index for each batch
         for i in range(0, len(files), files_per_request):
@@ -164,8 +172,11 @@ class GithubClient:
                 name = aliases[k]
                 if v is None:
                     ret[name] = None
-                else:
-                    ret[name] = v["text"]
+                else: 
+                    if mode:
+                        ret[name] = {"mode": v.get("mode"), "text": v.get("text")}
+                    else:
+                        ret[name] = v.get("text")
 
         return ret
 
