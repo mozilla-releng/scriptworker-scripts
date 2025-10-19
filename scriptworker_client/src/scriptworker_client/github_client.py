@@ -93,7 +93,9 @@ class GithubClient:
 
         await retry_async(_execute, attempts=3, retry_exceptions=(TransportQueryError,), sleeptime_kwargs={"delay_factor": 0})
 
-    async def get_files(self, files: Union[str, List[str]], branch: Optional[str] = None, files_per_request: int = 200, mode: Optional[str] = None) -> Dict[str, Union[str, Dict[str, Optional[str]]]]:
+    async def get_files(
+        self, files: Union[str, List[str]], branch: Optional[str] = None, files_per_request: int = 200, mode: Optional[str] = None
+    ) -> Dict[str, Union[str, Dict[str, Optional[str]]]]:
         """Get the contents of the specified files.
 
         Args:
@@ -172,7 +174,7 @@ class GithubClient:
                 name = aliases[k]
                 if v is None:
                     ret[name] = None
-                else: 
+                else:
                     if mode:
                         ret[name] = {"mode": v.get("mode"), "text": v.get("text")}
                     else:

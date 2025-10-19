@@ -59,10 +59,7 @@ def get_files_payload(file_contents={}):
             if contents is None:
                 payload["data"]["repository"][hash_] = None
             elif isinstance(contents, dict):
-                payload["data"]["repository"][hash_] = {
-                    "mode": contents.get("mode"),
-                    "text": contents.get("text")
-                }
+                payload["data"]["repository"][hash_] = {"mode": contents.get("mode"), "text": contents.get("text")}
 
             else:
                 payload["data"]["repository"][hash_] = {"text": contents}
