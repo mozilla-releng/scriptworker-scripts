@@ -20,8 +20,8 @@ dependencies = [
     "taskcluster",
 ]
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "tox",
     "tox-uv",
     "aioresponses",

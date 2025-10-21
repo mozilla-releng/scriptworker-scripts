@@ -17,8 +17,8 @@ dependencies = [
     "taskcluster",
 ]
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "tox",
     "tox-uv",
     "coverage>=4.2b1",
@@ -27,8 +27,6 @@ dev-dependencies = [
     "pytest-asyncio",
     "pytest-cov",
 ]
-
-[dependency-groups]
 flat-manager = [
     "aiohttp",
     "pygobject<3.52",

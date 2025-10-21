@@ -30,8 +30,8 @@ pytest-scriptworker-client = { workspace = true }
 scriptworker_client = { workspace = true }
 mozbuild = { path = "vendored/mozbuild" }
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "configloader",
     "tox",
     "tox-uv",
@@ -41,8 +41,6 @@ dev-dependencies = [
     "pytest",
     "pytest-xdist",
 ]
-
-[dependency-groups]
 docs = [
     "recommonmark",
     "sphinx-rtd-theme",
