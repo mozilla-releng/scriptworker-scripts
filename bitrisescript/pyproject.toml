@@ -19,8 +19,8 @@ dependencies = [
     "scriptworker-client",
 ]
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "tox",
     "tox-uv",
     "aioresponses>=0.7.6",

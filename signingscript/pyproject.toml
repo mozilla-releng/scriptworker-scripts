@@ -28,8 +28,8 @@ dependencies = [
     "six",
 ]
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "tox",
     "tox-uv",
     "coverage",
