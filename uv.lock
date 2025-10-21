@@ -1933,6 +1933,7 @@ dependencies = [
     { name = "mozilla-version" },
     { name = "scriptworker" },
     { name = "scriptworker-client" },
+    { name = "taskcluster" },
     { name = "yarl" },
 ]
 
@@ -1958,6 +1959,7 @@ requires-dist = [
     { name = "mozilla-version" },
     { name = "scriptworker" },
     { name = "scriptworker-client", editable = "scriptworker_client" },
+    { name = "taskcluster", specifier = "<91" },
     { name = "yarl" },
 ]
 
