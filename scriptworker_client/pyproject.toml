@@ -38,6 +38,9 @@ dev = [
     "graphql-core"
 ]
 
+[tool.uv.sources]
+pytest-scriptworker-client = { workspace = true }
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"

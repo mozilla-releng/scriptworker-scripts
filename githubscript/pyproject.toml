@@ -30,6 +30,9 @@ dev = [
     "pytest-cov",
 ]
 
+[tool.uv.sources]
+scriptworker_client = { workspace = true }
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"

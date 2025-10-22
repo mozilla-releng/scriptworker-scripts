@@ -41,6 +41,9 @@ dev = [
     "types-requests",
 ]
 
+[tool.uv.sources]
+scriptworker_client = { workspace = true }
+
 [project.optional-dependencies]
 scriptworker = [
     "scriptworker",

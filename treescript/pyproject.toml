@@ -39,6 +39,10 @@ dev = [
     "virtualenv",
 ]
 
+[tool.uv.sources]
+pytest-scriptworker-client = { workspace = true }
+scriptworker_client = { workspace = true }
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
