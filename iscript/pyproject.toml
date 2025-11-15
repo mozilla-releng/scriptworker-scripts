@@ -27,8 +27,8 @@ dependencies = [
     "six",
 ]
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "tox",
     "tox-uv",
     "coverage",
@@ -45,6 +45,9 @@ dev-dependencies = [
 scriptworker = [
     "scriptworker",
 ]
+
+[tool.uv.sources]
+scriptworker-client = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]

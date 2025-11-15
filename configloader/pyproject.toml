@@ -19,8 +19,8 @@ dependencies = [
     "slugid",
 ]
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "tox",
     "tox-uv",
 

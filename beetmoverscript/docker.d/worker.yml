@@ -74,6 +74,15 @@ clouds:
                 name: 'mozilla'
                 location: 'us'
                 project: 'moz-fx-productdelivery-no-7d6a'
+            product_yum_repos:
+              devedition:
+                name: 'mozilla-rpm'
+                location: 'us'
+                project: 'moz-fx-productdelivery-no-7d6a'
+              firefox:
+                name: 'mozilla-rpm'
+                location: 'us'
+                project: 'moz-fx-productdelivery-no-7d6a'
         'COT_PRODUCT == "firefox" && ENV == "prod"':
           nightly:
             credentials: { "$eval": "GCS_RELEASE_CREDS" }
@@ -93,6 +102,15 @@ clouds:
                 name: 'mozilla'
                 location: 'us'
                 project: 'moz-fx-productdelivery-pr-38b5'
+            product_yum_repos:
+              devedition:
+                name: 'mozilla-rpm'
+                location: 'us'
+                project: 'moz-fx-productdelivery-pr-38b5'
+              firefox:
+                name: 'mozilla-rpm'
+                location: 'us'
+                project: 'moz-fx-productdelivery-pr-38b5'
           release:
             credentials: { "$eval": "GCS_RELEASE_CREDS" }
             fail_task_on_error: True
@@ -109,6 +127,15 @@ clouds:
                 project: 'moz-fx-productdelivery-pr-38b5'
               firefox:
                 name: 'mozilla'
+                location: 'us'
+                project: 'moz-fx-productdelivery-pr-38b5'
+            product_yum_repos:
+              devedition:
+                name: 'mozilla-rpm'
+                location: 'us'
+                project: 'moz-fx-productdelivery-pr-38b5'
+              firefox:
+                name: 'mozilla-rpm'
                 location: 'us'
                 project: 'moz-fx-productdelivery-pr-38b5'
         'COT_PRODUCT == "xpi" && (ENV == "dev" || ENV == "fake-prod")':

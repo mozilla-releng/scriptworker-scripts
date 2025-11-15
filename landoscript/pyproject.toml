@@ -19,11 +19,12 @@ dependencies = [
     "moz.l10n",
     "scriptworker",
     "scriptworker-client",
+    "taskcluster<91",
     "yarl",
 ]
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "tox",
     "tox-uv",
     "coverage",
@@ -34,6 +35,10 @@ dev-dependencies = [
     "pytest-responses",
     "pytest-scriptworker-client",
 ]
+
+[tool.uv.sources]
+scriptworker-client = { workspace = true }
+pytest-scriptworker-client = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]

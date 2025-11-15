@@ -27,8 +27,8 @@ dependencies = [
     "taskcluster",
 ]
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "tox",
     "tox-uv",
     "coverage",
@@ -40,6 +40,9 @@ dev-dependencies = [
     "pytest-cov",
     "pytest-mock",
 ]
+
+[tool.uv.sources]
+scriptworker-client = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]

@@ -24,8 +24,8 @@ dependencies = [
     "google-cloud-artifact-registry",
 ]
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "tox",
     "tox-uv",
     "coverage",

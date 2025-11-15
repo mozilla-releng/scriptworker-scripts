@@ -20,8 +20,8 @@ dependencies = [
     "simple-github",
 ]
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "tox",
     "tox-uv",
     "mypy",
