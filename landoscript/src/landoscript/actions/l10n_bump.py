@@ -66,7 +66,7 @@ async def run(
             files = [bump_config.path, *platform_config_files]
             try:
                 log.info(f"fetching bump files from github: {files}")
-                orig_files = await github_client.get_files(files, branch)
+                orig_files = await github_client.get_files(files, branch, mode=None)
             except TransportError as e:
                 raise LandoscriptError("couldn't retrieve bump files from github") from e
 
