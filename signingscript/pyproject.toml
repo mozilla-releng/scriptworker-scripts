@@ -40,6 +40,9 @@ dev = [
     "pytest-mock",
 ]
 
+[tool.uv.sources]
+scriptworker = { git = "https://github.com/ahal/scriptworker", branch = "ahal/push-xtllkttkyvvk" }
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
