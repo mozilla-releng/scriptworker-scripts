@@ -1218,7 +1218,7 @@ def test_ensure_no_overwrites_in_artifact_map(artifact_map, errors):
 
 
 @pytest.mark.parametrize(
-    "upstream_artifacts,artifact_map,expected_uploads",
+    "upstream_artifacts,artifact_map,expected_uploads,allow_overwrites",
     (
         pytest.param(
             [
@@ -1245,7 +1245,64 @@ def test_ensure_no_overwrites_in_artifact_map(artifact_map, errors):
             {
                 "public/build/foo": ["some/dir/foo"],
             },
+            None,
             id="one_file_one_dest",
+        ),
+        pytest.param(
+            [
+                {
+                    "paths": [
+                        "public/build/*",
+                        "public/logs/*",
+                    ],
+                    "taskId": "dep1",
+                },
+            ],
+            [
+                {
+                    "paths": {
+                        "*": {
+                            "destinations": [
+                                "some/dir/",
+                            ]
+                        },
+                    },
+                    "taskId": "dep1",
+                },
+            ],
+            {
+                "public/build/foo": ["some/dir/foo"],
+            },
+            False,
+            id="one_file_one_dest_overwrites_false",
+        ),
+        pytest.param(
+            [
+                {
+                    "paths": [
+                        "public/build/*",
+                        "public/logs/*",
+                    ],
+                    "taskId": "dep1",
+                },
+            ],
+            [
+                {
+                    "paths": {
+                        "*": {
+                            "destinations": [
+                                "some/dir/",
+                            ]
+                        },
+                    },
+                    "taskId": "dep1",
+                },
+            ],
+            {
+                "public/build/foo": ["some/dir/foo"],
+            },
+            True,
+            id="one_file_one_dest_overwrites_true",
         ),
         pytest.param(
             [
@@ -1273,6 +1330,7 @@ def test_ensure_no_overwrites_in_artifact_map(artifact_map, errors):
             {
                 "public/build/foo": ["some/dir/foo", "some/other/foo", "a/third/foo"],
             },
+            None,
             id="one_file_multiple_dests",
         ),
         pytest.param(
@@ -1302,6 +1360,7 @@ def test_ensure_no_overwrites_in_artifact_map(artifact_map, errors):
                 "public/build/bar": ["some/dir/bar"],
                 "public/logs/live.log": ["some/dir/live.log"],
             },
+            None,
             id="multiple_files_one_dest_each",
         ),
         pytest.param(
@@ -1338,12 +1397,13 @@ def test_ensure_no_overwrites_in_artifact_map(artifact_map, errors):
                 "public/build/bar": ["some/dir/bar", "some/other/bar"],
                 "public/logs/live.log": ["some/dir/live.log", "some/log/live.log"],
             },
+            None,
             id="multiple_files_multiple_tests",
         ),
     ),
 )
 @pytest.mark.asyncio
-async def test_upload_translations_artifacts(aioresponses, monkeypatch, context, upstream_artifacts, artifact_map, expected_uploads):
+async def test_upload_translations_artifacts(aioresponses, monkeypatch, context, upstream_artifacts, artifact_map, expected_uploads, allow_overwrites):
     with tempfile.TemporaryDirectory() as tmp:
         context.config["work_dir"] = tmp
         for artifact in expected_uploads.keys():
@@ -1370,8 +1430,11 @@ async def test_upload_translations_artifacts(aioresponses, monkeypatch, context,
             monkeypatch.setattr(beetmoverscript.gcloud, "Bucket", lambda client, name: bucket)
 
             context.action = "upload-translations-artifacts"
+            payload = {"releaseProperties": {"appName": "fake"}, "upstreamArtifacts": upstream_artifacts, "artifactMap": artifact_map}
+            if allow_overwrites is not None:
+                payload["allow_overwrites"] = allow_overwrites
             context.task = {
-                "payload": {"releaseProperties": {"appName": "fake"}, "upstreamArtifacts": upstream_artifacts, "artifactMap": artifact_map},
+                "payload": payload,
                 "scopes": ["project:releng:beetmover:action:upload-translations-artifacts"],
             }
             await upload_translations_artifacts(context)
@@ -1379,6 +1442,14 @@ async def test_upload_translations_artifacts(aioresponses, monkeypatch, context,
             # verify GCS expectations
             expected_call_count = sum([len(uploads) for uploads in expected_uploads.values()])
             assert blob.upload_from_filename.call_count == expected_call_count
+
+            # verify that allow_overwrites is passed correctly to upload_from_filename
+            if allow_overwrites:
+                for call in blob.upload_from_filename.call_args_list:
+                    assert call[1].get("if_generation_match") is None
+            elif allow_overwrites in (False, None):
+                for call in blob.upload_from_filename.call_args_list:
+                    assert call[1].get("if_generation_match") == 0
 
 
 @pytest.mark.parametrize(

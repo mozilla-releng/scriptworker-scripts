@@ -494,6 +494,7 @@ def ensure_no_overwrites_in_artifact_map(artifactMap):
 
 async def upload_translations_artifacts(context):
     artifactMap = context.task["payload"]["artifactMap"]
+    allow_overwrites = context.task["payload"].get("allow_overwrites", False)
 
     # Ignore any failed artifacts; we'll take whatever we can get. All artifacts are considered optional.
     upstreamArtifactPaths = scriptworker_artifacts.get_upstream_artifacts_full_paths_per_task_id(context)[0]
@@ -504,7 +505,7 @@ async def upload_translations_artifacts(context):
     for map_ in concreteArtifactMap:
         for input_path, outputs in map_["paths"].items():
             log.info(f"Uploading {input_path} to {outputs['destinations']}")
-            await retry_upload(context, outputs["destinations"], input_path, fail_on_unknown_mimetype=False, allow_overwrites=False)
+            await retry_upload(context, outputs["destinations"], input_path, fail_on_unknown_mimetype=False, allow_overwrites=allow_overwrites)
 
 
 # copy_beets {{{1

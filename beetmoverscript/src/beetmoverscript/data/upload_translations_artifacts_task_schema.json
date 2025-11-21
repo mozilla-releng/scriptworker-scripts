@@ -25,6 +25,10 @@
             ],
             "additionalProperties": false
         },
+        "allow_overwrites": {
+            "type": "boolean",
+            "description": "Whether to allow overwriting existing files in cloud storage"
+        },
         "upstreamArtifacts": {
             "type": "array",
             "items": {
