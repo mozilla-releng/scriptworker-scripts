@@ -62,7 +62,7 @@ case $ENV in
     ;;
 esac
 case $COT_PRODUCT in
-  firefox)
+  firefox|enterprise)
     export TRUST_DOMAIN=gecko
     ;;
   thunderbird)
