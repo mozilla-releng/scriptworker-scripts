@@ -65,6 +65,9 @@ case $COT_PRODUCT in
   firefox)
     export TRUST_DOMAIN=gecko
     ;;
+  enterprise)
+    export TRUST_DOMAIN=gecko
+    ;;
   thunderbird)
     export TRUST_DOMAIN=comm
     ;;

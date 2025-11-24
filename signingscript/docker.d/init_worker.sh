@@ -46,7 +46,7 @@ if [ "$ENV" == "prod" ]; then
 fi
 
 case $COT_PRODUCT in
-  firefox)
+  firefox|enterprise)
     test_var_set 'WIDEVINE_CERT'
 
     echo $WIDEVINE_CERT | base64 -d > $WIDEVINE_CERT_PATH
@@ -76,7 +76,7 @@ esac
 case $ENV in
   dev|fake-prod)
     case $COT_PRODUCT in
-      firefox|thunderbird)
+      firefox|enterprise|thunderbird)
         test_var_set 'AUTHENTICODE_CERT_PATH'
         test_var_set 'AUTHENTICODE_CA_PATH'
         test_var_set 'AUTHENTICODE_CA_TIMESTAMP_PATH'
@@ -186,7 +186,7 @@ case $ENV in
     ;;
   prod)
     case $COT_PRODUCT in
-      firefox|thunderbird)
+      firefox|enterprise|thunderbird)
         test_var_set 'AUTOGRAPH_AUTHENTICODE_SHA2_PASSWORD'
         test_var_set 'AUTOGRAPH_AUTHENTICODE_SHA2_USERNAME'
         test_var_set 'AUTHENTICODE_CERT_PATH'
