@@ -26,6 +26,7 @@ case $COT_PRODUCT in
         ;;
       prod)
         test_var_set 'GCS_RELEASE_CREDS'
+        test_var_set 'GCS_INTEGRATION_CREDS'
         test_var_set 'NIGHTLY_ID'
         test_var_set 'NIGHTLY_KEY'
         test_var_set 'RELEASE_ID'

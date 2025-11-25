@@ -33,6 +33,7 @@ CONTEXT = {
         "DEP_PARTNER_KEY": "1",
         "GCS_DEP_CREDS": "1",
         "GCS_RELEASE_CREDS": "1",
+        "GCS_INTEGRATION_CREDS": "1",
         "MAVEN_ID": "1",
         "MAVEN_KEY": "1",
         "MAVEN_NIGHTLY_ID": "1",

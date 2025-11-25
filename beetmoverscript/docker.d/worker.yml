@@ -138,6 +138,14 @@ clouds:
                 name: 'mozilla-rpm'
                 location: 'us'
                 project: 'moz-fx-productdelivery-pr-38b5'
+          # Autoland / mozregression integration
+          integration:
+            credentials: { "$eval": "GCS_INTEGRATION_CREDS" }
+            fail_task_on_error: True
+            enabled: True
+            product_buckets:
+              firefox:    'moz-fx-productdelivery-pr-38b5-productdelivery'
+              fenix:      'moz-fx-productdelivery-pr-38b5-productdelivery'
         'COT_PRODUCT == "xpi" && (ENV == "dev" || ENV == "fake-prod")':
           dep:
             credentials: { "$eval": "GCS_DEP_CREDS" }
