@@ -11,7 +11,7 @@ taskcluster_scope_prefixes:
       'COT_PRODUCT == "thunderbird"':
         - 'project:comm:thunderbird:releng:signing:'
       'COT_PRODUCT == "enterprise"':
-        - 'project:gecko:enterprise:releng:signing:'
+        - 'project:enterprise:releng:signing:'
       'COT_PRODUCT == "mobile"':
         - 'project:mobile:reference-browser:releng:signing:'
       'COT_PRODUCT == "app-services"':
