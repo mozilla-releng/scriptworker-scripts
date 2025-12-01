@@ -28,6 +28,9 @@ dependencies = [
     "six",
 ]
 
+[tool.uv.sources]
+scriptworker = { git = "https://github.com/ahal/scriptworker", branch = "ahal/push-zozyykxpsykt" }
+
 [dependency-groups]
 dev = [
     "tox",

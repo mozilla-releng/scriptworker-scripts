@@ -3630,7 +3630,7 @@ wheels = [
 [[package]]
 name = "scriptworker"
 version = "62.2.1"
-source = { registry = "https://pypi.org/simple" }
+source = { git = "https://github.com/ahal/scriptworker?branch=ahal%2Fpush-zozyykxpsykt#b483ee78af9d950b7b41bff150d880af6b159435" }
 dependencies = [
     { name = "aiohttp" },
     { name = "aiomemoizettl" },
@@ -3644,10 +3644,6 @@ dependencies = [
     { name = "pyyaml" },
     { name = "taskcluster" },
     { name = "taskcluster-taskgraph" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/36/f2/e05d3982c82ce046e4b556628c5c3b4c512af9af085b5d5d0c2702643605/scriptworker-62.2.1.tar.gz", hash = "sha256:63b04b9afa9418badccc45a5031c4cab91ac4b4ad3f7ec1a6b8bc2fdb622b5d1", size = 98615, upload-time = "2025-12-01T14:11:36.812Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/20/dc/25b1d2920e1904e3ed5c60cd6f445d5d9ad37d162b0ee544452e97f809a2/scriptworker-62.2.1-py3-none-any.whl", hash = "sha256:cace904de86e66a337c23b508143610c42579581d1826810efdc14a9d8675b1e", size = 79332, upload-time = "2025-12-01T14:11:35.01Z" },
 ]
 
 [[package]]
@@ -3830,7 +3826,7 @@ requires-dist = [
     { name = "mohawk", specifier = ">=1.0.0" },
     { name = "mozbuild", directory = "vendored/mozbuild" },
     { name = "packaging" },
-    { name = "scriptworker" },
+    { name = "scriptworker", git = "https://github.com/ahal/scriptworker?branch=ahal%2Fpush-zozyykxpsykt" },
     { name = "six" },
     { name = "taskcluster" },
     { name = "winsign", specifier = "==2.2.4" },
