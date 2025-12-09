@@ -3,7 +3,7 @@ $let:
     $match:
       'COT_PRODUCT == "firefox"': 'project:releng:signing:'
       'COT_PRODUCT == "thunderbird"': 'project:comm:thunderbird:releng:signing:'
-      'COT_PRODUCT == "enterprise"': 'project:gecko:enterprise:releng:signing:'
+      'COT_PRODUCT == "enterprise"': 'project:enterprise:releng:signing:'
       'COT_PRODUCT == "mozillavpn"': 'project:mozillavpn:releng:signing:'
       'COT_PRODUCT == "adhoc"': 'project:adhoc:releng:signing:'
 in:
