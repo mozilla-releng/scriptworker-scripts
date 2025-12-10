@@ -20,12 +20,12 @@ workers:
             provisioner: scriptworker-{level}
             implementation: docker-worker
             os: linux
-            worker-type: 'b-linux-gcp'
+            worker-type: images
         images:
             provisioner: scriptworker-{level}
             implementation: docker-worker
             os: linux
-            worker-type: 'images-gcp'
+            worker-type: images
 
 docker:
     email: "release+dockerhub+services@mozilla.com"
