@@ -30,6 +30,28 @@ async def test_mark_as_shipped(context, monkeypatch, scopes):
     )
 
 
+@pytest.mark.parametrize("scopes", (["project:releng:ship-it:action:mark-as-merged", "project:releng:ship-it:server:dev"],))
+@pytest.mark.asyncio
+async def test_mark_as_merged(context, monkeypatch, scopes):
+    context.task["scopes"] = scopes
+    context.task["payload"] = {"automation_id": 123}
+
+    mark_as_merged_mock = MagicMock()
+    monkeypatch.setattr(ship_actions, "mark_as_merged", mark_as_merged_mock)
+
+    await script.async_main(context)
+    mark_as_merged_mock.assert_called_with(
+        {
+            "scope": scopes[-1],
+            "api_root_v2": "http://some-ship-it.url/v2",
+            "timeout_in_seconds": 1,
+            "taskcluster_client_id": "some-id",
+            "taskcluster_access_token": "some-token",
+        },
+        123,
+    )
+
+
 @pytest.mark.parametrize(
     "task,raises",
     (
@@ -79,6 +101,7 @@ def test_get_default_config():
         "work_dir": os.path.join(parent_dir, "work_dir"),
         "verbose": False,
         "mark_as_shipped_schema_file": os.path.join(data_dir, "mark_as_shipped_task_schema.json"),
+        "mark_as_merged_schema_file": os.path.join(data_dir, "mark_as_merged_task_schema.json"),
         "create_new_release_schema_file": os.path.join(data_dir, "create_new_release_task_schema.json"),
     }
 
