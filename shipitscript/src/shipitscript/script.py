@@ -35,6 +35,14 @@ def mark_as_shipped_action(context):
     ship_actions.mark_as_shipped_v2(context.ship_it_instance_config, release_name)
 
 
+def mark_as_merged_action(context):
+    """Action to mark a merge automation as complete"""
+    automation_id = context.task["payload"]["automation_id"]
+
+    log.info("Marking the merge automation as complete ...")
+    ship_actions.mark_as_merged(context.ship_it_instance_config, automation_id)
+
+
 def create_new_release_action(context):
     """Determine if there is a shippable release and create it if so in Shipit"""
     payload = context.task["payload"]
@@ -109,6 +117,7 @@ def update_product_channel_version_action(context):
 # ACTION_MAP {{{1
 ACTION_MAP = {
     "mark-as-shipped": mark_as_shipped_action,
+    "mark-as-merged": mark_as_merged_action,
     "create-new-release": create_new_release_action,
     "update-product-channel-version": update_product_channel_version_action,
 }
@@ -123,6 +132,7 @@ def get_default_config():
         "work_dir": os.path.join(parent_dir, "work_dir"),
         "verbose": False,
         "mark_as_shipped_schema_file": os.path.join(data_dir, "mark_as_shipped_task_schema.json"),
+        "mark_as_merged_schema_file": os.path.join(data_dir, "mark_as_merged_task_schema.json"),
         "create_new_release_schema_file": os.path.join(data_dir, "create_new_release_task_schema.json"),
     }
 

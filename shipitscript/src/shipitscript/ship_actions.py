@@ -104,6 +104,13 @@ def mark_as_shipped_v2(shipit_config, release_name):
     check_release_has_values_v2(release_api, release_name, headers, status="shipped")
 
 
+def mark_as_merged(shipit_config, automation_id):
+    release_api, headers = get_shipit_api_instance(shipit_config)
+
+    log.info("Marking merge automation as complete...")
+    release_api.complete_merge_automation(automation_id, headers=headers)
+
+
 def get_product_channel_version(shipit_config, product, channel):
     release_api, headers = get_shipit_api_instance(shipit_config)
     log.info(f"Getting the current version of {product} {channel}...")
