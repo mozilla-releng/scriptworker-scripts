@@ -66,6 +66,17 @@ def test_release_v2_class(mocker):
     # make sure we don't modify the passed headers dictionary in the methods
     assert headers == {"X-Test": "yes"}
 
+    # test that complete_merge_automation calls the right URL
+    headers = {"X-Test": "yes"}
+    ret = release.complete_merge_automation(123, headers=headers)
+    ret_json = json.loads(ret)
+    assert ret_json["test"] is True
+    correct_url = "https://www.apiroot.com/merge-automation/123"
+    release.session.request.assert_called_with(data="", headers=mock.ANY, method="PATCH", timeout=mock.ANY, verify=mock.ANY, url=correct_url)
+    api_call_count += 1
+    assert release.session.request.call_count == api_call_count
+    assert headers == {"X-Test": "yes"}
+
     # test that exception raised if error, and retry api call
     release.session.request.return_value.status_code = 400
     with pytest.raises(requests.exceptions.HTTPError):
