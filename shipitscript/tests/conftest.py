@@ -9,7 +9,10 @@ import shipitscript
 @pytest.fixture
 def context():
     context = Context()
-    context.config = {"mark_as_shipped_schema_file": os.path.join(os.path.dirname(shipitscript.__file__), "data", "mark_as_shipped_task_schema.json")}
+    context.config = {
+        "mark_as_shipped_schema_file": os.path.join(os.path.dirname(shipitscript.__file__), "data", "mark_as_shipped_task_schema.json"),
+        "mark_as_merged_schema_file": os.path.join(os.path.dirname(shipitscript.__file__), "data", "mark_as_merged_task_schema.json"),
+    }
     context.config["shipit_instance"] = {
         "scope": "project:releng:ship-it:server:dev",
         "api_root_v2": "http://some-ship-it.url/v2",

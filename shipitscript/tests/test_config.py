@@ -33,6 +33,7 @@ def test_config():
         "VERBOSE": "true",
         "TASKCLUSTER_SCOPE_PREFIX": "",
         "MARK_AS_SHIPPED_SCHEMA_FILE": "",
+        "MARK_AS_MERGED_SCHEMA_FILE": "",
         "TASKCLUSTER_SCOPE": "",
         "API_ROOT_V2": "",
         "TASKCLUSTER_CLIENT_ID": "",
