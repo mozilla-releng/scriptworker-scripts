@@ -3,11 +3,15 @@
     "type": "object",
     "required": [
         "mark_as_shipped_schema_file",
+        "mark_as_merged_schema_file",
         "taskcluster_scope_prefix",
         "shipit_instance"
     ],
     "properties": {
         "mark_as_shipped_schema_file": {
+            "type": "string"
+        },
+        "mark_as_merged_schema_file": {
             "type": "string"
         },
         "taskcluster_scope_prefix": {

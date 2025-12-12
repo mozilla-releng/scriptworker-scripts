@@ -180,3 +180,12 @@ class Release_V2(object):
         except Exception:
             log.error(f"Caught error while getting version for {product} {channel}!", exc_info=True)
             raise
+
+    def complete_merge_automation(self, automation_id, headers={}):
+        """Method to map over the PATCH /merge-automation/{automation_id} API in shipit
+
+        Parameters:
+            * automation_id
+        """
+        resp = self._request(api_endpoint=f"/merge-automation/{automation_id}", method="PATCH", data="", headers=headers).content
+        return resp
