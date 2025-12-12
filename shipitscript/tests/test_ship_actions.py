@@ -47,6 +47,4 @@ def test_mark_as_merged(monkeypatch, timeout, expected_timeout):
     ReleaseClassMock.assert_called_with(
         taskcluster_client_id="some-id", taskcluster_access_token="some-token", api_root="http://some.ship-it.tld/api/root", timeout=expected_timeout
     )
-    release_instance_mock.complete_merge_automation.assert_called_with(
-        123, headers={"X-Forwarded-Proto": "https", "X-Forwarded-Port": "80"}
-    )
+    release_instance_mock.complete_merge_automation.assert_called_with(123, headers={"X-Forwarded-Proto": "https", "X-Forwarded-Port": "80"})
