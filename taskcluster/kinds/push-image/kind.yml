@@ -21,7 +21,6 @@ task-defaults:
         max-run-time: 1800
         env:
             VCS_HEAD_REPOSITORY: https://github.com/mozilla-releng/scriptworker-scripts
-            TASKCLUSTER_ROOT_URL: "$TASKCLUSTER_ROOT_URL"
             # The following are set in the transform:
             APP:
             VCS_HEAD_REV:
