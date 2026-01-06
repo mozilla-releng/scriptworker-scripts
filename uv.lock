@@ -3715,7 +3715,7 @@ wheels = [
 
 [[package]]
 name = "scriptworker"
-version = "62.2.3"
+version = "62.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
@@ -3731,9 +3731,9 @@ dependencies = [
     { name = "taskcluster" },
     { name = "taskcluster-taskgraph" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/6c/ec/be6dc897ea1bae38556050113c7f59c5e7fc23023e21140990de690b0ea6/scriptworker-62.2.3.tar.gz", hash = "sha256:d9696989c8dedb80b24a7088f0556fdd8b4f5b4c41448609b5a194fa4017a0be", size = 98719, upload-time = "2025-12-05T12:12:43.861Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ed/5a/735f8d89f4fe6abb302871dcc4389bb7b0dd729451180c92f16fe09b85d1/scriptworker-62.3.0.tar.gz", hash = "sha256:0f4d29c9a9c550fd17566cb82cd0ccc47091b44d9b7e0be9f2ecbb9115e69155", size = 98762, upload-time = "2026-01-06T15:18:33.223Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/7c/a6/675d821ba2a82b4ee519bb0d0847b5e390af0021d22acc21b20bdb122320/scriptworker-62.2.3-py3-none-any.whl", hash = "sha256:78ab6a07fe8f7e598d1b849d810c4280feb8550c84b61c47190a528b5a459b40", size = 79384, upload-time = "2025-12-05T12:12:42.51Z" },
+    { url = "https://files.pythonhosted.org/packages/66/55/82a66b3cab859b0e5e24acb822741864faadc5b88503fae6a448f87124db/scriptworker-62.3.0-py3-none-any.whl", hash = "sha256:bb6ff9f6cdf3510d015ec1ded99220326c1da83459bb368f446326edfe659a4e", size = 79395, upload-time = "2026-01-06T15:18:31.793Z" },
 ]
 
 [[package]]
