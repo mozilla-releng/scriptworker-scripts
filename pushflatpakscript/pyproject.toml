@@ -29,7 +29,7 @@ dev = [
 ]
 flat-manager = [
     "aiohttp",
-    "pygobject<3.52",
+    "pygobject<3.55",
     "tenacity",
 ]
 

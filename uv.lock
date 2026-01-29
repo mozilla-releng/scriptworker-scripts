@@ -2961,7 +2961,7 @@ dev = [
 ]
 flat-manager = [
     { name = "aiohttp" },
-    { name = "pygobject", specifier = "<3.52" },
+    { name = "pygobject", specifier = "<3.55" },
     { name = "tenacity" },
 ]
 
@@ -3156,12 +3156,12 @@ wheels = [
 
 [[package]]
 name = "pygobject"
-version = "3.50.2"
+version = "3.54.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pycairo" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a7/5d/f2946cc6c1baf56dee6e942af8cfa16472538a8ad9d780d9f484e7554288/pygobject-3.50.2.tar.gz", hash = "sha256:ece6b860aab77cb649fdfc6e88d8a83765e7a62f7ffd39a628d6e2a0d397a7ff", size = 1085854, upload-time = "2025-10-18T13:44:45.634Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/d3/a5/68f883df1d8442e3b267cb92105a4b2f0de819bd64ac9981c2d680d3f49f/pygobject-3.54.5.tar.gz", hash = "sha256:b6656f6348f5245606cf15ea48c384c7f05156c75ead206c1b246c80a22fb585", size = 1274658, upload-time = "2025-10-18T13:45:03.121Z" }
 
 [[package]]
 name = "pyjwt"
