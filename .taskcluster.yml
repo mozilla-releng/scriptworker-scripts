@@ -213,7 +213,7 @@ tasks:
                           chainOfTrust: true
                       # Note: This task is built server side without the context or tooling that
                       # exist in tree so we must hard code the hash
-                      image: mozillareleases/taskgraph:decision-v14.5.0@sha256:252efeedf5c954ddfc1858ce92e1dc67dec04856dd3ee100696c217f2536c4e3
+                      image: mozillareleases/taskgraph:decision-v14.6.1@sha256:ba272a54aac0ec7c6e095196083e9d2c809806fb9961f8edb64962cdae0f0f71
                       maxRunTime: 1800
 
                       command:
