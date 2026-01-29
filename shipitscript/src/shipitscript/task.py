@@ -9,6 +9,7 @@ log = logging.getLogger(__name__)
 # SCHEMA_MAP {{{1
 SCHEMA_MAP = {
     "mark-as-shipped": "mark_as_shipped_schema_file",
+    "mark-as-merged": "mark_as_merged_schema_file",
     "create-new-release": "create_new_release_schema_file",
     "update-product-channel-version": "update_product_channel_version_schema_file",
 }

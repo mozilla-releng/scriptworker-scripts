@@ -1,0 +1,33 @@
+{
+    "title": "Taskcluster shipit mark-as-merged task schema",
+    "type": "object",
+    "properties": {
+        "dependencies": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+                "type": "string"
+            }
+        },
+        "scopes": {
+            "type": "array",
+            "minItems": 2,
+            "uniqueItems": true,
+            "items": {
+                "type": "string"
+            }
+        },
+        "payload": {
+            "type": "object",
+            "properties": {
+                "automation_id": {
+                  "type": "integer"
+                }
+            },
+            "required": ["automation_id"],
+            "additionalProperties": false
+        }
+    },
+    "required": ["dependencies", "scopes", "payload"]
+}
