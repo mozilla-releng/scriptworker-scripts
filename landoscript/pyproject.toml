@@ -19,7 +19,7 @@ dependencies = [
     "moz.l10n",
     "scriptworker",
     "scriptworker-client",
-    "taskcluster<91",
+    "taskcluster<97",
     "yarl",
 ]
 
