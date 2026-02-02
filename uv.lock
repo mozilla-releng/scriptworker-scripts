@@ -2060,7 +2060,7 @@ requires-dist = [
     { name = "mozilla-version" },
     { name = "scriptworker" },
     { name = "scriptworker-client", editable = "scriptworker_client" },
-    { name = "taskcluster", specifier = "<91" },
+    { name = "taskcluster", specifier = "<97" },
     { name = "yarl" },
 ]
 
@@ -4108,7 +4108,7 @@ wheels = [
 
 [[package]]
 name = "taskcluster"
-version = "90.0.5"
+version = "96.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
@@ -4119,9 +4119,9 @@ dependencies = [
     { name = "slugid" },
     { name = "taskcluster-urls" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/7a/9a/f28142083e024bce75ebbc6ac5de0b3ce8a0b5989c83493a172718fde986/taskcluster-90.0.5.tar.gz", hash = "sha256:3529b62d05b3a869669e7c128cf46849de6641d50d598e8ce81cd4ed7ba756f6", size = 129199, upload-time = "2025-10-08T13:55:23.916Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/f3/fd/061bbc2e6c9f93b1c5b07911a37ff14dbc3aab4cf9f254644a86e5973518/taskcluster-96.1.0.tar.gz", hash = "sha256:a7f78b8fc175aa8bbec75b158c9e279dfebff56abb56c77857e6453bc21aa366", size = 253787, upload-time = "2026-01-22T15:40:03.992Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/31/4c/7c4473080e9e74666e49fa3477f601d7188bb6bd1db68ec5e4c875829505/taskcluster-90.0.5-py3-none-any.whl", hash = "sha256:d4ca28ffa391fbd2f6553b5c390a606a01748ba12791ad90675efd65b734a3c7", size = 147341, upload-time = "2025-10-08T13:55:21.866Z" },
+    { url = "https://files.pythonhosted.org/packages/28/4c/3a70c13791f688d3e656eb1904c4d98b8b4e19647690fac80b532ba287d4/taskcluster-96.1.0-py3-none-any.whl", hash = "sha256:bce4ed0c104b326b48c563065c7f6114d13af52550977a4057b0704a6f02921e", size = 148274, upload-time = "2026-01-22T15:40:01.505Z" },
 ]
 
 [[package]]
