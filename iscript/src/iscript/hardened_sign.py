@@ -260,10 +260,15 @@ async def sign_hardened_behavior(config, task, create_pkg=False, **kwargs):
                 config=config_settings,
                 file_map=sign_config_files,
             )
-            await run_command(
-                command,
-                cwd=app.parent_dir,
-                exception=IScriptError,
+            await retry_async(
+                run_command,
+                kwargs={
+                    "cmd": command,
+                    "cwd": app.parent_dir,
+                    "exception": IScriptError,
+                },
+                attempts=5,
+                retry_exceptions=IScriptError,
             )
 
     await tar_apps(config, non_langpack_apps)
