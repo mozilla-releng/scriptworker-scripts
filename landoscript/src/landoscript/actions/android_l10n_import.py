@@ -1,11 +1,11 @@
 import logging
 import os.path
+import tomllib
 from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Self
 
-import tomllib
 from scriptworker_client.github import extract_github_repo_owner_and_name
 from scriptworker_client.github_client import GithubClient
 
