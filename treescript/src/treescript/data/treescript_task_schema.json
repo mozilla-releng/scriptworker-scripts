@@ -205,6 +205,17 @@
                         "files"
                     ]
                 },
+                "create_branch_info": {
+                    "type": "object",
+                    "properties": {
+                        "branch_name": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "branch_name"
+                    ]
+                },
                 "android_l10n_import_info": {
                     "type": "object",
                     "properties": {
@@ -343,7 +354,8 @@
                             "merge_day",
                             "android_l10n_import",
                             "android_l10n_sync",
-                            "push"
+                            "push",
+                            "create_branch"
                         ]
                     }
                 }
