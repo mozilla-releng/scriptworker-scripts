@@ -16,7 +16,11 @@ from treescript.util.task import DONTBUILD_MSG, get_branch, get_dontbuild, get_v
 log = logging.getLogger(__name__)
 
 
-ALLOWED_BUMP_FILES = ("version.txt",)
+ALLOWED_BUMP_FILES = (
+    "version.txt",
+    "focus-ios/version.xcconfig",
+    "firefox-ios/Client/Configuration/version.xcconfig",
+)
 
 FileContents = Dict[str, str]
 
