@@ -39,6 +39,7 @@ class MergeInfo:
     base_tag: str = ""
     end_tag: str = ""
     merge_old_head: bool = False
+    update_clobber_file: bool = True
     l10n_bump_info: list[l10n_bump.L10nBumpInfo] = field(default_factory=list)
     version_files: list[VersionFile] = field(default_factory=list)
     replacements: list[list[str]] = field(default_factory=list)
@@ -61,6 +62,7 @@ async def run(
     end_tag = merge_info.end_tag
     base_tag = merge_info.base_tag
     merge_old_head = merge_info.merge_old_head
+    update_clobber_file = merge_info.update_clobber_file
     version_file = merge_info.fetch_version_from
     actions = []
 
@@ -170,15 +172,16 @@ async def run(
                 raise LandoscriptError(f"Couldn't find file '{fn}' in repository!")
             files_to_diff.append((fn, str(orig_contents[fn]), new_contents[fn]))
 
-    log.info("Touching clobber file")
-    orig_clobber_file = (await github_client.get_files("CLOBBER", bump_branch))["CLOBBER"]
-    if orig_clobber_file is None:
-        raise LandoscriptError("Couldn't find CLOBBER file in repository!")
+    if update_clobber_file:
+        log.info("Touching clobber file")
+        orig_clobber_file = (await github_client.get_files("CLOBBER", bump_branch))["CLOBBER"]
+        if orig_clobber_file is None:
+            raise LandoscriptError("Couldn't find CLOBBER file in repository!")
 
-    new_clobber_file = get_new_clobber_file(orig_clobber_file)
-    files_to_diff.append(("CLOBBER", orig_clobber_file, new_clobber_file))
+        new_clobber_file = get_new_clobber_file(orig_clobber_file)
+        files_to_diff.append(("CLOBBER", orig_clobber_file, new_clobber_file))
 
-    files_to_diff.sort(key=lambda x: x[0])
+        files_to_diff.sort(key=lambda x: x[0])
 
     # Generate diffs in sorted order
     diffs = []
