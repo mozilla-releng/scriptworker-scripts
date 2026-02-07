@@ -142,7 +142,7 @@ def check_and_extract_tar_archive(context, tar_file_path):
     return os.path.join(flatpak_tar_basedir, flatpak_deflated_dir)
 
 
-def check_app_id_matches_flatpak(context, flatpak_path):
+def check_app_id_matches_flatpak(context, flatpak_path, channel):
     # Extract all ostree refs from the supplied Flatpak repo
     flatpak_refs = subprocess.check_output(["ostree", "refs"], cwd=flatpak_path).decode().splitlines()
 
@@ -150,10 +150,10 @@ def check_app_id_matches_flatpak(context, flatpak_path):
     flatpak_refs = [ref.split("/")[1] for ref in flatpak_refs if ref.startswith("app/")]
 
     # Create a list, if any, of all unexpected Flatpak IDs present in repo
-    invalid_refs = set(flatpak_refs) - {context.config["app_id"]}
+    invalid_refs = set(flatpak_refs) - {context.config["app_ids"]}
 
-    if context.config["app_id"] not in flatpak_refs:
-        raise TaskVerificationError(f"Supplied app ID ({context.config['app_id']}) is not present in Flatpak!")
+    if context.config["app_ids"][channel] not in flatpak_refs:
+        raise TaskVerificationError(f"Supplied app ID ({context.config['app_ids'][channel]}) is not present in Flatpak!")
 
     if len(invalid_refs) > 0:
         raise TaskVerificationError("One or more invalid app IDs are present in Flatpak!")
@@ -191,7 +191,7 @@ def push(context, flatpak_file_path, channel):
     deflated_dir = check_and_extract_tar_archive(context, flatpak_file_path)
 
     log.info("Verifying supplied app ID matches flatpak app ID...")
-    check_app_id_matches_flatpak(context, deflated_dir)
+    check_app_id_matches_flatpak(context, deflated_dir, channel)
 
     log.info(f"Pushing the flatpak to the associated {publish_build_output}")
     run_flat_manager_client_process(context, token_args + ["push", publish_build_output, deflated_dir])

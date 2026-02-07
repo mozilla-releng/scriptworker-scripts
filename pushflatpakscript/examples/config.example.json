@@ -1,7 +1,10 @@
 {
   "work_dir": "/some/work/dir",
   "verbose": true,
-  "app_id": "org.mozilla.firefox",
+  "app_ids": {
+    "stable": "org.mozilla.firefox",
+    "beta": "org.mozilla.firefox"
+  },
   "taskcluster_scope_prefix": "project:releng:flathub:firefox:",
   "push_to_flathub": true,
   "flathub_url": "flathub URL location",

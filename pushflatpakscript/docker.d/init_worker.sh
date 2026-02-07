@@ -25,6 +25,12 @@ case $ENV in
     export REPO_TOKEN_STABLE_PATH=$CONFIG_DIR/stable_token.txt
     echo $REPO_TOKEN_BETA | base64 -d > $REPO_TOKEN_BETA_PATH
     echo $REPO_TOKEN_STABLE | base64 -d > $REPO_TOKEN_STABLE_PATH
+
+    if [[$COT_PRODUCT == 'thunderbird']]; then
+      test_var_set 'REPO_TOKEN_ESR'
+      export REPO_TOKEN_ESR_PATH=$CONFIG_DIR/esr_token.txt
+      echo $REPO_TOKEN_ESR | base64 -d > $REPO_TOKEN_ESR_PATH
+    fi
     ;;
   *)
     exit 1
@@ -33,11 +39,14 @@ esac
 
 case $COT_PRODUCT in
   firefox)
-    export APP_ID="org.mozilla.firefox"
+    export APP_ID_BETA="org.mozilla.firefox"
+    export APP_ID_STABLE="org.mozilla.firefox"
     export TASKCLUSTER_SCOPE_PREFIX="project:releng:flathub:firefox:"
     ;;
   thunderbird)
-    export APP_ID="org.mozilla.Thunderbird"
+    export APP_ID_BETA="org.mozilla.Thunderbird"
+    export APP_ID_STABLE="org.mozilla.ThunderbirdRelease"
+    export APP_ID_ESR="org.mozilla.Thunderbird"
     export TASKCLUSTER_SCOPE_PREFIX="project:comm:thunderbird:releng:flathub:"
     ;;
   *)
