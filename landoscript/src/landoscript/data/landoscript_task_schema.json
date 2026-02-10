@@ -63,6 +63,26 @@
                         ]
                     }
                 },
+                "regex_replacements": {
+                    "type": "array",
+                    "minItems": 0,
+                    "default": [],
+                    "items": {
+                        "type": "array",
+                        "minItems": 3,
+                        "maxItems": 3,
+                        "items": {
+                            "type": "string"
+                        },
+                        "examples": [
+                            [
+                                "browser/extensions/webcompat/manifest.json",
+                                "'version': '[0-9]+.[0-9]+.0'",
+                                "'version': '{next_major_version}.0.0'"
+                            ]
+                        ]
+                    }
+                },
                 "from_branch": {
                     "type": "string",
                     "examples": [
