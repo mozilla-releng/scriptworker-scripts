@@ -37,6 +37,10 @@ task-defaults:
             - -lxce
             - >-
               uv run tox -e {name}-py{python_version}
+    resources:
+        - pyproject.toml
+        - tox.ini
+        - uv.lock
 
 tasks:
     addonscript:
