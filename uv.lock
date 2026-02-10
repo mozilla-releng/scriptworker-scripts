@@ -1660,7 +1660,7 @@ grpc = [
 
 [[package]]
 name = "gql"
-version = "3.5.3"
+version = "4.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "anyio" },
@@ -1668,9 +1668,9 @@ dependencies = [
     { name = "graphql-core" },
     { name = "yarl" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/34/ed/44ffd30b06b3afc8274ee2f38c3c1b61fe4740bf03d92083e43d2c17ac77/gql-3.5.3.tar.gz", hash = "sha256:393b8c049d58e0d2f5461b9d738a2b5f904186a40395500b4a84dd092d56e42b", size = 180504, upload-time = "2025-05-20T12:34:08.954Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/06/9f/cf224a88ed71eb223b7aa0b9ff0aa10d7ecc9a4acdca2279eb046c26d5dc/gql-4.0.0.tar.gz", hash = "sha256:f22980844eb6a7c0266ffc70f111b9c7e7c7c13da38c3b439afc7eab3d7c9c8e", size = 215644, upload-time = "2025-08-17T14:32:35.397Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/cb/50/2f4e99b216821ac921dbebf91c644ba95818f5d07857acadee17220221f3/gql-3.5.3-py2.py3-none-any.whl", hash = "sha256:e1fcbde2893fcafdd28114ece87ff47f1cc339a31db271fc4e1d528f5a1d4fbc", size = 74348, upload-time = "2025-05-20T12:34:07.687Z" },
+    { url = "https://files.pythonhosted.org/packages/ac/94/30bbd09e8d45339fa77a48f5778d74d47e9242c11b3cd1093b3d994770a5/gql-4.0.0-py3-none-any.whl", hash = "sha256:f3beed7c531218eb24d97cb7df031b4a84fdb462f4a2beb86e2633d395937479", size = 89900, upload-time = "2025-08-17T14:32:34.029Z" },
 ]
 
 [package.optional-dependencies]
@@ -1684,11 +1684,11 @@ requests = [
 
 [[package]]
 name = "graphql-core"
-version = "3.2.6"
+version = "3.2.7"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/c4/16/7574029da84834349b60ed71614d66ca3afe46e9bf9c7b9562102acb7d4f/graphql_core-3.2.6.tar.gz", hash = "sha256:c08eec22f9e40f0bd61d805907e3b3b1b9a320bc606e23dc145eebca07c8fbab", size = 505353, upload-time = "2025-01-26T16:36:27.374Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ac/9b/037a640a2983b09aed4a823f9cf1729e6d780b0671f854efa4727a7affbe/graphql_core-3.2.7.tar.gz", hash = "sha256:27b6904bdd3b43f2a0556dad5d579bdfdeab1f38e8e8788e555bdcb586a6f62c", size = 513484, upload-time = "2025-11-01T22:30:40.436Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ae/4f/7297663840621022bc73c22d7d9d80dbc78b4db6297f764b545cd5dd462d/graphql_core-3.2.6-py3-none-any.whl", hash = "sha256:78b016718c161a6fb20a7d97bbf107f331cd1afe53e45566c59f776ed7f0b45f", size = 203416, upload-time = "2025-01-26T16:36:24.868Z" },
+    { url = "https://files.pythonhosted.org/packages/0a/14/933037032608787fb92e365883ad6a741c235e0ff992865ec5d904a38f1e/graphql_core-3.2.7-py3-none-any.whl", hash = "sha256:17fc8f3ca4a42913d8e24d9ac9f08deddf0a0b2483076575757f6c412ead2ec0", size = 207262, upload-time = "2025-11-01T22:30:38.912Z" },
 ]
 
 [[package]]
@@ -3974,7 +3974,7 @@ dev = [
 
 [[package]]
 name = "simple-github"
-version = "2.2.1"
+version = "3.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp", extra = ["speedups"] },
@@ -3982,9 +3982,9 @@ dependencies = [
     { name = "pyjwt", extra = ["crypto"] },
     { name = "requests" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b1/e6/fbfd4104b94ae8c99b337b2784eacc9800f5f7d72b6911a278c38b882c48/simple_github-2.2.1.tar.gz", hash = "sha256:88addb238a5d32b1a0f85eff6bc69496c8a1b27e40fd9f3a172a3049f5a588b7", size = 131675, upload-time = "2025-05-30T12:39:52.379Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/e8/35/72c9eb9641d100476d26d13e0f9c75b7b467b3ad0eb4565bab2e7a1b2a05/simple_github-3.0.0.tar.gz", hash = "sha256:3cb87771e20e17597b2183169662a47a490a0494039bbe78c6dd2c7ed9cb4d85", size = 140012, upload-time = "2026-02-10T15:31:44.096Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/fd/94/523e0a873d9604d5271cf8d414316cd1ed31715cc8e2451d79f1423c80bb/simple_github-2.2.1-py3-none-any.whl", hash = "sha256:417e870918190789cac1c51b2ecb72d9c9c62634e604fc3d60c076b465eed7e8", size = 13910, upload-time = "2025-05-30T12:39:47.801Z" },
+    { url = "https://files.pythonhosted.org/packages/57/08/5f9921bfad2346acc97363f96971007679430284648f8b061d3eec3ecbc8/simple_github-3.0.0-py3-none-any.whl", hash = "sha256:906f6af08c9b373524bb55ab71da08cb4521da46d00439e42e25a5c6f516f7ec", size = 13885, upload-time = "2026-02-10T15:31:42.258Z" },
 ]
 
 [[package]]
