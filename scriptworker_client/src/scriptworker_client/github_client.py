@@ -43,6 +43,58 @@ class GithubClient:
     async def __aexit__(self, *excinfo):
         await self.close()
 
+    async def create_branch(self, branch_name: str, from_branch: Optional[str] = None, dry_run: bool = False) -> None:
+        """Create a new branch in the repository.
+
+        Args:
+            branch_name (str): The name of the new branch to create.
+            from_branch (str): The branch to create the new branch from. Uses the
+                repository's default branch if unspecified (optional).
+            dry_run (bool): If it's a dry run
+        """
+        # Get the repository ID and source OID in one query
+        source_branch = from_branch or "HEAD"
+        info_query = Template(
+            dedent("""
+            query getRepoInfo {
+              repository(owner: "$owner", name: "$repo") {
+                id
+                object(expression: "$branch") {
+                  oid
+                }
+              }
+            }""")
+        )
+        str_info_query = info_query.substitute(owner=self.owner, repo=self.repo, branch=source_branch)
+        repo = (await self._client.execute(str_info_query))["repository"]
+
+        if repo.get("object") is None:
+            raise UnknownBranchError(f"branch '{source_branch}' not found in repo!")
+
+        repo_id = repo["id"]
+        source_oid = repo["object"]["oid"]
+
+        create_branch_mutation = dedent("""
+            mutation ($input: CreateRefInput!) {
+              createRef(input: $input) {
+                ref {
+                  name
+                }
+              }
+            }""")
+        variables = {
+            "input": {
+                "repositoryId": repo_id,
+                "name": f"refs/heads/{branch_name}",
+                "oid": source_oid,
+            }
+        }
+
+        verb = "Would create" if dry_run else "Creating"
+        log.debug(f"{verb} {branch_name} on repo {self.repo}[{repo_id}] at {source_branch}@{source_oid}")
+        if not dry_run:
+            await self._client.execute(create_branch_mutation, variables=variables)
+
     async def commit(self, branch: str, message: str, additions: Optional[Dict[str, str]] = None, deletions: Optional[List[str]] = None) -> None:
         """Commit changes to the given repository and branch.
 

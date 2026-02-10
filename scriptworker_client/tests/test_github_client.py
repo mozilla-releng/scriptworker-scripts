@@ -15,6 +15,104 @@ from scriptworker_client.github_client import UnknownBranchError
 
 
 @pytest.mark.asyncio
+async def test_create_branch(aioresponses, github_client):
+    branch_name = "new-feature"
+    from_branch = "main"
+    repo_id = "R_abc123"
+    source_oid = "def456"
+
+    # First query gets repo ID and source OID
+    aioresponses.post(
+        GITHUB_GRAPHQL_ENDPOINT,
+        status=200,
+        payload={"data": {"repository": {"id": repo_id, "object": {"oid": source_oid}}}},
+    )
+    # Second query creates the branch
+    aioresponses.post(
+        GITHUB_GRAPHQL_ENDPOINT,
+        status=200,
+        payload={"data": {"createRef": {"ref": {"name": f"refs/heads/{branch_name}"}}}},
+    )
+
+    await github_client.create_branch(branch_name=branch_name, from_branch=from_branch)
+
+    aioresponses.assert_called()
+    key = ("POST", URL(GITHUB_GRAPHQL_ENDPOINT))
+    info_request = aioresponses.requests[key][-2][1]["json"]
+    create_request = aioresponses.requests[key][-1][1]["json"]
+
+    assert info_request == {
+        "query": dedent(
+            f"""
+            query getRepoInfo {{
+              repository(owner: "{github_client.owner}", name: "{github_client.repo}") {{
+                id
+                object(expression: "{from_branch}") {{
+                  oid
+                }}
+              }}
+            }}"""
+        ).strip(),
+    }
+    assert create_request == {
+        "query": dedent(
+            """
+            mutation ($input: CreateRefInput!) {
+              createRef(input: $input) {
+                ref {
+                  name
+                }
+              }
+            }"""
+        ).strip(),
+        "variables": {
+            "input": {
+                "repositoryId": repo_id,
+                "name": f"refs/heads/{branch_name}",
+                "oid": source_oid,
+            }
+        },
+    }
+
+
+@pytest.mark.asyncio
+async def test_create_branch_dry_run(aioresponses, github_client):
+    branch_name = "new-feature"
+    from_branch = "main"
+    repo_id = "R_abc123"
+    source_oid = "def456"
+
+    # Only the info query should be made in dry_run mode
+    aioresponses.post(
+        GITHUB_GRAPHQL_ENDPOINT,
+        status=200,
+        payload={"data": {"repository": {"id": repo_id, "object": {"oid": source_oid}}}},
+    )
+
+    await github_client.create_branch(branch_name=branch_name, from_branch=from_branch, dry_run=True)
+
+    aioresponses.assert_called()
+    key = ("POST", URL(GITHUB_GRAPHQL_ENDPOINT))
+    # Only one request should be made (the info query, not the mutation)
+    assert len(aioresponses.requests[key]) == 1
+
+
+@pytest.mark.asyncio
+async def test_create_branch_unknown_source_branch(aioresponses, github_client):
+    branch_name = "new-feature"
+    from_branch = "nonexistent"
+
+    aioresponses.post(
+        GITHUB_GRAPHQL_ENDPOINT,
+        status=200,
+        payload={"data": {"repository": {"id": "R_abc123", "object": None}}},
+    )
+
+    with pytest.raises(UnknownBranchError, match=f"branch '{from_branch}' not found in repo!"):
+        await github_client.create_branch(branch_name=branch_name, from_branch=from_branch)
+
+
+@pytest.mark.asyncio
 async def test_commit(aioresponses, github_client):
     branch = "main"
     message = "Commit it!"

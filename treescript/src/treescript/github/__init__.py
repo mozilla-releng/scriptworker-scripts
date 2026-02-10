@@ -3,6 +3,7 @@ import logging
 from scriptworker_client.github import extract_github_repo_owner_and_name
 from scriptworker_client.github_client import GithubClient
 
+from treescript.github.branch import create_branch
 from treescript.github.versionmanip import bump_version
 from treescript.util.task import get_source_repo, task_action_types
 
@@ -23,5 +24,7 @@ async def do_actions(config, task):
     actions = task_action_types(config, task)
 
     async with GithubClient(config["github_config"], owner, repo) as client:
+        if "create_branch" in actions:
+            await create_branch(client, task)
         if "version_bump" in actions:
             await bump_version(client, task)

@@ -13,7 +13,7 @@ log = logging.getLogger(__name__)
 VALID_ACTIONS = {
     "comm": {"tag", "version_bump", "l10n_bump", "l10n_bump_github", "push", "merge_day"},
     "gecko": {"tag", "version_bump", "l10n_bump", "l10n_bump_github", "push", "merge_day", "android_l10n_import", "android_l10n_sync"},
-    "mobile": {"version_bump"},
+    "mobile": {"version_bump", "create_branch"},
 }
 
 DONTBUILD_MSG = " DONTBUILD"
@@ -152,6 +152,26 @@ def get_version_bump_info(task):
     if not version_info:
         raise TaskVerificationError("Requested version bump but no version_bump_info in payload")
     return version_info
+
+
+# get_create_branch_info {{{1
+def get_create_branch_info(task):
+    """Get the create branch information from the task metadata.
+
+    Args:
+        task: the task definition.
+
+    Returns:
+        object: the info structure as passed to the task payload.
+
+    Raises:
+        TaskVerificationError: If expected item missing from task definition.
+
+    """
+    create_branch_info = task.get("payload", {}).get("create_branch_info")
+    if not create_branch_info:
+        raise TaskVerificationError("Requested create branch but no create_branch_info in payload")
+    return create_branch_info
 
 
 # get_l10n_bump_info {{{1
