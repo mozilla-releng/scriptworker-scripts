@@ -26,8 +26,18 @@ case $ENV in
     echo $REPO_TOKEN_BETA | base64 -d > $REPO_TOKEN_BETA_PATH
     echo $REPO_TOKEN_STABLE | base64 -d > $REPO_TOKEN_STABLE_PATH
 
-    if [[$COT_PRODUCT == 'thunderbird']]; then
-      test_var_set 'REPO_TOKEN_ESR'
+
+    if [ "$COT_PRODUCT" = thunderbird ]; then
+      # test_var_set 'REPO_TOKEN_RELEASE'
+      # must either have REPO_TOKEN_RELEASE or REPO_TOKEN_ESR defined
+      if [[ -z "$REPO_TOKEN_RELEASE" ]] && [[ -z "$REPO_TOKEN_ESR" ]]; then
+        echo "error: must have token defined for release or esr channel"
+        exit 1
+      fi
+
+      export REPO_TOKEN_RELEASE_PATH=$CONFIG_DIR/release_token.txt
+      echo $REPO_TOKEN_RELEASE | base64 -d > $REPO_TOKEN_RELEASE_PATH
+
       export REPO_TOKEN_ESR_PATH=$CONFIG_DIR/esr_token.txt
       echo $REPO_TOKEN_ESR | base64 -d > $REPO_TOKEN_ESR_PATH
     fi
@@ -39,14 +49,13 @@ esac
 
 case $COT_PRODUCT in
   firefox)
-    export APP_ID_BETA="org.mozilla.firefox"
-    export APP_ID_STABLE="org.mozilla.firefox"
+    export APP_ID="org.mozilla.firefox"
     export TASKCLUSTER_SCOPE_PREFIX="project:releng:flathub:firefox:"
     ;;
   thunderbird)
-    export APP_ID_BETA="org.mozilla.Thunderbird"
-    export APP_ID_STABLE="org.mozilla.ThunderbirdRelease"
-    export APP_ID_ESR="org.mozilla.Thunderbird"
+    export APP_ID="org.mozilla.Thunderbird"
+    export APP_ID_RELEASE="org.mozilla.ThunderbirdRelease"
+    export APP_ID_ESR="org.mozilla.ThunderbirdESR"
     export TASKCLUSTER_SCOPE_PREFIX="project:comm:thunderbird:releng:flathub:"
     ;;
   *)

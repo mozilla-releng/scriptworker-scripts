@@ -1,6 +1,6 @@
 from scriptworker.exceptions import TaskVerificationError
 
-_CHANNELS_AUTHORIZED_TO_REACH_FLATHUB = ("beta", "stable", "esr")
+_CHANNELS_AUTHORIZED_TO_REACH_FLATHUB = ("beta", "stable", "release", "esr")
 ALLOWED_CHANNELS = ("mock", *_CHANNELS_AUTHORIZED_TO_REACH_FLATHUB)
 
 

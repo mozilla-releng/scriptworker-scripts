@@ -35,7 +35,10 @@ def test_get_flatpak_channel_dep(raises, channel):
 )
 def test_get_flatpak_channel_prod(raises, scopes, channel):
     task = {"scopes": scopes, "payload": {"channel": channel}}
-    config = {"app_ids": {"stable": "org.mozilla.firefox", "beta": "org.mozilla.firefox"}, "taskcluster_scope_prefix": "project:releng:flathub:firefox:", "push_to_flathub": True}
+    config = {"app_ids": {"stable": "org.mozilla.firefox", "beta": "org.mozilla.firefox"},
+              "token_locations": {"stable": "stable.txt", "beta": "beta.txt"},
+              "taskcluster_scope_prefix": "project:releng:flathub:firefox:",
+              "push_to_flathub": True}
     if raises:
         with pytest.raises(TaskVerificationError):
             get_flatpak_channel(config, task)

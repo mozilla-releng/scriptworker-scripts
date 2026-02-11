@@ -150,13 +150,22 @@ def check_app_id_matches_flatpak(context, flatpak_path, channel):
     flatpak_refs = [ref.split("/")[1] for ref in flatpak_refs if ref.startswith("app/")]
 
     # Create a list, if any, of all unexpected Flatpak IDs present in repo
-    invalid_refs = set(flatpak_refs) - {context.config["app_ids"]}
+    invalid_refs = set(flatpak_refs) - set(context.config["app_ids"].values())
 
     if context.config["app_ids"][channel] not in flatpak_refs:
         raise TaskVerificationError(f"Supplied app ID ({context.config['app_ids'][channel]}) is not present in Flatpak!")
 
     if len(invalid_refs) > 0:
         raise TaskVerificationError("One or more invalid app IDs are present in Flatpak!")
+
+
+def check_config_for_channel(config, channel):
+    """Verify AppID and token location defined for supplied channel"""
+    if channel not in config["app_ids"]:
+        raise TaskVerificationError(f"Supplied channel ({channel}) does not have a configured appID")
+
+    if channel not in config["token_locations"]:
+        raise TaskVerificationError(f"Supplied channel ({channel}) does not have a configured token")
 
 
 def sanitize_buildid(bytes_input):
@@ -174,10 +183,13 @@ def push(context, flatpak_file_path, channel):
         # We don't raise an error because we still want green tasks on dev instances
         return
 
+    check_config_for_channel(context.config, channel)
+
     token_args = ["--token-file", context.config["token_locations"][channel]]
     log.info("Grab a flatpak buildid from Flathub ...")
+    publish_channel = "beta" if channel == "beta" else "stable"
     publish_build_output = run_flat_manager_client_process(
-        context, token_args + ["create", context.config["flathub_url"], channel, "--build-log-url", build_log]
+        context, token_args + ["create", context.config["flathub_url"], publish_channel, "--build-log-url", build_log]
     )
 
     log.info("Sanitize the buildid received from Flathub ...")

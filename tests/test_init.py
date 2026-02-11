@@ -78,6 +78,8 @@ CONTEXT = {
         "FLATHUB_URL": "https://flathub.example.com",
         "REPO_TOKEN_BETA": "Zm9vYmFyCg==",
         "REPO_TOKEN_STABLE": "Zm9vYmFyCg==",
+        "REPO_TOKEN_RELEASE": "Zm9vYmFyCg==",
+        "REPO_TOKEN_ESR": "Zm9vYmFyCg==",
     },
     re.compile(r"pushmsix:.*"): {
         "TENANT_ID": "Zm9vYmFyCg==",

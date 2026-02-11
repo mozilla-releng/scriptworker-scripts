@@ -2,11 +2,15 @@ work_dir: { "$eval": "WORK_DIR" }
 artifact_dir: { "$eval": "ARTIFACTS_DIR" }
 verbose: { "$eval": "VERBOSE == 'true'" }
 app_ids:
-  beta: {"$eval": "APP_ID_BETA" }
-  stable: {"$eval": "APP_ID_STABLE"}
+  beta: {"$eval": "APP_ID" }
+  stable: {"$eval": "APP_ID"}
+  release:
+    $if: defined("APP_ID_RELEASE")
+    then: {"$eval": "APP_ID_RELEASE"}
+    else: ''
   esr:
-    $if: 'COT_PRODUCT == "thunderbird"'
-    then: { "$eval": "APP_ID_ESR"}
+    $if: defined("APP_ID_ESR")
+    then: {"$eval": "APP_ID_ESR"}
     else: ''
 taskcluster_scope_prefix: { "$eval": "TASKCLUSTER_SCOPE_PREFIX" }
 push_to_flathub: { "$eval": "ENV == 'prod'" }
@@ -18,8 +22,13 @@ token_locations:
   then:
     beta: { "$eval": "REPO_TOKEN_BETA_PATH" }
     stable: { "$eval": "REPO_TOKEN_STABLE_PATH" }
-    esr:
-      $if: 'COT_PRODUCT == "thunderbird"'
-      then: { "$eval": "REPO_TOKEN_ESR_PATH" }
+    release:
+      $if: defined("REPO_TOKEN_RELEASE_PATH")
+      then: {"$eval": "REPO_TOKEN_RELEASE_PATH"}
       else: ''
+    esr:
+      $if: defined("REPO_TOKEN_ESR_PATH")
+      then: {"$eval": "REPO_TOKEN_ESR_PATH"}
+      else: ''
+
   else: {}
