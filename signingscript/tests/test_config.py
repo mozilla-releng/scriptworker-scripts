@@ -88,6 +88,8 @@ def test_firefox_dev():
         "AUTOGRAPH_STAGE_FOCUS_PASSWORD": "",
         "AUTOGRAPH_STAGE_FENIX_USERNAME": "",
         "AUTOGRAPH_STAGE_FENIX_PASSWORD": "",
+        "AUTOGRAPH_STAGE_RPMSIGN_USERNAME": "",
+        "AUTOGRAPH_STAGE_RPMSIGN_PASSWORD": "",
     }
     _validate_config(context)
 
@@ -130,6 +132,8 @@ def test_thunderbird_fake_prod():
         "AUTOGRAPH_STAGE_FOCUS_PASSWORD": "",
         "AUTOGRAPH_STAGE_FENIX_USERNAME": "",
         "AUTOGRAPH_STAGE_FENIX_PASSWORD": "",
+        "AUTOGRAPH_STAGE_RPMSIGN_USERNAME": "",
+        "AUTOGRAPH_STAGE_RPMSIGN_PASSWORD": "",
     }
     _validate_config(context)
 
