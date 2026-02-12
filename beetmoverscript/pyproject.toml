@@ -20,7 +20,7 @@ dependencies = [
     "redo",
     "scriptworker",
     "taskcluster",
-    "google-cloud-storage<3",
+    "google-cloud-storage<4",
     "google-cloud-artifact-registry",
 ]
 
