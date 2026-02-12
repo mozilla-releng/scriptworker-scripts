@@ -150,6 +150,7 @@ async def test_sign(context, mocker, format, filename, post_files):
         ("widevine", stask.sign_widevine),
         ("autograph_authenticode_sha2", stask.sign_authenticode),
         ("autograph_authenticode_sha2_stub", stask.sign_authenticode),
+        ("autograph_rpmsign", stask.sign_rpm_pkg),
         ("apple_notarization", stask.apple_notarize),
         ("default", stask.sign_file),
         # GCP prod

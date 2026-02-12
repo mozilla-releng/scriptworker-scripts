@@ -1658,6 +1658,35 @@ async def apple_notarize_openh264_plugin(context, path, *args, **kwargs):
 
 
 @time_async_function
+async def sign_rpm_pkg(context, path, fmt, **kwargs):
+    """Sign an RPM package using autograph
+
+    Args:
+        context (Context): the signing context
+        path (str): the path of the RPM file to sign
+        fmt (str): the format to sign with
+
+    Returns:
+        str: the path to the signed RPM file
+    """
+    if not path.endswith(".rpm"):
+        raise SigningScriptError(f"Expected a .rpm file, got: {path}")
+
+    cert_type = task.task_cert_type(context)
+    autograph_config = get_autograph_config(context.autograph_configs, cert_type, [fmt], raise_on_empty=True)
+
+    with open(path, "rb") as f:
+        signed_files = await sign_with_autograph(context.session, autograph_config, [f], fmt, "files")
+
+    signed_file = signed_files[0]
+    signed_content = base64.b64decode(signed_file["content"])
+    with open(path, "wb") as f:
+        f.write(signed_content)
+
+    return path
+
+
+@time_async_function
 async def apple_notarize_stacked(context, filelist_dict):
     """
     Notarizes multiple packages using rcodesign.

@@ -27,6 +27,7 @@ from signingscript.sign import (
     sign_macapp,
     sign_mar384_with_autograph_hash,
     sign_omnija,
+    sign_rpm_pkg,
     sign_widevine,
     sign_xpi,
 )
@@ -49,6 +50,7 @@ FORMAT_TO_SIGNING_FUNCTION = immutabledict(
         "autograph_authenticode_202412": sign_authenticode,
         "autograph_authenticode_202412_stub": sign_authenticode,
         "autograph_authenticode_ev_202412": sign_authenticode,
+        "autograph_rpmsign": sign_rpm_pkg,
         "privileged_webextension": sign_xpi,
         "system_addon": sign_xpi,
         "autograph_rsa": sign_file_detached,
