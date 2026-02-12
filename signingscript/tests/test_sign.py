@@ -725,7 +725,7 @@ async def test_tarfile_append_write(context):
 
 def test_signreq_task_keyid():
     fmt = "autograph_hash_only_mar384"
-    req = sign.make_signing_req(None, fmt, "newkeyid")
+    req = sign.make_signing_req(None, fmt, "hash", keyid="newkeyid")
 
     assert req["keyid"] == "newkeyid"
     assert req["input"] is None
@@ -733,7 +733,7 @@ def test_signreq_task_keyid():
 
 def test_signreq_task_omnija():
     fmt = "autograph_omnija"
-    req = sign.make_signing_req(None, fmt, "newkeyid", extension_id="omni.ja@mozilla.org")
+    req = sign.make_signing_req(None, fmt, "file", keyid="newkeyid", extension_id="omni.ja@mozilla.org")
 
     assert req["keyid"] == "newkeyid"
     assert req["input"] is None
@@ -746,7 +746,7 @@ def test_signreq_task_omnija():
 
 def test_signreq_task_langpack():
     fmt = "autograph_langpack"
-    req = sign.make_signing_req(None, fmt, "newkeyid", extension_id="langpack-en-CA@firefox.mozilla.org")
+    req = sign.make_signing_req(None, fmt, "file", keyid="newkeyid", extension_id="langpack-en-CA@firefox.mozilla.org")
 
     assert req["keyid"] == "newkeyid"
     assert req["input"] is None
@@ -1474,3 +1474,26 @@ async def test_apple_notarize_stacked_unsupported(mocker, context):
                 "/app.bbb": {"full_path": "/app.bbb", "formats": ["apple_notarize_stacked"]},
             },
         )
+
+
+def test_encode_multiple_files():
+    """Test streaming encoding for /sign/files endpoint."""
+    output_file = tempfile.TemporaryFile("w+b")
+    input_files = [
+        {"name": "file1.rpm", "content": BufferedRandom(BytesIO(b"content1"))},
+        {"name": "file2.rpm", "content": BufferedRandom(BytesIO(b"content2"))},
+    ]
+    signing_req = {"keyid": "testkey", "files": input_files}
+    sign._encode_multiple_files(output_file, signing_req)
+    output_file.seek(0)
+    result = json.loads(output_file.read().decode())
+    expected = [
+        {
+            "keyid": "testkey",
+            "files": [
+                {"name": "file1.rpm", "content": "Y29udGVudDE="},  # base64 of "content1"
+                {"name": "file2.rpm", "content": "Y29udGVudDI="},  # base64 of "content2"
+            ],
+        }
+    ]
+    assert result == expected

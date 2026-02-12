@@ -789,8 +789,8 @@ async def _create_tarfile(context, to, files, compression, tmp_dir=None):
         raise SigningScriptError(e)
 
 
-def write_signing_req_to_disk(fp, signing_req):
-    """Write signing_req to fp.
+def _encode_single_file(fp, signing_req):
+    """Write signing_req for a single file to fp.
 
     Does proper base64 and json encoding.
     Tries not to hold onto a lot of memory.
@@ -816,6 +816,49 @@ def write_signing_req_to_disk(fp, signing_req):
         fp.write(b",")
     fp.seek(-1, 1)
     fp.write(b"}]")
+
+
+def write_signing_req_to_disk(fp, signing_req):
+    """Write signing_req to fp.
+
+    Does proper base64 and json encoding.
+    Tries not to hold onto a lot of memory.
+    """
+    if "files" in signing_req:
+        _encode_multiple_files(fp, signing_req)
+    else:
+        _encode_single_file(fp, signing_req)
+
+
+def _encode_multiple_files(fp, signing_req):
+    """Write signing_req to fp.
+
+    Does proper base64 and json encoding.
+    Tries not to hold onto a lot of memory.
+    """
+    _signing_req = signing_req.copy()
+    input_files = _signing_req.pop("files")
+    fp.write(b"[{")
+    for k, v in _signing_req.items():
+        fp.write(json.dumps(k).encode("utf8"))
+        fp.write(b":")
+        fp.write(json.dumps(v).encode("utf8"))
+        fp.write(b",")
+    fp.write(b'"files":[')
+    for i, input_file in enumerate(input_files):
+        if i > 0:
+            fp.write(b",")
+        fp.write(b'{"name":')
+        fp.write(json.dumps(os.path.basename(input_file["name"])).encode("utf8"))
+        fp.write(b',"content":"')
+        input_file["content"].seek(0)
+        while True:
+            block = input_file["content"].read(1020)
+            if not block:
+                break
+            fp.write(base64.b64encode(block))
+        fp.write(b'"}')
+    fp.write(b"]}]")
 
 
 def get_hawk_content_hash(request_body, content_type):
@@ -896,9 +939,12 @@ def _is_xpi_format(fmt):
 
 
 @time_function
-def make_signing_req(input_file, fmt, keyid=None, extension_id=None):
+def make_signing_req(input_, fmt, autograph_method, *, keyid=None, extension_id=None):
     """Make a signing request object to pass to autograph."""
-    sign_req = {"input": input_file}
+    if autograph_method == "files":
+        sign_req = {"files": [{"name": f.name, "content": f} for f in input_]}
+    else:
+        sign_req = {"input": input_}
 
     if keyid:
         sign_req["keyid"] = keyid
@@ -940,16 +986,16 @@ def _xpi_signing_options(fmt):
 
 
 @time_async_function
-async def sign_with_autograph(session, server, input_file, fmt, autograph_method, keyid=None, extension_id=None):
+async def sign_with_autograph(session, server, input_, fmt, autograph_method, keyid=None, extension_id=None):
     """Signs data with autograph and returns the result.
 
     Args:
         session (aiohttp.ClientSession): client session object
         server (Autograph): the server to connect to sign
-        input_file (file object): the source data to sign
+        input_: the source data to sign (a file object or a list of file objects if the method is "files")
         fmt (str): the format to sign with
         autograph_method (str): which autograph method to use to sign. must be
-                                one of 'file', 'hash', or 'data'
+                                one of 'file', 'hash', 'data', or 'files'
         keyid (str): which key to use on autograph (optional)
         extension_id (str): which id to send to autograph for the extension (optional)
 
@@ -961,11 +1007,11 @@ async def sign_with_autograph(session, server, input_file, fmt, autograph_method
         bytes: the signed data
 
     """
-    if autograph_method not in {"file", "hash", "data"}:
+    if autograph_method not in {"file", "hash", "data", "files"}:
         raise SigningScriptError(f"Unsupported autograph method: {autograph_method}")
 
     keyid = keyid or server.key_id
-    sign_req = make_signing_req(input_file, fmt, keyid, extension_id)
+    sign_req = make_signing_req(input_, fmt, autograph_method, keyid=keyid, extension_id=extension_id)
 
     url = f"{server.url}/sign/{autograph_method}"
 
@@ -976,6 +1022,8 @@ async def sign_with_autograph(session, server, input_file, fmt, autograph_method
 
     if autograph_method == "file":
         return sign_resp[0]["signed_file"]
+    elif autograph_method == "files":
+        return sign_resp[0]["signed_files"]
     else:
         return sign_resp[0]["signature"]
 
