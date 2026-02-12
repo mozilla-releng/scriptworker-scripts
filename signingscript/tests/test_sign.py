@@ -1476,8 +1476,50 @@ async def test_apple_notarize_stacked_unsupported(mocker, context):
         )
 
 
+class MockedFilesSession:
+    def __init__(self, signed_files):
+        self.signed_files = signed_files
+
+    async def post(self, *args, **kwargs):
+        resp = mock.MagicMock()
+        resp.status = 200
+        resp.ok = True
+        future = asyncio.Future()
+        future.set_result([{"signed_files": self.signed_files}])
+        resp.json.return_value = future
+        return resp
+
+
+@pytest.mark.asyncio
+async def test_sign_rpm_pkg(mocker, context):
+    context.task = {"scopes": ["project:releng:signing:cert:dep-signing"]}
+    context.autograph_configs = {
+        "project:releng:signing:cert:dep-signing": [utils.Autograph("https://autograph.example.com", "user", "secret", ["autograph_rpmsign"], "keyid")]
+    }
+
+    signed_content = b"signed-rpm-content"
+
+    with tempfile.NamedTemporaryFile(suffix=".rpm", dir=context.config["work_dir"]) as f:
+        f.write(b"original-rpm-content")
+        f.flush()
+        rpm_path = f.name
+
+        session = MockedFilesSession([{"name": os.path.basename(rpm_path), "content": base64.b64encode(signed_content).decode()}])
+        mocker.patch.object(context, "session", session)
+
+        result = await sign.sign_rpm_pkg(context, rpm_path, "autograph_rpmsign")
+        assert result == rpm_path
+        with open(rpm_path, "rb") as rf:
+            assert rf.read() == signed_content
+
+
+@pytest.mark.asyncio
+async def test_sign_rpm_pkg_wrong_extension(context):
+    with pytest.raises(SigningScriptError, match="Expected a .rpm file"):
+        await sign.sign_rpm_pkg(context, "/path/to/file.txt", "autograph_rpmsign")
+
+
 def test_encode_multiple_files():
-    """Test streaming encoding for /sign/files endpoint."""
     output_file = tempfile.TemporaryFile("w+b")
     input_files = [
         {"name": "file1.rpm", "content": BufferedRandom(BytesIO(b"content1"))},
@@ -1491,8 +1533,8 @@ def test_encode_multiple_files():
         {
             "keyid": "testkey",
             "files": [
-                {"name": "file1.rpm", "content": "Y29udGVudDE="},  # base64 of "content1"
-                {"name": "file2.rpm", "content": "Y29udGVudDI="},  # base64 of "content2"
+                {"name": "file1.rpm", "content": "Y29udGVudDE="},
+                {"name": "file2.rpm", "content": "Y29udGVudDI="},
             ],
         }
     ]
