@@ -219,7 +219,7 @@ def assert_tag_response(req, tag_info, target_revision):
     assert revisions.pop() == target_revision
 
 
-def assert_add_commit_response(action, commit_msg_strings, initial_values, expected_bumps):
+def assert_add_commit_response(action, commit_msg_strings, initial_values, expected_bumps, mode=None):
     # ensure metadata is correct
     assert action["author"] == "Release Engineering Landoscript <release+landoscript@mozilla.com>"
     # we don't actually verify the value here; it's not worth the trouble of mocking
@@ -261,12 +261,12 @@ def assert_add_commit_response(action, commit_msg_strings, initial_values, expec
                 # the diff.
                 if not before:
                     # addition
-                    assert "new file mode 100644" in diff
+                    assert f"new file mode {mode or 100644}" in diff
                     if "\n" not in after and f"+{after}" in diff:
                         break
                 elif not after:
                     # removal
-                    assert "deleted file mode 100644" in diff
+                    assert f"deleted file mode {mode or 100644}" in diff
                     if not "\n" in before and f"-{before}" in diff:
                         break
                 else:

@@ -207,7 +207,7 @@ async def test_get_files(aioresponses, github_client):
 
     aioresponses.post(GITHUB_GRAPHQL_ENDPOINT, status=200, payload={"data": {"repository": {aliases[k]: {"text": v} for k, v in expected.items()}}})
 
-    result = await github_client.get_files(files, branch)
+    result = await github_client.get_files(files, branch, mode=None)
     assert result == expected
 
     aioresponses.assert_called()
@@ -221,13 +221,29 @@ async def test_get_files(aioresponses, github_client):
             query getFileContents {{
               repository(owner: "{github_client.owner}", name: "{github_client.repo}") {{
                 {aliases[str(files[0])]}: object(expression: "{branch}:{files[0]}") {{
-                  ... on Blob {{
-                    text
+                  ... on Tree {{
+                    entries {{
+                      name
+                      mode
+                      object {{
+                        ... on Blob {{
+                          text
+                        }}
+                      }}
+                    }}
                   }}
                 }}
                 {aliases[str(files[1])]}: object(expression: "{branch}:{files[1]}") {{
-                  ... on Blob {{
-                    text
+                  ... on Tree {{
+                    entries {{
+                      name
+                      mode
+                      object {{
+                        ... on Blob {{
+                          text
+                        }}
+                      }}
+                    }}
                   }}
                 }}
               }}
@@ -250,7 +266,7 @@ async def test_get_files_multiple_requests(aioresponses, github_client):
     aioresponses.post(GITHUB_GRAPHQL_ENDPOINT, status=200, payload={"data": {"repository": {aliases["README.md"]: {"text": expected["README.md"]}}}})
     aioresponses.post(GITHUB_GRAPHQL_ENDPOINT, status=200, payload={"data": {"repository": {aliases["version.txt"]: {"text": expected["version.txt"]}}}})
 
-    result = await github_client.get_files(files, branch, files_per_request=1)
+    result = await github_client.get_files(files, branch, files_per_request=1, mode=None)
     assert result == expected
 
     aioresponses.assert_called()
@@ -265,8 +281,16 @@ async def test_get_files_multiple_requests(aioresponses, github_client):
             query getFileContents {{
               repository(owner: "{github_client.owner}", name: "{github_client.repo}") {{
                 {aliases["README.md"]}: object(expression: "{branch}:README.md") {{
-                  ... on Blob {{
-                    text
+                  ... on Tree {{
+                    entries {{
+                      name
+                      mode
+                      object {{
+                        ... on Blob {{
+                          text
+                        }}
+                      }}
+                    }}
                   }}
                 }}
               }}
@@ -280,8 +304,16 @@ async def test_get_files_multiple_requests(aioresponses, github_client):
             query getFileContents {{
               repository(owner: "{github_client.owner}", name: "{github_client.repo}") {{
                 {aliases["version.txt"]}: object(expression: "{branch}:version.txt") {{
-                  ... on Blob {{
-                    text
+                  ... on Tree {{
+                    entries {{
+                      name
+                      mode
+                      object {{
+                        ... on Blob {{
+                          text
+                        }}
+                      }}
+                    }}
                   }}
                 }}
               }}
@@ -308,7 +340,7 @@ async def test_get_files_with_missing(aioresponses, github_client):
         payload={"data": {"repository": {aliases["README.md"]: {"text": "Hello!"}, aliases["version.txt"]: {"text": "109.1.0"}, aliases["missing.txt"]: None}}},
     )
 
-    result = await github_client.get_files(files, branch)
+    result = await github_client.get_files(files, branch, mode=None)
     assert result == expected
 
     aioresponses.assert_called()
@@ -322,18 +354,42 @@ async def test_get_files_with_missing(aioresponses, github_client):
             query getFileContents {{
               repository(owner: "{github_client.owner}", name: "{github_client.repo}") {{
                 {aliases[str(files[0])]}: object(expression: "{branch}:{files[0]}") {{
-                  ... on Blob {{
-                    text
+                  ... on Tree {{
+                    entries {{
+                      name
+                      mode
+                      object {{
+                        ... on Blob {{
+                          text
+                        }}
+                      }}
+                    }}
                   }}
                 }}
                 {aliases[str(files[1])]}: object(expression: "{branch}:{files[1]}") {{
-                  ... on Blob {{
-                    text
+                  ... on Tree {{
+                    entries {{
+                      name
+                      mode
+                      object {{
+                        ... on Blob {{
+                          text
+                        }}
+                      }}
+                    }}
                   }}
                 }}
                 {aliases[str(files[2])]}: object(expression: "{branch}:{files[2]}") {{
-                  ... on Blob {{
-                    text
+                  ... on Tree {{
+                    entries {{
+                      name
+                      mode
+                      object {{
+                        ... on Blob {{
+                          text
+                        }}
+                      }}
+                    }}
                   }}
                 }}
               }}
