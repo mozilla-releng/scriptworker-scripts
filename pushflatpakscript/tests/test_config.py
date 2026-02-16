@@ -10,6 +10,7 @@ COMMON_CONTEXT = {
     "ARTIFACTS_DIR": "",
     "VERBOSE": "true",
     "APP_ID": "",
+    "COT_PRODUCT": "firefox",
     "TASKCLUSTER_SCOPE_PREFIX": "",
     "FLATHUB_URL": "https://flat.example",
     "FLAT_MANAGER_CLIENT": "/app/bin/flat-manager-client",
