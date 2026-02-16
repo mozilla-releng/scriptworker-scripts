@@ -23,6 +23,12 @@
                 "channel": {
                     "type": "string"
                 },
+                "app_id": {
+                    "type": "string"
+                },
+                "branch": {
+                    "type": "string"
+                },
                 "upstreamArtifacts": {
                     "type": "array",
                     "items": {

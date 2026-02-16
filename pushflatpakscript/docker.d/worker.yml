@@ -1,17 +1,7 @@
 work_dir: { "$eval": "WORK_DIR" }
 artifact_dir: { "$eval": "ARTIFACTS_DIR" }
 verbose: { "$eval": "VERBOSE == 'true'" }
-app_ids:
-  beta: {"$eval": "APP_ID" }
-  stable: {"$eval": "APP_ID"}
-  release:
-    $if: defined("APP_ID_RELEASE")
-    then: {"$eval": "APP_ID_RELEASE"}
-    else: ''
-  esr:
-    $if: defined("APP_ID_ESR")
-    then: {"$eval": "APP_ID_ESR"}
-    else: ''
+app_id: { "$eval": "APP_ID" }
 taskcluster_scope_prefix: { "$eval": "TASKCLUSTER_SCOPE_PREFIX" }
 push_to_flathub: { "$eval": "ENV == 'prod'" }
 flathub_url: { "$eval": "FLATHUB_URL" }
@@ -24,11 +14,11 @@ token_locations:
     stable: { "$eval": "REPO_TOKEN_STABLE_PATH" }
     release:
       $if: defined("REPO_TOKEN_RELEASE_PATH")
-      then: {"$eval": "REPO_TOKEN_RELEASE_PATH"}
+      then: { "$eval": "REPO_TOKEN_RELEASE_PATH" }
       else: ''
     esr:
       $if: defined("REPO_TOKEN_ESR_PATH")
-      then: {"$eval": "REPO_TOKEN_ESR_PATH"}
+      then: { "$eval": "REPO_TOKEN_ESR_PATH" }
       else: ''
 
   else: {}

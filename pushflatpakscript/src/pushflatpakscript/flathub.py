@@ -142,30 +142,29 @@ def check_and_extract_tar_archive(context, tar_file_path):
     return os.path.join(flatpak_tar_basedir, flatpak_deflated_dir)
 
 
-def check_app_id_matches_flatpak(context, flatpak_path, channel):
+def check_app_id_matches_flatpak(context, flatpak_path):
     # Extract all ostree refs from the supplied Flatpak repo
     flatpak_refs = subprocess.check_output(["ostree", "refs"], cwd=flatpak_path).decode().splitlines()
 
     # Consolidate ostree refs into list of Flatpak IDs available in repo
     flatpak_refs = [ref.split("/")[1] for ref in flatpak_refs if ref.startswith("app/")]
 
-    # Create a list, if any, of all unexpected Flatpak IDs present in repo
-    invalid_refs = set(flatpak_refs) - set(context.config["app_ids"].values())
+    app_id = task.get_flatpak_app_id(context.config, context.task)
 
-    if context.config["app_ids"][channel] not in flatpak_refs:
-        raise TaskVerificationError(f"Supplied app ID ({context.config['app_ids'][channel]}) is not present in Flatpak!")
+    # Create a list, if any, of all unexpected Flatpak IDs present in repo
+    invalid_refs = set(flatpak_refs) - app_id
+
+    if app_id not in flatpak_refs:
+        raise TaskVerificationError(f"Supplied app ID ({app_id}) is not present in Flatpak!")
 
     if len(invalid_refs) > 0:
         raise TaskVerificationError("One or more invalid app IDs are present in Flatpak!")
 
 
-def check_config_for_channel(config, channel):
-    """Verify AppID and token location defined for supplied channel"""
-    if channel not in config["app_ids"]:
-        raise TaskVerificationError(f"Supplied channel ({channel}) does not have a configured appID")
-
-    if channel not in config["token_locations"]:
-        raise TaskVerificationError(f"Supplied channel ({channel}) does not have a configured token")
+def check_config_for_branch(config, branch):
+    """Verify Token location defined for supplied branch"""
+    if branch not in config["token_locations"]:
+        raise TaskVerificationError(f"Supplied branch ({branch}) does not have a configured token")
 
 
 def sanitize_buildid(bytes_input):
@@ -183,13 +182,14 @@ def push(context, flatpak_file_path, channel):
         # We don't raise an error because we still want green tasks on dev instances
         return
 
-    check_config_for_channel(context.config, channel)
+    branch = task.get_release_branch(context.config, context.task)
 
-    token_args = ["--token-file", context.config["token_locations"][channel]]
+    check_config_for_branch(context.config, branch)
+
+    token_args = ["--token-file", context.config["token_locations"][branch]]
     log.info("Grab a flatpak buildid from Flathub ...")
-    publish_channel = "beta" if channel == "beta" else "stable"
     publish_build_output = run_flat_manager_client_process(
-        context, token_args + ["create", context.config["flathub_url"], publish_channel, "--build-log-url", build_log]
+        context, token_args + ["create", context.config["flathub_url"], channel, "--build-log-url", build_log]
     )
 
     log.info("Sanitize the buildid received from Flathub ...")
@@ -203,7 +203,7 @@ def push(context, flatpak_file_path, channel):
     deflated_dir = check_and_extract_tar_archive(context, flatpak_file_path)
 
     log.info("Verifying supplied app ID matches flatpak app ID...")
-    check_app_id_matches_flatpak(context, deflated_dir, channel)
+    check_app_id_matches_flatpak(context, deflated_dir)
 
     log.info(f"Pushing the flatpak to the associated {publish_build_output}")
     run_flat_manager_client_process(context, token_args + ["push", publish_build_output, deflated_dir])
