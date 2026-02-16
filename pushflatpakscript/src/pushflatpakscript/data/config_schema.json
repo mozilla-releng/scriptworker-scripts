@@ -2,7 +2,7 @@
     "title": "pushflatpakscript config schema",
     "type": "object",
     "required": [
-        "app_ids",
+        "app_id",
         "taskcluster_scope_prefix",
         "push_to_flathub",
         "token_locations",
@@ -11,11 +11,8 @@
         "taskcluster_root_url"
     ],
     "properties": {
-        "app_ids": {
-            "type": "object",
-            "additionalProperties": {
-                "type": "string"
-            }
+        "app_id": {
+            "type": "string"
         },
         "taskcluster_scope_prefix": {
             "type": "string"

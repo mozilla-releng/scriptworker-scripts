@@ -1,6 +1,6 @@
 from scriptworker.exceptions import TaskVerificationError
 
-_CHANNELS_AUTHORIZED_TO_REACH_FLATHUB = ("beta", "stable", "release", "esr")
+_CHANNELS_AUTHORIZED_TO_REACH_FLATHUB = ("beta", "stable")
 ALLOWED_CHANNELS = ("mock", *_CHANNELS_AUTHORIZED_TO_REACH_FLATHUB)
 
 
@@ -18,6 +18,18 @@ def get_flatpak_channel(config, task):
         raise TaskVerificationError('Channel "{}" is not allowed. Allowed ones are: {}'.format(channel, ALLOWED_CHANNELS))
 
     return channel
+
+
+def get_flatpak_app_id(config, task):
+    payload = task["payload"]
+
+    return payload.get("app_id", config["app_id"])
+
+
+def get_release_branch(config, task):
+    payload = task["payload"]
+
+    return payload.get("branch", config["channel"])
 
 
 def is_allowed_to_push_to_flathub(config, channel):
