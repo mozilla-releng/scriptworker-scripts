@@ -1,0 +1,13 @@
+{
+    "title": "signingscript mar-channels config schema",
+    "type": "object",
+    "patternProperties": {
+        "cert:(nightly|release|dep)-signing$": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        }
+    },
+    "additionalProperties": false
+}
