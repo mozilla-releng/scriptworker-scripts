@@ -295,7 +295,7 @@ async def test_sign_mar384_with_autograph_hash(context, mocker, to, expected):
     m_mock.calculate_hashes.return_value = [[None, b"b64marhash"]]
     MarReader_mock = mocker.Mock()
     MarReader_mock.return_value.__enter__ = mocker.Mock(return_value=m_mock)
-    MarReader_mock.return_value.__exit__ = mocker.Mock()
+    MarReader_mock.return_value.__exit__ = mocker.Mock(return_value=None)
     mocker.patch("signingscript.sign.MarReader", MarReader_mock, create=True)
     mocker.patch("signingscript.sign.verify_mar_signature")
 
@@ -378,7 +378,7 @@ async def test_sign_mar384_with_autograph_hash_returns_invalid_signature_length(
     m_mock.calculate_hashes.return_value = [[None, b"b64marhash"]]
     MarReader_mock = mocker.Mock()
     MarReader_mock.return_value.__enter__ = mocker.Mock(return_value=m_mock)
-    MarReader_mock.return_value.__exit__ = mocker.Mock()
+    MarReader_mock.return_value.__exit__ = mocker.Mock(return_value=None)
     mocker.patch("signingscript.sign.MarReader", MarReader_mock, create=True)
 
     context.autograph_configs = {
