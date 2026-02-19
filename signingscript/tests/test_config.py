@@ -11,6 +11,7 @@ COMMON_CONTEXT = {
     "VERBOSE": "true",
     "PASSWORDS_PATH": "",
     "APPLE_NOTARIZATION_CREDS_PATH": "",
+    "MAR_CHANNELS_PATH": "",
     "SSL_CERT_PATH": "",
     "SIGNTOOL_PATH": "",
     "DMG_PATH": "",
@@ -45,16 +46,59 @@ def _validate_config(context):
     context.update(COMMON_CONTEXT)
     config = load_config(os.path.join(os.path.dirname(__file__), "..", "docker.d", "worker.yml"), context)
     passwords_config = load_config(os.path.join(os.path.dirname(__file__), "..", "docker.d", "passwords.yml"), context)
+    mar_channels_config = load_config(os.path.join(os.path.dirname(__file__), "..", "docker.d", "mar-channels.yml"), context)
     config_schema = load_schema(os.path.join(os.path.dirname(__file__), "..", "src", "signingscript", "data", "config_schema.json"))
     passwords_schema = load_schema(os.path.join(os.path.dirname(__file__), "..", "src", "signingscript", "data", "passwords_config_schema.json"))
+    mar_config_schema = load_schema(os.path.join(os.path.dirname(__file__), "..", "src", "signingscript", "data", "mar_config_schema.json"))
 
     jsonschema.validate(config, config_schema)
     jsonschema.validate(passwords_config, passwords_schema)
+    jsonschema.validate(mar_channels_config, mar_config_schema)
 
 
 def test_firefox_dev():
     context = {
         "COT_PRODUCT": "firefox",
+        "ENV": "dev",
+        "AUTOGRAPH_AUTHENTICODE_SHA2_USERNAME": "",
+        "AUTOGRAPH_AUTHENTICODE_SHA2_PASSWORD": "",
+        "AUTOGRAPH_MAR_USERNAME": "",
+        "AUTOGRAPH_MAR_PASSWORD": "",
+        "AUTOGRAPH_GPG_USERNAME": "",
+        "AUTOGRAPH_GPG_PASSWORD": "",
+        "AUTOGRAPH_WIDEVINE_USERNAME": "",
+        "AUTOGRAPH_WIDEVINE_PASSWORD": "",
+        "AUTOGRAPH_OMNIJA_USERNAME": "",
+        "AUTOGRAPH_OMNIJA_PASSWORD": "",
+        "AUTOGRAPH_LANGPACK_USERNAME": "",
+        "AUTOGRAPH_LANGPACK_PASSWORD": "",
+        "AUTOGRAPH_FOCUS_USERNAME": "",
+        "AUTOGRAPH_FOCUS_PASSWORD": "",
+        "AUTOGRAPH_FENIX_USERNAME": "",
+        "AUTOGRAPH_FENIX_PASSWORD": "",
+        "AUTOGRAPH_STAGE_AUTHENTICODE_SHA2_USERNAME": "",
+        "AUTOGRAPH_STAGE_AUTHENTICODE_SHA2_PASSWORD": "",
+        "AUTOGRAPH_STAGE_MAR_USERNAME": "",
+        "AUTOGRAPH_STAGE_MAR_PASSWORD": "",
+        "AUTOGRAPH_STAGE_GPG_USERNAME": "",
+        "AUTOGRAPH_STAGE_GPG_PASSWORD": "",
+        "AUTOGRAPH_STAGE_OMNIJA_USERNAME": "",
+        "AUTOGRAPH_STAGE_OMNIJA_PASSWORD": "",
+        "AUTOGRAPH_STAGE_WIDEVINE_USERNAME": "",
+        "AUTOGRAPH_STAGE_WIDEVINE_PASSWORD": "",
+        "AUTOGRAPH_STAGE_LANGPACK_USERNAME": "",
+        "AUTOGRAPH_STAGE_LANGPACK_PASSWORD": "",
+        "AUTOGRAPH_STAGE_FOCUS_USERNAME": "",
+        "AUTOGRAPH_STAGE_FOCUS_PASSWORD": "",
+        "AUTOGRAPH_STAGE_FENIX_USERNAME": "",
+        "AUTOGRAPH_STAGE_FENIX_PASSWORD": "",
+    }
+    _validate_config(context)
+
+
+def test_enterprise_dev():
+    context = {
+        "COT_PRODUCT": "enterprise",
         "ENV": "dev",
         "AUTOGRAPH_AUTHENTICODE_SHA2_USERNAME": "",
         "AUTOGRAPH_AUTHENTICODE_SHA2_PASSWORD": "",

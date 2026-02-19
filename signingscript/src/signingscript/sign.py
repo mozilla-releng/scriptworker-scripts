@@ -1149,6 +1149,19 @@ def verify_mar_signature(cert_type, fmt, mar, keyid=None):
         raise SigningScriptError(e)
 
 
+def validate_mar_channel(context, mar):
+    """Verify the mar channel matches an authorized pattern"""
+    cert_type = task.task_cert_type(context)
+    try:
+        channel_id = mar.productinfo[1]
+    except TypeError:
+        raise SigningScriptError("Can't find mar channel id")
+    allowed_channels = context.mar_channels.get(cert_type, [])
+    if any(fnmatch.fnmatch(channel_id, pattern) for pattern in allowed_channels):
+        return
+    raise SigningScriptError(f"Cannot use mar channel id {channel_id}, expected one of {allowed_channels}")
+
+
 @time_async_function
 async def sign_mar384_with_autograph_hash(context, from_, fmt, to=None, **kwargs):
     """Signs a hash with autograph, injects it into the file, and writes the result to arg `to` or `from_` if `to` is None.
@@ -1184,6 +1197,8 @@ async def sign_mar384_with_autograph_hash(context, from_, fmt, to=None, **kwargs
         tmp.seek(0)
 
         with MarReader(tmp) as m:
+            validate_mar_channel(context, m)
+
             hashes = m.calculate_hashes()
         h = hashes[0][1]
 
