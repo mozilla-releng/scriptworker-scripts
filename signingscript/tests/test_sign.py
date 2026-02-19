@@ -293,6 +293,7 @@ async def test_sign_mar384_with_autograph_hash(context, mocker, to, expected):
 
     m_mock = mocker.MagicMock()
     m_mock.calculate_hashes.return_value = [[None, b"b64marhash"]]
+    m_mock.productinfo = ("149.0a1", "firefox-mozilla-central")
     MarReader_mock = mocker.Mock()
     MarReader_mock.return_value.__enter__ = mocker.Mock(return_value=m_mock)
     MarReader_mock.return_value.__exit__ = mocker.Mock(return_value=None)
@@ -397,6 +398,45 @@ async def test_sign_mar384_with_autograph_hash_returns_invalid_signature_length(
     m_mock.calculate_hashes.assert_called()
     mocked_session.post.assert_called_with("https://autograph-hsm.dev.mozaws.net/sign/hash", headers=mocker.ANY, data=mocker.ANY)
     assert json.load(mocked_session.post.call_args[1]["data"]) == [{"input": "YjY0bWFyaGFzaA=="}]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("channel,raises", (("firefox-mozilla-central", False), ("firefox-nightly-pine", False), ("firefox-mozilla-beta", True), ("firefox-mozilla-release", True)))
+async def test_sign_mar384_with_autograph_hash_channel(context, mocker, channel, raises):
+    open_mock = mocker.mock_open(read_data=b"0xdeadbeef")
+    mocker.patch("builtins.open", open_mock, create=True)
+
+    mocked_session = MockedSession(signature=base64.b64encode(b"0" * 512))
+    mocker.patch.object(context, "session", new=mocked_session)
+
+    add_signature_mock = mocker.Mock()
+    mocker.patch("signingscript.sign.add_signature_block", add_signature_mock, create=True)
+
+    m_mock = mocker.MagicMock()
+    m_mock.calculate_hashes.return_value = [[None, b"b64marhash"]]
+    m_mock.productinfo = ("149.0a1", channel)
+    MarReader_mock = mocker.Mock()
+    MarReader_mock.return_value.__enter__ = mocker.Mock(return_value=m_mock)
+    MarReader_mock.return_value.__exit__ = mocker.Mock(return_value=None)
+    mocker.patch("signingscript.sign.MarReader", MarReader_mock, create=True)
+    mocker.patch("signingscript.sign.verify_mar_signature")
+
+    context.autograph_configs = {
+        TEST_CERT_TYPE: [
+            utils.Autograph(
+                "https://autograph-hsm.dev.mozaws.net", "alice", "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu", ["autograph_hash_only_mar384"]
+            )
+        ]
+    }
+    context.mar_channels = {
+        TEST_CERT_TYPE: ["firefox-mozilla-central", "firefox-nightly-*"],
+    }
+
+    if raises:
+        with pytest.raises(SigningScriptError):
+            await sign.sign_mar384_with_autograph_hash(context, "from", "autograph_hash_only_mar384")
+    else:
+        assert await sign.sign_mar384_with_autograph_hash(context, "from", "autograph_hash_only_mar384") == "from"
 
 
 # sign_macapp {{{1

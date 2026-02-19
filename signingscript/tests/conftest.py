@@ -56,6 +56,7 @@ def context(tmpdir):
     context.config["apple_notarization_configs"] = APPLE_CONFIG_PATH
     context.autograph_configs = load_autograph_configs(SERVER_CONFIG_PATH)
     context.apple_credentials_path = "fakepath"
+    context.mar_channels = {TEST_CERT_TYPE: ["*"]}
     mkdir(context.config["work_dir"])
     mkdir(context.config["artifact_dir"])
     context.task = {"scopes": [TEST_CERT_TYPE]}
