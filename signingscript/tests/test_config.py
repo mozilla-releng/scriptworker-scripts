@@ -72,6 +72,8 @@ def test_firefox_dev():
         "AUTOGRAPH_FOCUS_PASSWORD": "",
         "AUTOGRAPH_FENIX_USERNAME": "",
         "AUTOGRAPH_FENIX_PASSWORD": "",
+        "AUTOGRAPH_RPMSIGN_USERNAME": "",
+        "AUTOGRAPH_RPMSIGN_PASSWORD": "",
         "AUTOGRAPH_STAGE_AUTHENTICODE_SHA2_USERNAME": "",
         "AUTOGRAPH_STAGE_AUTHENTICODE_SHA2_PASSWORD": "",
         "AUTOGRAPH_STAGE_MAR_USERNAME": "",
@@ -88,6 +90,8 @@ def test_firefox_dev():
         "AUTOGRAPH_STAGE_FOCUS_PASSWORD": "",
         "AUTOGRAPH_STAGE_FENIX_USERNAME": "",
         "AUTOGRAPH_STAGE_FENIX_PASSWORD": "",
+        "AUTOGRAPH_STAGE_RPMSIGN_USERNAME": "",
+        "AUTOGRAPH_STAGE_RPMSIGN_PASSWORD": "",
     }
     _validate_config(context)
 
@@ -114,6 +118,8 @@ def test_thunderbird_fake_prod():
         "AUTOGRAPH_FOCUS_PASSWORD": "",
         "AUTOGRAPH_FENIX_USERNAME": "",
         "AUTOGRAPH_FENIX_PASSWORD": "",
+        "AUTOGRAPH_RPMSIGN_USERNAME": "",
+        "AUTOGRAPH_RPMSIGN_PASSWORD": "",
         "AUTOGRAPH_STAGE_AUTHENTICODE_SHA2_USERNAME": "",
         "AUTOGRAPH_STAGE_AUTHENTICODE_SHA2_PASSWORD": "",
         "AUTOGRAPH_STAGE_MAR_USERNAME": "",
@@ -130,6 +136,8 @@ def test_thunderbird_fake_prod():
         "AUTOGRAPH_STAGE_FOCUS_PASSWORD": "",
         "AUTOGRAPH_STAGE_FENIX_USERNAME": "",
         "AUTOGRAPH_STAGE_FENIX_PASSWORD": "",
+        "AUTOGRAPH_STAGE_RPMSIGN_USERNAME": "",
+        "AUTOGRAPH_STAGE_RPMSIGN_PASSWORD": "",
     }
     _validate_config(context)
 
@@ -186,6 +194,8 @@ def test_firefox_prod():
         "AUTOGRAPH_FENIX_PASSWORD": "",
         "AUTOGRAPH_FENIX_MOZILLA_ONLINE_USERNAME": "",
         "AUTOGRAPH_FENIX_MOZILLA_ONLINE_PASSWORD": "",
+        "AUTOGRAPH_RPMSIGN_USERNAME": "",
+        "AUTOGRAPH_RPMSIGN_PASSWORD": "",
     }
     _validate_config(context)
 
@@ -210,6 +220,8 @@ def test_thunderbird_prod():
         "AUTOGRAPH_LANGPACK_PASSWORD": "",
         "AUTOGRAPH_MAR_NIGHTLY_USERNAME": "",
         "AUTOGRAPH_MAR_NIGHTLY_PASSWORD": "",
+        "AUTOGRAPH_RPMSIGN_USERNAME": "",
+        "AUTOGRAPH_RPMSIGN_PASSWORD": "",
     }
     _validate_config(context)
 
