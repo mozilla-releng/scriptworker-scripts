@@ -194,6 +194,8 @@ def test_firefox_prod():
         "AUTOGRAPH_FENIX_PASSWORD": "",
         "AUTOGRAPH_FENIX_MOZILLA_ONLINE_USERNAME": "",
         "AUTOGRAPH_FENIX_MOZILLA_ONLINE_PASSWORD": "",
+        "AUTOGRAPH_RPMSIGN_USERNAME": "",
+        "AUTOGRAPH_RPMSIGN_PASSWORD": "",
     }
     _validate_config(context)
 
@@ -218,6 +220,8 @@ def test_thunderbird_prod():
         "AUTOGRAPH_LANGPACK_PASSWORD": "",
         "AUTOGRAPH_MAR_NIGHTLY_USERNAME": "",
         "AUTOGRAPH_MAR_NIGHTLY_PASSWORD": "",
+        "AUTOGRAPH_RPMSIGN_USERNAME": "",
+        "AUTOGRAPH_RPMSIGN_PASSWORD": "",
     }
     _validate_config(context)
 
