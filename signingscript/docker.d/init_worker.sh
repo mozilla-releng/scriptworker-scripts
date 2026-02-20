@@ -208,6 +208,8 @@ case $ENV in
         test_var_set 'AUTOGRAPH_MAR_RELEASE_USERNAME'
         test_var_set 'AUTOGRAPH_OMNIJA_PASSWORD'
         test_var_set 'AUTOGRAPH_OMNIJA_USERNAME'
+        test_var_set 'AUTOGRAPH_RPMSIGN_USERNAME'
+        test_var_set 'AUTOGRAPH_RPMSIGN_PASSWORD'
         test_var_set 'AUTOGRAPH_WIDEVINE_PASSWORD'
         test_var_set 'AUTOGRAPH_WIDEVINE_USERNAME'
         if [ "$COT_PRODUCT" = "firefox" ]; then
