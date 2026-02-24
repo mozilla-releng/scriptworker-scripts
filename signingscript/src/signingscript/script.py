@@ -11,7 +11,7 @@ import scriptworker.client
 
 from signingscript.exceptions import SigningScriptError
 from signingscript.task import apple_notarize_stacked, build_filelist_dict, sign, task_cert_type, task_signing_formats
-from signingscript.utils import copy_to_dir, load_apple_notarization_configs, load_autograph_configs
+from signingscript.utils import copy_to_dir, load_apple_notarization_configs, load_autograph_configs, load_json
 
 log = logging.getLogger(__name__)
 
@@ -46,6 +46,10 @@ async def async_main(context):
 
         context.session = session
         context.autograph_configs = load_autograph_configs(context.config["autograph_configs"])
+        if "mar_channels" in context.config:
+            context.mar_channels = load_json(context.config["mar_channels"])
+        else:
+            context.mar_channels = {}
 
         # TODO: Make task.sign take in the whole filelist_dict and return a dict of output files.
         #       That would likely mean changing all behaviors to accept and deal with multiple files at once.

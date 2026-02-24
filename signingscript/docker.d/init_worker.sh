@@ -25,6 +25,7 @@ export HFSPLUS_PATH=$APP_DIR/signingscript/files/hfsplus
 
 export PASSWORDS_PATH=$CONFIG_DIR/passwords.json
 export APPLE_NOTARIZATION_CREDS_PATH=$CONFIG_DIR/apple_notarization_creds.json
+export MAR_CHANNELS_PATH=$CONFIG_DIR/mar-channels.json
 export GPG_PUBKEY_PATH=$APP_DIR/signingscript/src/signingscript/data/gpg_pubkey_dep.asc
 export WIDEVINE_CERT_PATH=$CONFIG_DIR/widevine.crt
 export AUTHENTICODE_TIMESTAMP_STYLE=old
@@ -280,3 +281,4 @@ esac
 
 $CONFIG_LOADER $TEMPLATE_DIR/passwords.yml $PASSWORDS_PATH
 $CONFIG_LOADER $TEMPLATE_DIR/apple_notarization_creds.yml $APPLE_NOTARIZATION_CREDS_PATH
+$CONFIG_LOADER $TEMPLATE_DIR/mar-channels.yml $MAR_CHANNELS_PATH

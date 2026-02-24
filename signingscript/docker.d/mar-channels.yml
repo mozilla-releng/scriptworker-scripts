@@ -1,0 +1,27 @@
+$let:
+  scope_prefix:
+    $match:
+      'COT_PRODUCT == "adhoc"': 'project:adhoc:releng:signing:'
+      'COT_PRODUCT == "enterprise"': 'project:enterprise:releng:signing:'
+      'COT_PRODUCT == "firefox"': 'project:releng:signing:'
+      'COT_PRODUCT == "thunderbird"': 'project:comm:thunderbird:releng:signing:'
+in:
+  $switch:
+    'COT_PRODUCT == "adhoc"':
+      # adhoc can sign anything, for custom updates
+      '${scope_prefix[0]}cert:nightly-signing': ["*"]
+      '${scope_prefix[0]}cert:release-signing': ["*"]
+      '${scope_prefix[0]}cert:dep-signing': ["*"]
+    'COT_PRODUCT == "enterprise"':
+      '${scope_prefix[0]}cert:nightly-signing': ["firefox-enterprise-nightly"]
+      '${scope_prefix[0]}cert:release-signing': ["firefox-enterprise-release"]
+      '${scope_prefix[0]}cert:dep-signing': ["*"]
+    'COT_PRODUCT == "firefox"':
+      '${scope_prefix[0]}cert:nightly-signing': ["firefox-nightly-*", "firefox-mozilla-central", "firefox-mozilla-aurora"]
+      '${scope_prefix[0]}cert:release-signing': ["firefox-mozilla-beta", "firefox-mozilla-release", "firefox-mozilla-esr"]
+      '${scope_prefix[0]}cert:dep-signing': ["*"]
+    'COT_PRODUCT == "thunderbird"':
+      '${scope_prefix[0]}cert:nightly-signing': ["thunderbird-comm-central"]
+      '${scope_prefix[0]}cert:release-signing': ["thunderbird-comm-beta", "thunderbird-comm-release", "thunderbird-comm-esr"]
+      '${scope_prefix[0]}cert:dep-signing': ["*"]
+    $default: {}
