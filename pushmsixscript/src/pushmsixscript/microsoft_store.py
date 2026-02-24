@@ -267,13 +267,19 @@ def _get_submission_status(config, channel, session, submission_id, headers):
     return response.json()
 
 
+FAILURE_STATUSES = ("CommitFailed", "PreProcessingFailed", "CertificationFailed", "ReleaseFailed", "PublishFailed", "Canceled")
+# Statuses from the microsoft store that indicate the submission has passed the
+# commit phase and is out of our control
+OK_STATUSES = ("PreProcessing", "Certification", "Release", "PendingPublication", "Publishing", "Published")
+TERMINAL_STATUSES = FAILURE_STATUSES + OK_STATUSES
+
+
 def _wait_for_commit_completion(config, channel, session, submission_id, headers):
     # pull submission status until commit process is completed
     response_json = _get_submission_status(config, channel, session, submission_id, headers)
     log.info(response_json.get("status"))
     attempts = 1
-    # TODO: Confirm what the status is for a complete submission!
-    while response_json.get("status") not in ("PreProcessing", "CommitFailed"):
+    while response_json.get("status") not in TERMINAL_STATUSES:
         if attempts > COMMIT_POLL_MAX_ATTEMPTS:
             log.error(
                 "This task reached the max polling attempts for a submission and may "
@@ -287,7 +293,8 @@ def _wait_for_commit_completion(config, channel, session, submission_id, headers
         time.sleep(COMMIT_POLL_WAIT_SECONDS)
         response_json = _get_submission_status(config, channel, session, submission_id, headers)
         log.info(response_json.get("status"))
-    if "Failed" in response_json.get("status", ""):
+
+    if response_json["status"] in FAILURE_STATUSES:
         log.error(
             "This task failed and may have left a pending submission in the Store. "
             "It may be possible to edit it and submit it manually from the Partner "
