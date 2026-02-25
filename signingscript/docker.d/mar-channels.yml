@@ -17,7 +17,7 @@ in:
       '${scope_prefix[0]}cert:release-signing': ["firefox-enterprise-release"]
       '${scope_prefix[0]}cert:dep-signing': ["*"]
     'COT_PRODUCT == "firefox"':
-      '${scope_prefix[0]}cert:nightly-signing': ["firefox-nightly-*", "firefox-mozilla-central", "firefox-mozilla-aurora"]
+      '${scope_prefix[0]}cert:nightly-signing': ["firefox-nightly-*", "firefox-mozilla-central", "firefox-mozilla-central-asan", "firefox-mozilla-aurora"]
       '${scope_prefix[0]}cert:release-signing': ["firefox-mozilla-beta", "firefox-mozilla-release", "firefox-mozilla-esr"]
       '${scope_prefix[0]}cert:dep-signing': ["*"]
     'COT_PRODUCT == "thunderbird"':
