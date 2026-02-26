@@ -10,20 +10,30 @@ transforms:
     - taskgraph.transforms.cached_tasks:transforms
     - taskgraph.transforms.task:transforms
 
+meta:
+  - &py311 "3.11.9"
+  - &py314 "3.14.3"
+  - &uv_version "0.7.15"
+
 tasks:
     python311:
         definition: base-test
         args:
-            PYTHON_VERSION: "3.11.9"
-            UV_VERSION: "0.7.15"
+            PYTHON_VERSION: *py311
+            UV_VERSION: *uv_version
+    python314:
+        definition: base-test
+        args:
+            PYTHON_VERSION: *py314
+            UV_VERSION: *uv_version
 
     # Used by push-image kind
     skopeo: {}
 
     base:
         args:
-            PYTHON_VERSION: "3.11.9"
-            UV_VERSION: "0.7.15"
+            PYTHON_VERSION: *py311
+            UV_VERSION: *uv_version
     addonscript:
         definition: script
         parent: base
@@ -84,18 +94,37 @@ tasks:
     pushapkscript-test-py311:
         definition: base-test
         args:
-            PYTHON_VERSION: "3.11.9"
+            PYTHON_VERSION: *py311
             APT_PACKAGES: default-jdk
 
     pushflatpakscript-test-py311:
         definition: base-test
         args:
-            PYTHON_VERSION: "3.11.9"
+            PYTHON_VERSION: *py311
             # Copied from pushflatpakscript/docker.d/image_setup.sh
             APT_PACKAGES: gir1.2-ostree-1.0 libgirepository1.0-dev ostree
 
     signingscript-test-py311:
         definition: base-test
         args:
-            PYTHON_VERSION: "3.11.9"
+            PYTHON_VERSION: *py311
+            APT_PACKAGES: osslsigncode cmake clang
+
+    pushapkscript-test-py314:
+        definition: base-test
+        args:
+            PYTHON_VERSION: *py314
+            APT_PACKAGES: default-jdk
+
+    pushflatpakscript-test-py314:
+        definition: base-test
+        args:
+            PYTHON_VERSION: *py314
+            # Copied from pushflatpakscript/docker.d/image_setup.sh
+            APT_PACKAGES: gir1.2-ostree-1.0 libgirepository1.0-dev ostree
+
+    signingscript-test-py314:
+        definition: base-test
+        args:
+            PYTHON_VERSION: *py314
             APT_PACKAGES: osslsigncode cmake clang
