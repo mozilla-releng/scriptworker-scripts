@@ -43,7 +43,7 @@ task-defaults:
         - tox.ini
         - uv.lock
     matrix:
-        python: ["311"]
+        python: ["311", "314"]
 
 tasks:
     addonscript:
