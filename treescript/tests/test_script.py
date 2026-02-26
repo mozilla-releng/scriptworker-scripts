@@ -71,10 +71,10 @@ async def test_async_main(mocker, task, expected):
     else:
         await script.async_main(config, task)
         if expected == "github":
-            assert github_mock.called_with(config, task)
+            github_mock.assert_called_with(config, task)
             assert not gecko_mock.called
         elif expected == "gecko":
-            assert gecko_mock.called_with(config, task)
+            gecko_mock.assert_called_with(config, task)
             assert not github_mock.called
 
 
