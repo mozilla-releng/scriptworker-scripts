@@ -12,7 +12,7 @@ transforms:
 
 meta:
     - &py311 "3.11.9"
-    - &py313 "3.13.12"
+    - &py314 "3.14.3"
     - &uv_version "0.7.15"
 
 tasks:
@@ -21,10 +21,10 @@ tasks:
         args:
             PYTHON_VERSION: *py311
             UV_VERSION: *uv_version
-    python313:
+    python314:
         definition: base-test
         args:
-            PYTHON_VERSION: *py313
+            PYTHON_VERSION: *py314
             UV_VERSION: *uv_version
 
     # Used by push-image kind
@@ -110,21 +110,21 @@ tasks:
             PYTHON_VERSION: *py311
             APT_PACKAGES: osslsigncode cmake clang
 
-    pushapkscript-test-py313:
+    pushapkscript-test-py314:
         definition: base-test
         args:
-            PYTHON_VERSION: *py313
+            PYTHON_VERSION: *py314
             APT_PACKAGES: default-jdk
 
-    pushflatpakscript-test-py313:
+    pushflatpakscript-test-py314:
         definition: base-test
         args:
-            PYTHON_VERSION: *py313
+            PYTHON_VERSION: *py314
             # Copied from pushflatpakscript/docker.d/image_setup.sh
             APT_PACKAGES: gir1.2-ostree-1.0 libgirepository1.0-dev ostree
 
-    signingscript-test-py313:
+    signingscript-test-py314:
         definition: base-test
         args:
-            PYTHON_VERSION: *py313
+            PYTHON_VERSION: *py314
             APT_PACKAGES: osslsigncode cmake clang
