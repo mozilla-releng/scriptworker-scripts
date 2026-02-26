@@ -11,9 +11,9 @@ transforms:
     - taskgraph.transforms.task:transforms
 
 meta:
-  - &py311 "3.11.9"
-  - &py314 "3.14.3"
-  - &uv_version "0.7.15"
+    - &py311 "3.11.9"
+    - &py314 "3.14.3"
+    - &uv_version "0.7.15"
 
 tasks:
     python311:
