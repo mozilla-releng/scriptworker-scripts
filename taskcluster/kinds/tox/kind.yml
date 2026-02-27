@@ -8,14 +8,15 @@ kind-dependencies:
     - docker-image
 
 transforms:
-    - scriptworker_taskgraph.transforms.python_version:transforms
+    - scriptworker_taskgraph.transforms.replace_name:transforms
+    - taskgraph.transforms.matrix
     - scriptworker_taskgraph.transforms.cached:transforms
     - taskgraph.transforms.cached_tasks:transforms
     - taskgraph.transforms.run:transforms
     - taskgraph.transforms.task:transforms
 
 task-defaults:
-    description: "{name} tox-py{python_version}"
+    description: "{name} tox-py{{matrix[python]}}"
     run-on-tasks-for:
         - "github-pull-request"
         - "github-push"
@@ -23,7 +24,7 @@ task-defaults:
         code-review: true
     worker-type: b-linux
     worker:
-        docker-image: {in-tree: 'python{python_version}'}
+        docker-image: {in-tree: 'python{matrix[python]}'}
         max-run-time: 1800
     run:
         using: run-task
@@ -31,50 +32,44 @@ task-defaults:
             scriptworker: {}
         # sparse-profile: str/none
         # workdir:
-        cwd: '{checkout}'
+        cwd: '{{checkout}}'
         command:
             - sh
             - -lxce
             - >-
-              uv run tox -e {name}-py{python_version}
+              uv run tox -e {name}-py{{matrix[python]}}
     resources:
         - pyproject.toml
         - tox.ini
         - uv.lock
+    matrix:
+        python: ["311"]
 
 tasks:
     addonscript:
-        python-versions: [311]
         resources:
             - addonscript
     balrogscript:
-        python-versions: [311]
         resources:
             - balrogscript
             - scriptworker_client
     beetmoverscript:
-        python-versions: [311]
         resources:
             - beetmoverscript
     bitrisescript:
-        python-versions: [311]
         resources:
             - bitrisescript
     bouncerscript:
-        python-versions: [311]
         resources:
             - bouncerscript
     configloader:
-        python-versions: [311]
         resources:
             - configloader
     githubscript:
-        python-versions: [311]
         resources:
             - githubscript
             - scriptworker_client
     init:
-        python-versions: [311]
         resources:
             - docker.d
             - addonscript/docker.d
@@ -91,49 +86,40 @@ tasks:
             - signingscript/docker.d
             - treescript/docker.d
     iscript:
-        python-versions: [311]
         resources:
             - iscript
             - scriptworker_client
             - vendored/mozbuild
     landoscript:
-        python-versions: [311]
         resources:
             - landoscript
             - scriptworker_client
     pushapkscript:
-        python-versions: [311]
         worker:
-            docker-image: {in-tree: 'pushapkscript-test-py{python_version}'}
+            docker-image: {in-tree: 'pushapkscript-test-py{matrix[python]}'}
         resources:
             - pushapkscript
     pushflatpakscript:
-        python-versions: [311]
         worker:
-            docker-image: {in-tree: 'pushflatpakscript-test-py{python_version}'}
+            docker-image: {in-tree: 'pushflatpakscript-test-py{matrix[python]}'}
         resources:
             - pushflatpakscript
     pushmsixscript:
-        python-versions: [311]
         resources:
             - pushmsixscript
     scriptworker_client:
-        python-versions: [311]
         resources:
             - scriptworker_client
     shipitscript:
-        python-versions: [311]
         resources:
             - shipitscript
     signingscript:
-        python-versions: [311]
         worker:
-            docker-image: {in-tree: 'signingscript-test-py{python_version}'}
+            docker-image: {in-tree: 'signingscript-test-py{matrix[python]}'}
         resources:
             - signingscript
             - vendored/mozbuild
     treescript:
-        python-versions: [311]
         resources:
             - treescript
             - scriptworker_client
