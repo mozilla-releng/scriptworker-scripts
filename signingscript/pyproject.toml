@@ -18,7 +18,7 @@ dependencies = [
     "scriptworker",
     "taskcluster",
     "mohawk>=1.0.0",
-    "winsign==2.2.4",
+    "winsign==2.3.0",
     "macholib>=1.11",
     "mozbuild",
     "jsonschema>=4.0.0",
