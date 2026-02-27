@@ -24,7 +24,7 @@ task-defaults:
 
 tasks:
     ruff-lint:
-        description: "ruff-py311"
+        description: "ruff"
         run:
             using: run-task
             checkout:
@@ -33,7 +33,7 @@ tasks:
             command:
                 - sh
                 - -lxce
-                - uv run tox -e ruff-py311
+                - uv run tox -e ruff
 
     ruff-format:
         description: "ruff-format"
