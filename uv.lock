@@ -3027,7 +3027,7 @@ dev = [
 ]
 flat-manager = [
     { name = "aiohttp" },
-    { name = "pygobject", specifier = "<3.52" },
+    { name = "pygobject", specifier = "<3.57" },
     { name = "tenacity" },
 ]
 
@@ -3222,12 +3222,12 @@ wheels = [
 
 [[package]]
 name = "pygobject"
-version = "3.50.2"
+version = "3.56.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pycairo" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a7/5d/f2946cc6c1baf56dee6e942af8cfa16472538a8ad9d780d9f484e7554288/pygobject-3.50.2.tar.gz", hash = "sha256:ece6b860aab77cb649fdfc6e88d8a83765e7a62f7ffd39a628d6e2a0d397a7ff", size = 1085854, upload-time = "2025-10-18T13:44:45.634Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/1f/86/b87f8d9ecb01effa2b17319b9b0a8852c29374ab7c5268a44597cb1605c7/pygobject-3.56.0.tar.gz", hash = "sha256:4fbb5bf47524e01026f8e309dd54233eb0f75f2281392c5bf0df5d9041cc7891", size = 1407051, upload-time = "2026-02-27T10:02:25.583Z" }
 
 [[package]]
 name = "pyjwt"
@@ -3967,7 +3967,7 @@ requires-dist = [
     { name = "scriptworker" },
     { name = "six" },
     { name = "taskcluster" },
-    { name = "winsign", specifier = "==2.2.4" },
+    { name = "winsign", specifier = "==2.3.0" },
 ]
 
 [package.metadata.requires-dev]
@@ -4519,16 +4519,19 @@ wheels = [
 
 [[package]]
 name = "winsign"
-version = "2.2.4"
+version = "2.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
+    { name = "aiohttp" },
     { name = "construct" },
     { name = "cryptography" },
     { name = "pyasn1" },
     { name = "pyasn1-modules" },
+    { name = "rsa" },
 ]
+sdist = { url = "https://files.pythonhosted.org/packages/02/3c/10d2cb98db0799cf84bb8833bf25c7f6d0af0028d8f0a28fc3c2f3597523/winsign-2.3.0.tar.gz", hash = "sha256:d850339143a43888280cf95657b4b068c07e1b5a13ab51e01c9b52be3d7b983e", size = 46708493, upload-time = "2026-02-25T13:46:00.004Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/06/2a/bd80fda66ad7131417a08b7c5c5a5cf9a860eb7bf1d1ab3f7b3d43a42c9e/winsign-2.2.4-py3-none-any.whl", hash = "sha256:54ad848993a10b16a88779845b366e257cf1218ce03be8004ff45846fca6f0aa", size = 27712, upload-time = "2022-05-24T17:05:24.197Z" },
+    { url = "https://files.pythonhosted.org/packages/7d/9a/8c79782d069a6abca9204a62a2779cde43dc1f20d723771b18550df0c50f/winsign-2.3.0-py3-none-any.whl", hash = "sha256:8a86382a6200be0abd7c00f9807aa696e5b5a3f82b64d4c28c74ca9e438dbbec", size = 32842, upload-time = "2026-02-25T13:45:57.977Z" },
 ]
 
 [[package]]
