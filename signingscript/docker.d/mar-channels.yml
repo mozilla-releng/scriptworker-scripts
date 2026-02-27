@@ -21,7 +21,7 @@ in:
       '${scope_prefix[0]}cert:release-signing': ["firefox-mozilla-beta", "firefox-mozilla-release", "firefox-mozilla-esr"]
       '${scope_prefix[0]}cert:dep-signing': ["*"]
     'COT_PRODUCT == "thunderbird"':
-      '${scope_prefix[0]}cert:nightly-signing': ["thunderbird-comm-central"]
+      '${scope_prefix[0]}cert:nightly-signing': ["thunderbird-comm-central", "thunderbird-comm-central-asan"]
       '${scope_prefix[0]}cert:release-signing': ["thunderbird-comm-beta", "thunderbird-comm-release", "thunderbird-comm-esr"]
       '${scope_prefix[0]}cert:dep-signing': ["*"]
     $default: {}
