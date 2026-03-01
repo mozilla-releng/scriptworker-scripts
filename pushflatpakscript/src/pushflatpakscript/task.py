@@ -20,5 +20,17 @@ def get_flatpak_channel(config, task):
     return channel
 
 
+def get_flatpak_app_id(config, task):
+    payload = task["payload"]
+
+    return payload.get("app_id", config["app_id"])
+
+
+def get_release_branch(config, task):
+    payload = task["payload"]
+
+    return payload.get("branch", config["channel"])
+
+
 def is_allowed_to_push_to_flathub(config, channel):
     return "push_to_flathub" in config and config["push_to_flathub"] and channel in _CHANNELS_AUTHORIZED_TO_REACH_FLATHUB

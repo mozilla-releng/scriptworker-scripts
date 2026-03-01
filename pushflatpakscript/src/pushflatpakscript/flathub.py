@@ -149,14 +149,22 @@ def check_app_id_matches_flatpak(context, flatpak_path):
     # Consolidate ostree refs into list of Flatpak IDs available in repo
     flatpak_refs = [ref.split("/")[1] for ref in flatpak_refs if ref.startswith("app/")]
 
-    # Create a list, if any, of all unexpected Flatpak IDs present in repo
-    invalid_refs = set(flatpak_refs) - {context.config["app_id"]}
+    app_id = task.get_flatpak_app_id(context.config, context.task)
 
-    if context.config["app_id"] not in flatpak_refs:
-        raise TaskVerificationError(f"Supplied app ID ({context.config['app_id']}) is not present in Flatpak!")
+    # Create a list, if any, of all unexpected Flatpak IDs present in repo
+    invalid_refs = set(flatpak_refs) - app_id
+
+    if app_id not in flatpak_refs:
+        raise TaskVerificationError(f"Supplied app ID ({app_id}) is not present in Flatpak!")
 
     if len(invalid_refs) > 0:
         raise TaskVerificationError("One or more invalid app IDs are present in Flatpak!")
+
+
+def check_config_for_branch(config, branch):
+    """Verify Token location defined for supplied branch"""
+    if branch not in config["token_locations"]:
+        raise TaskVerificationError(f"Supplied branch ({branch}) does not have a configured token")
 
 
 def sanitize_buildid(bytes_input):
@@ -174,7 +182,11 @@ def push(context, flatpak_file_path, channel):
         # We don't raise an error because we still want green tasks on dev instances
         return
 
-    token_args = ["--token-file", context.config["token_locations"][channel]]
+    branch = task.get_release_branch(context.config, context.task)
+
+    check_config_for_branch(context.config, branch)
+
+    token_args = ["--token-file", context.config["token_locations"][branch]]
     log.info("Grab a flatpak buildid from Flathub ...")
     publish_build_output = run_flat_manager_client_process(
         context, token_args + ["create", context.config["flathub_url"], channel, "--build-log-url", build_log]

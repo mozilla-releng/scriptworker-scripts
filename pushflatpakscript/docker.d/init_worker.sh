@@ -25,6 +25,16 @@ case $ENV in
     export REPO_TOKEN_STABLE_PATH=$CONFIG_DIR/stable_token.txt
     echo $REPO_TOKEN_BETA | base64 -d > $REPO_TOKEN_BETA_PATH
     echo $REPO_TOKEN_STABLE | base64 -d > $REPO_TOKEN_STABLE_PATH
+
+    if [ -n "$REPO_TOKEN_RELEASE" ]; then
+      export REPO_TOKEN_RELEASE_PATH=$CONFIG_DIR/release_token.txt
+      echo $REPO_TOKEN_RELEASE | base64 -d > $REPO_TOKEN_RELEASE_PATH
+    fi
+
+    if [ -n "$REPO_TOKEN_ESR" ]; then
+      export REPO_TOKEN_ESR_PATH=$CONFIG_DIR/esr_token.txt
+      echo $REPO_TOKEN_ESR | base64 -d > $REPO_TOKEN_ESR_PATH
+    fi
     ;;
   *)
     exit 1
