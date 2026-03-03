@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """Signing script."""
 
+import asyncio
 import json
 import logging
 import os
@@ -32,6 +33,7 @@ async def async_main(context):
                 raise Exception("GPG format is enabled but gpg_pubkey is not defined")
             if not os.path.exists(context.config["gpg_pubkey"]):
                 raise Exception("gpg_pubkey ({}) doesn't exist!".format(context.config["gpg_pubkey"]))
+            await set_up_gpg_keyring(context)
 
         if {"autograph_widevine", "gcp_prod_autograph_widevine", "stage_autograph_widevine"}.intersection(all_signing_formats):
             if not context.config.get("widevine_cert"):
@@ -80,6 +82,18 @@ async def async_main(context):
                 copy_to_dir(os.path.join(work_dir, source), context.config["artifact_dir"], target=source)
 
     log.info("Done!")
+
+
+async def set_up_gpg_keyring(context):
+    with open(context.config["gpg_pubkey"], "rb") as pubkey, open(os.path.join(context.config["work_dir"], "trustedkeys.gpg"), "wb") as keyring:
+        p = await asyncio.create_subprocess_exec("gpg", "--dearmor", stdin=pubkey, stdout=keyring)
+        try:
+            ret = await asyncio.wait_for(p.wait(), timeout=2)
+        except TimeoutError:
+            p.kill()
+            ret = await p.wait()
+        if ret != 0:
+            raise SigningScriptError("Could not make gpg trusted keyring")
 
 
 def get_default_config(base_dir=None):
