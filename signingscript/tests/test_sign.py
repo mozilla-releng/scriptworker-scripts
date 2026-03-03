@@ -24,6 +24,7 @@ from scriptworker.utils import makedirs
 import signingscript.sign as sign
 import signingscript.utils as utils
 from signingscript.exceptions import SigningScriptError
+from signingscript.script import set_up_gpg_keyring
 from signingscript.utils import get_hash
 
 # helper constants, fixtures, functions {{{1
@@ -861,12 +862,15 @@ async def test_gpg_autograph(context, mocker, tmp_path):
         ]
     }
 
+    mocker.patch.object(sign, "verify_gpg")
+
     mocked_sign = mocker.patch.object(sign, "sign_with_autograph")
     mocked_sign.return_value = async_mock_return_value("--- FAKE SIG ---")
 
     result = await sign.sign_gpg_with_autograph(context, tmp, "autograph_gpg")
 
     assert result == [tmp, f"{tmp}.asc"]
+    sign.verify_gpg.assert_called_once_with(context, tmp, f"{tmp}.asc")
 
     with pytest.raises(SigningScriptError):
         result = await sign.sign_gpg_with_autograph(context, tmp, "gpg")
@@ -1211,7 +1215,7 @@ async def test_authenticode_sign_authenticode_permanent_error(tmpdir, mocker, co
 
 
 @pytest.mark.asyncio
-async def test_authenticode_sign_gpg_temporary_error(tmpdir, mocker, context, caplog):
+async def test_sign_gpg_temporary_error(tmpdir, mocker, context, caplog):
     context.autograph_configs = {
         TEST_CERT_TYPE: [
             utils.Autograph(*["https://autograph-hsm.dev.mozaws.net", "alice", "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu", ["autograph_gpg"]])
@@ -1231,11 +1235,13 @@ async def test_authenticode_sign_gpg_temporary_error(tmpdir, mocker, context, ca
     mocked_session.post = mock.MagicMock(wraps=mocked_session.post)
 
     mocker.patch.object(context, "session", new=mocked_session)
+    mocker.patch.object(sign, "verify_gpg")
 
     test_file = tmpdir / "file.txt"
     test_file.write(b"hello world")
 
     await sign.sign_gpg_with_autograph(context, test_file, "autograph_gpg")
+    sign.verify_gpg.assert_called_once_with(context, f"{test_file}", f"{test_file}.asc")
     hashes = []
     for call in mocked_session.post.call_args_list:
         auth = call[1]["headers"]["Authorization"]
@@ -1579,3 +1585,13 @@ def test_encode_multiple_files():
         }
     ]
     assert result == expected
+
+
+@pytest.mark.asyncio
+async def test_verify_gpg(context):
+    context.task = {"scopes": ["project:releng:signing:cert:dep-signing"]}
+    context.config["gpg_pubkey"] = os.path.join(BASE_DIR, "src/signingscript/data/gpg_pubkey_dep.asc")
+    await set_up_gpg_keyring(context)
+    from_ = os.path.join(TEST_DATA_DIR, "SHA256SUMS")
+    to = os.path.join(TEST_DATA_DIR, "SHA256SUMS.asc")
+    await sign.verify_gpg(context, from_, to)
