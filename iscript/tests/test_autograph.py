@@ -3,7 +3,7 @@ import os
 import os.path
 import shutil
 from contextlib import contextmanager
-from hashlib import sha256
+from hashlib import file_digest
 
 import pytest
 from scriptworker_client.utils import makedirs
@@ -425,7 +425,7 @@ async def test_omnija_sign(tmpdir, mocker, orig, signed, sha256_expected):
 
     mocker.patch.object(autograph, "sign_file_with_autograph", mocked_autograph)
     await autograph.sign_omnija_with_autograph(config, sign_config, tmpdir, "autograph_omnija")
-    sha256_actual = sha256(open(copy_from, "rb").read()).hexdigest()
+    sha256_actual = file_digest(open(copy_from, "rb"), "sha256").hexdigest()
     assert sha256_actual == sha256_expected
 
 
@@ -518,5 +518,5 @@ async def test_langpack_sign(sign_config, mocker, tmp_path):
 
     await autograph.sign_langpacks(config, sign_config, [langpack_app], "autograph_langpack")
     expected_hash = "7f4292927b4a26589ee912918de941f498e58ce100041ec3565a82da57a42eab"
-    assert sha256(open(langpack_app.target_bundle_path, "rb").read()).hexdigest() == expected_hash
+    assert file_digest(open(langpack_app.target_bundle_path, "rb"), "sha256").hexdigest() == expected_hash
     assert mock_ever_called[0]
