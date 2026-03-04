@@ -53,6 +53,7 @@ async def test_async_main_gpg(tmpdir, tmpfile, mocker):
     fake_gpg_pubkey = tmpfile
     mocked_copy_to_dir = mocker.Mock()
     mocker.patch.object(script, "copy_to_dir", new=mocked_copy_to_dir)
+    mocker.patch.object(script, "set_up_gpg_keyring")
 
     await async_main_helper(tmpdir, mocker, formats, {"gpg_pubkey": fake_gpg_pubkey})
     for call in mocked_copy_to_dir.call_args_list:
@@ -60,6 +61,8 @@ async def test_async_main_gpg(tmpdir, tmpfile, mocker):
             break
     else:
         assert False, "couldn't find copy_to_dir call that created KEY"
+
+    script.set_up_gpg_keyring.assert_called_once()
 
 
 @pytest.mark.asyncio

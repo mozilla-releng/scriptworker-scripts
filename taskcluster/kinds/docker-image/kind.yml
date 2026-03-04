@@ -108,7 +108,7 @@ tasks:
         definition: base-test
         args:
             PYTHON_VERSION: *py311
-            APT_PACKAGES: osslsigncode cmake clang
+            APT_PACKAGES: osslsigncode cmake clang gpg gpgv
 
     pushapkscript-test-py313:
         definition: base-test
@@ -127,4 +127,4 @@ tasks:
         definition: base-test
         args:
             PYTHON_VERSION: *py313
-            APT_PACKAGES: osslsigncode cmake clang
+            APT_PACKAGES: osslsigncode cmake clang gpg gpgv

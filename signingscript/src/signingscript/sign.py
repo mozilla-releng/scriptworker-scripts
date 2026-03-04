@@ -1060,6 +1060,11 @@ async def sign_file_with_autograph(context, from_, fmt, to=None, extension_id=No
     return to
 
 
+async def verify_gpg(context, from_, signature):
+    keyring = os.path.join(context.config["work_dir"], "trustedkeys.gpg")
+    await utils.execute_subprocess(["gpgv", "--keyring", str(keyring), str(signature), str(from_)])
+
+
 @time_async_function
 async def sign_gpg_with_autograph(context, from_, fmt, **kwargs):
     """Signs file with autograph and writes the results to a file.
@@ -1084,6 +1089,7 @@ async def sign_gpg_with_autograph(context, from_, fmt, **kwargs):
     signature = await sign_with_autograph(context.session, a, input_file, fmt, "data")
     with open(to, "w") as fout:
         fout.write(signature)
+    await verify_gpg(context, from_, to)
     return [from_, to]
 
 
