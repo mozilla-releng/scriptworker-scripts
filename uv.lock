@@ -3980,7 +3980,7 @@ requires-dist = [
     { name = "scriptworker" },
     { name = "six" },
     { name = "taskcluster" },
-    { name = "winsign", specifier = "==2.2.4" },
+    { name = "winsign" },
 ]
 
 [package.metadata.requires-dev]
