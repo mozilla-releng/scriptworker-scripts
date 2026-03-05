@@ -1120,7 +1120,7 @@ async def sign_hash_with_autograph(context, hash_, fmt, keyid=None):
 
 @time_async_function
 async def sign_file_detached(context, file_, fmt, keyid=None, **kwargs):
-    """Signs the sha256 hash of a file and returns is along with a detached signature.
+    """Signs the sha256 hash of a file and returns it along with a detached signature.
 
     Args:
         context (Context): the signing context
@@ -1135,9 +1135,8 @@ async def sign_file_detached(context, file_, fmt, keyid=None, **kwargs):
     Returns:
         list: path to the original file and its detached signature named `file.sig`.
     """
-    h = hashlib.sha256()
     with open(file_, "rb") as fh:
-        h.update(fh.read())
+        h = hashlib.file_digest(fh, "sha256")
 
     signature = await sign_hash_with_autograph(context, h.digest(), fmt, keyid=keyid)
     detached_signature = f"{file_}.sig"

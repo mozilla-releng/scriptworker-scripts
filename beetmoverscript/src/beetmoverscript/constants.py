@@ -69,8 +69,6 @@ NORMALIZED_FILENAME_PLATFORMS.update(
     }
 )
 
-HASH_BLOCK_SIZE = 1024 * 1024
-
 RELEASE_BRANCHES = ("mozilla-central", "mozilla-beta", "mozilla-release", "mozilla-esr52", "comm-central", "comm-beta", "comm-esr60")
 
 # actions that imply actual releases, hence the need of `build_number` and

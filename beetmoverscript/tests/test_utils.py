@@ -4,7 +4,7 @@ import tempfile
 import pytest
 from scriptworker.exceptions import TaskVerificationError
 
-from beetmoverscript.constants import BUILDHUB_ARTIFACT, HASH_BLOCK_SIZE, INSTALLER_ARTIFACTS
+from beetmoverscript.constants import BUILDHUB_ARTIFACT, INSTALLER_ARTIFACTS
 from beetmoverscript.utils import (
     _check_locale_consistency,
     exists_or_endswith,
@@ -40,9 +40,7 @@ def test_get_hash():
     text = b"Hello world from beetmoverscript!"
 
     with tempfile.NamedTemporaryFile(delete=True) as fp:
-        # we generate a file by repeatedly appending the `text` to make sure we
-        # overcome the HASH_BLOCK_SIZE chunk digest update line
-        count = int(HASH_BLOCK_SIZE / len(text)) * 2
+        count = int(1024 * 1024 / len(text)) * 2
         for i in range(count):
             fp.write(text)
         fp.flush()
