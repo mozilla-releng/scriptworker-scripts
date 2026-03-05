@@ -11,7 +11,7 @@ transforms:
     - taskgraph.transforms.task:transforms
 
 meta:
-    - &py311 "3.11.9"
+    - &py311 "3.11.15"
     - &py313 "3.13.12"
     - &uv_version "0.7.15"
 
@@ -84,7 +84,7 @@ tasks:
         args:
             SCRIPT_NAME: pushmsixscript
     signingscript:
-        # python:3.11.9 docker image contains osslsigncode 2.5.
+        # python:3.11.15 docker image contains osslsigncode 2.9.
         # if the image changes, verify version of osslsigncode and make sure winsign works as well
         parent: base
     treescript:
