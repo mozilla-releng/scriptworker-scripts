@@ -12,4 +12,13 @@ token_locations:
   then:
     beta: { "$eval": "REPO_TOKEN_BETA_PATH" }
     stable: { "$eval": "REPO_TOKEN_STABLE_PATH" }
+    release:
+      $if: defined("REPO_TOKEN_RELEASE_PATH")
+      then: { "$eval": "REPO_TOKEN_RELEASE_PATH" }
+      else: ''
+    esr:
+      $if: defined("REPO_TOKEN_ESR_PATH")
+      then: { "$eval": "REPO_TOKEN_ESR_PATH" }
+      else: ''
+
   else: {}
