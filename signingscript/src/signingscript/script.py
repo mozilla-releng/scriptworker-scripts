@@ -34,6 +34,7 @@ async def async_main(context):
             if not os.path.exists(context.config["gpg_pubkey"]):
                 raise Exception("gpg_pubkey ({}) doesn't exist!".format(context.config["gpg_pubkey"]))
             await set_up_gpg_keyring(context)
+            copy_to_dir(context.config["gpg_pubkey"], context.config["artifact_dir"], target="public/build/KEY")
 
         if {"autograph_widevine", "gcp_prod_autograph_widevine", "stage_autograph_widevine"}.intersection(all_signing_formats):
             if not context.config.get("widevine_cert"):
@@ -69,8 +70,6 @@ async def async_main(context):
             for source in output_files:
                 source = os.path.relpath(source, work_dir)
                 copy_to_dir(os.path.join(work_dir, source), context.config["artifact_dir"], target=source)
-            if {"autograph_gpg", "gcp_prod_autograph_gpg", "stage_autograph_gpg"}.intersection(set(path_dict["formats"])):
-                copy_to_dir(context.config["gpg_pubkey"], context.config["artifact_dir"], target="public/build/KEY")
 
         # notarization_stacked is a special format that takes in all files at once instead of sequentially like other formats
         # Should be fixed in https://github.com/mozilla-releng/scriptworker-scripts/issues/980
