@@ -10,6 +10,14 @@ taskcluster_root_url: { "$eval": "TASKCLUSTER_ROOT_URL" }
 token_locations:
   $if: 'ENV == "prod"'
   then:
-    beta: { "$eval": "REPO_TOKEN_BETA_PATH" }
-    stable: { "$eval": "REPO_TOKEN_STABLE_PATH" }
+    $merge:
+      $match:
+        'COT_PRODUCT == "firefox"':
+          'org.mozilla.firefox':
+            beta: { "$eval": "REPO_TOKEN_BETA_PATH" }
+            stable: { "$eval": "REPO_TOKEN_STABLE_PATH" }
+        'COT_PRODUCT == "thunderbird"':
+          'org.mozilla.Thunderbird':
+            beta: { "$eval": "REPO_TOKEN_BETA_PATH" }
+            stable: { "$eval": "REPO_TOKEN_STABLE_PATH" }
   else: {}

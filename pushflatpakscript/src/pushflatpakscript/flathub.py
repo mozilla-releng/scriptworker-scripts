@@ -150,10 +150,11 @@ def check_app_id_matches_flatpak(context, flatpak_path):
     flatpak_refs = [ref.split("/")[1] for ref in flatpak_refs if ref.startswith("app/")]
 
     # Create a list, if any, of all unexpected Flatpak IDs present in repo
-    invalid_refs = set(flatpak_refs) - {context.config["app_id"]}
+    app_id = task.get_flatpak_app(context.config, context.task)
+    invalid_refs = set(flatpak_refs) - {app_id}
 
-    if context.config["app_id"] not in flatpak_refs:
-        raise TaskVerificationError(f"Supplied app ID ({context.config['app_id']}) is not present in Flatpak!")
+    if app_id not in flatpak_refs:
+        raise TaskVerificationError(f"Supplied app ID ({app_id}) is not present in Flatpak!")
 
     if len(invalid_refs) > 0:
         raise TaskVerificationError("One or more invalid app IDs are present in Flatpak!")
@@ -174,7 +175,12 @@ def push(context, flatpak_file_path, channel):
         # We don't raise an error because we still want green tasks on dev instances
         return
 
-    token_args = ["--token-file", context.config["token_locations"][channel]]
+    app_id = task.get_flatpak_app(context.config, context.task)
+    token_file = context.config["token_locations"].get(app_id, {}).get(channel)
+    if not token_file:
+        raise TaskVerificationError(f"Cannot push {app_id} to flathub channel {channel}")
+
+    token_args = ["--token-file", token_file]
     log.info("Grab a flatpak buildid from Flathub ...")
     publish_build_output = run_flat_manager_client_process(
         context, token_args + ["create", context.config["flathub_url"], channel, "--build-log-url", build_log]
