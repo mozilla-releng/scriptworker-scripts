@@ -29,7 +29,15 @@
         "token_locations": {
             "type": "object",
             "additionalProperties": {
-                "type": "string"
+                "type": "object",
+                "properties": {
+                    "beta": {
+                        "type": "string"
+                    },
+                    "stable": {
+                        "type": "string"
+                    }
+                }
             }
         },
         "taskcluster_root_url": {
