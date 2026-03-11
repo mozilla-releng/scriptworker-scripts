@@ -12,7 +12,7 @@ def diff_contents(orig, modified, file):
         fromfile = f"a/{file}"
     else:
         # orig does not exist yet; ie: it will be added
-        orig_contents = ""
+        orig_contents = []
         fromfile = "/dev/null"
         add_remove_metadata = "new file mode 100644\n"
     if modified:
@@ -21,7 +21,7 @@ def diff_contents(orig, modified, file):
         tofile = f"b/{file}"
     else:
         # modified does not exist yet; ie: it will be added
-        modified_contents = ""
+        modified_contents = []
         tofile = "/dev/null"
         add_remove_metadata = "deleted file mode 100644\n"
 
