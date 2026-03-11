@@ -25,6 +25,19 @@ case $ENV in
     export REPO_TOKEN_STABLE_PATH=$CONFIG_DIR/stable_token.txt
     echo $REPO_TOKEN_BETA | base64 -d > $REPO_TOKEN_BETA_PATH
     echo $REPO_TOKEN_STABLE | base64 -d > $REPO_TOKEN_STABLE_PATH
+
+    if [ -n "$REPO_TOKEN_TB_BETA" ]; then
+      export REPO_TOKEN_TB_BETA_PATH=$CONFIG_DIR/tb_beta_token.txt
+      echo "$REPO_TOKEN_TB_BETA" | base64 -d > $REPO_TOKEN_TB_BETA_PATH
+    fi
+    if [ -n "$REPO_TOKEN_TB_STABLE" ]; then
+      export REPO_TOKEN_TB_STABLE_PATH=$CONFIG_DIR/tb_stable_token.txt
+      echo "$REPO_TOKEN_TB_STABLE" | base64 -d > $REPO_TOKEN_TB_STABLE_PATH
+    fi
+    if [ -n "$REPO_TOKEN_TB_ESR" ]; then
+      export REPO_TOKEN_TB_ESR_PATH=$CONFIG_DIR/tb_esr_token.txt
+      echo "$REPO_TOKEN_TB_ESR" | base64 -d > $REPO_TOKEN_TB_ESR_PATH
+    fi
     ;;
   *)
     exit 1
