@@ -92,7 +92,7 @@ def sync_main(
     config_path=None,
     default_config=None,
     should_verify_task=True,
-    loop_function=asyncio.get_event_loop,
+    loop_function=asyncio.new_event_loop,
 ):
     """Entry point for scripts using scriptworker.
 
@@ -112,7 +112,7 @@ def sync_main(
             schema. Defaults to True.
         loop_function (function, optional): the function to call to get the
             event loop; here for testing purposes. Defaults to
-            ``asyncio.get_event_loop``.
+            ``asyncio.new_event_loop``.
 
     """
     config = init_config(config_path, default_config)
