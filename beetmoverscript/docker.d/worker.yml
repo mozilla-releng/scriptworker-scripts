@@ -167,6 +167,11 @@ clouds:
             enabled: True
             product_buckets:
               thunderbird: 'moz-fx-productdelivery-no-7d6a-productdelivery'
+            product_apt_repos:
+              thunderbird:
+                name: 'thunderbird-deb'
+                location: 'us'
+                project: 'moz-fx-productdelivery-no-7d6a'
         'COT_PRODUCT == "thunderbird" && ENV == "prod"':
           nightly:
             credentials: { "$eval": "GCS_RELEASE_CREDS" }
@@ -174,12 +179,22 @@ clouds:
             enabled: True
             product_buckets:
               thunderbird: 'moz-fx-productdelivery-pr-38b5-productdelivery'
+            product_apt_repos:
+              thunderbird:
+                name: 'thunderbird-deb'
+                location: 'us'
+                project: 'moz-fx-productdelivery-pr-38b5'
           release:
             credentials: { "$eval": "GCS_RELEASE_CREDS" }
             fail_task_on_error: True
             enabled: True
             product_buckets:
               thunderbird: 'moz-fx-productdelivery-pr-38b5-productdelivery'
+            product_apt_repos:
+              thunderbird:
+                name: 'thunderbird-deb'
+                location: 'us'
+                project: 'moz-fx-productdelivery-pr-38b5'
         'COT_PRODUCT == "mozillavpn" && (ENV == "dev" || ENV == "fake-prod")':
           dep:
             credentials: { "$eval": "GCS_DEP_CREDS" }
