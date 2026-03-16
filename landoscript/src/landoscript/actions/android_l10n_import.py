@@ -47,7 +47,7 @@ async def run(
     async with GithubClient(github_config, l10n_owner, l10n_repo) as l10n_github_client:
         toml_files = [info.toml_path for info in android_l10n_import_info.toml_info]
         # we always take the tip of the default branch when importing new strings
-        toml_contents = await l10n_github_client.get_files(toml_files)
+        toml_contents = await l10n_github_client.get_files(toml_files, mode=None)
         l10n_files: list[L10nFile] = []
 
         missing = [fn for fn, contents in toml_contents.items() if contents is None]
@@ -75,7 +75,7 @@ async def run(
         # fetch l10n_files from android-l10n
         src_files = [f.src_name for f in l10n_files]
         log.info(f"fetching updated files from l10n repository: {src_files}")
-        new_files = await l10n_github_client.get_files(src_files)
+        new_files = await l10n_github_client.get_files(src_files, mode=None)
         # we also need to update the toml files with locale metadata. we've
         # already fetched them above; so just add their contents by hand
         new_files.update(toml_contents)
@@ -88,7 +88,7 @@ async def run(
             dst_files.append(f"{toml_info.dest_path}/l10n.toml")
 
         log.info(f"fetching original files from l10n repository: {dst_files}")
-        orig_files = await github_client.get_files(dst_files, branch=to_branch)
+        orig_files = await github_client.get_files(dst_files, branch=to_branch, mode=None)
 
         files_to_diff = []
         for l10n_file in l10n_files:
