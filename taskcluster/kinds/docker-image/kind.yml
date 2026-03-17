@@ -102,7 +102,7 @@ tasks:
         args:
             PYTHON_VERSION: *py311
             # Copied from pushflatpakscript/docker.d/image_setup.sh
-            APT_PACKAGES: gir1.2-ostree-1.0 libgirepository1.0-dev ostree
+            APT_PACKAGES: gir1.2-ostree-1.0 libgirepository-2.0-dev ostree
 
     signingscript-test-py311:
         definition: base-test
@@ -121,7 +121,7 @@ tasks:
         args:
             PYTHON_VERSION: *py314
             # Copied from pushflatpakscript/docker.d/image_setup.sh
-            APT_PACKAGES: gir1.2-ostree-1.0 libgirepository1.0-dev ostree
+            APT_PACKAGES: gir1.2-ostree-1.0 libgirepository-2.0-dev ostree
 
     signingscript-test-py314:
         definition: base-test
