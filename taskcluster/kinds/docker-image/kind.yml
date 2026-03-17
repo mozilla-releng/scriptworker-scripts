@@ -11,8 +11,8 @@ transforms:
     - taskgraph.transforms.task:transforms
 
 meta:
-    - &py311 "3.11.15-trixie"
-    - &py314 "3.14.3-trixie"
+    - &py311 "3.11.15-slim-trixie"
+    - &py314 "3.14.3-slim-trixie"
     - &uv_version "0.7.15"
 
 tasks:
@@ -60,10 +60,7 @@ tasks:
         args:
             SCRIPT_NAME: bouncerscript
     githubscript:
-        definition: script
         parent: base
-        args:
-            SCRIPT_NAME: githubscript
     landoscript:
         definition: script
         parent: base
@@ -91,6 +88,13 @@ tasks:
         parent: base
 
     # Testing images
+    githubscript-test-py311:
+        definition: base-test
+        args:
+            PYTHON_VERSION: *py311
+            # tests expect mimetypes.guess_type to map *.apk to application/vnd.android.package-archive
+            APT_PACKAGES: media-types
+
     pushapkscript-test-py311:
         definition: base-test
         args:
@@ -108,7 +112,14 @@ tasks:
         definition: base-test
         args:
             PYTHON_VERSION: *py311
-            APT_PACKAGES: osslsigncode cmake clang gpg gpgv
+            APT_PACKAGES: osslsigncode cmake make clang gpg gpgv
+
+    githubscript-test-py314:
+        definition: base-test
+        args:
+            PYTHON_VERSION: *py314
+            # tests expect mimetypes.guess_type to map *.apk to application/vnd.android.package-archive
+            APT_PACKAGES: media-types
 
     pushapkscript-test-py314:
         definition: base-test
@@ -127,4 +138,4 @@ tasks:
         definition: base-test
         args:
             PYTHON_VERSION: *py314
-            APT_PACKAGES: osslsigncode cmake clang gpg gpgv
+            APT_PACKAGES: osslsigncode cmake make clang gpg gpgv
