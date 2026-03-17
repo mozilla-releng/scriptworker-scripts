@@ -11,7 +11,7 @@ import tarfile
 import tempfile
 import zipfile
 from contextlib import contextmanager
-from hashlib import sha256
+from hashlib import file_digest, sha256
 from io import BufferedRandom, BytesIO
 from unittest import mock
 
@@ -24,6 +24,7 @@ from scriptworker.utils import makedirs
 import signingscript.sign as sign
 import signingscript.utils as utils
 from signingscript.exceptions import SigningScriptError
+from signingscript.script import set_up_gpg_keyring
 from signingscript.utils import get_hash
 
 # helper constants, fixtures, functions {{{1
@@ -220,6 +221,8 @@ async def test_sign_file_detached(context, mocker):
     expected_signature = b"0" * 512
 
     open_mock = mocker.mock_open(read_data=data)
+    # mock_open doesn't implement getbuffer or readinto
+    open_mock.return_value.getbuffer.side_effect = lambda: memoryview(data)
     mocker.patch("builtins.open", open_mock, create=True)
 
     mocked_session = MockedSession(signature=base64.b64encode(expected_signature))
@@ -293,9 +296,10 @@ async def test_sign_mar384_with_autograph_hash(context, mocker, to, expected):
 
     m_mock = mocker.MagicMock()
     m_mock.calculate_hashes.return_value = [[None, b"b64marhash"]]
+    m_mock.productinfo = ("149.0a1", "firefox-mozilla-central")
     MarReader_mock = mocker.Mock()
     MarReader_mock.return_value.__enter__ = mocker.Mock(return_value=m_mock)
-    MarReader_mock.return_value.__exit__ = mocker.Mock()
+    MarReader_mock.return_value.__exit__ = mocker.Mock(return_value=None)
     mocker.patch("signingscript.sign.MarReader", MarReader_mock, create=True)
     mocker.patch("signingscript.sign.verify_mar_signature")
 
@@ -378,7 +382,7 @@ async def test_sign_mar384_with_autograph_hash_returns_invalid_signature_length(
     m_mock.calculate_hashes.return_value = [[None, b"b64marhash"]]
     MarReader_mock = mocker.Mock()
     MarReader_mock.return_value.__enter__ = mocker.Mock(return_value=m_mock)
-    MarReader_mock.return_value.__exit__ = mocker.Mock()
+    MarReader_mock.return_value.__exit__ = mocker.Mock(return_value=None)
     mocker.patch("signingscript.sign.MarReader", MarReader_mock, create=True)
 
     context.autograph_configs = {
@@ -397,6 +401,45 @@ async def test_sign_mar384_with_autograph_hash_returns_invalid_signature_length(
     m_mock.calculate_hashes.assert_called()
     mocked_session.post.assert_called_with("https://autograph-hsm.dev.mozaws.net/sign/hash", headers=mocker.ANY, data=mocker.ANY)
     assert json.load(mocked_session.post.call_args[1]["data"]) == [{"input": "YjY0bWFyaGFzaA=="}]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("channel,raises", (("firefox-mozilla-central", False), ("firefox-nightly-pine", False), ("firefox-mozilla-beta", True), ("firefox-mozilla-release", True)))
+async def test_sign_mar384_with_autograph_hash_channel(context, mocker, channel, raises):
+    open_mock = mocker.mock_open(read_data=b"0xdeadbeef")
+    mocker.patch("builtins.open", open_mock, create=True)
+
+    mocked_session = MockedSession(signature=base64.b64encode(b"0" * 512))
+    mocker.patch.object(context, "session", new=mocked_session)
+
+    add_signature_mock = mocker.Mock()
+    mocker.patch("signingscript.sign.add_signature_block", add_signature_mock, create=True)
+
+    m_mock = mocker.MagicMock()
+    m_mock.calculate_hashes.return_value = [[None, b"b64marhash"]]
+    m_mock.productinfo = ("149.0a1", channel)
+    MarReader_mock = mocker.Mock()
+    MarReader_mock.return_value.__enter__ = mocker.Mock(return_value=m_mock)
+    MarReader_mock.return_value.__exit__ = mocker.Mock(return_value=None)
+    mocker.patch("signingscript.sign.MarReader", MarReader_mock, create=True)
+    mocker.patch("signingscript.sign.verify_mar_signature")
+
+    context.autograph_configs = {
+        TEST_CERT_TYPE: [
+            utils.Autograph(
+                "https://autograph-hsm.dev.mozaws.net", "alice", "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu", ["autograph_hash_only_mar384"]
+            )
+        ]
+    }
+    context.mar_channels = {
+        TEST_CERT_TYPE: ["firefox-mozilla-central", "firefox-nightly-*"],
+    }
+
+    if raises:
+        with pytest.raises(SigningScriptError):
+            await sign.sign_mar384_with_autograph_hash(context, "from", "autograph_hash_only_mar384")
+    else:
+        assert await sign.sign_mar384_with_autograph_hash(context, "from", "autograph_hash_only_mar384") == "from"
 
 
 # sign_macapp {{{1
@@ -725,7 +768,7 @@ async def test_tarfile_append_write(context):
 
 def test_signreq_task_keyid():
     fmt = "autograph_hash_only_mar384"
-    req = sign.make_signing_req(None, fmt, "newkeyid")
+    req = sign.make_signing_req(None, fmt, "hash", keyid="newkeyid")
 
     assert req["keyid"] == "newkeyid"
     assert req["input"] is None
@@ -733,7 +776,7 @@ def test_signreq_task_keyid():
 
 def test_signreq_task_omnija():
     fmt = "autograph_omnija"
-    req = sign.make_signing_req(None, fmt, "newkeyid", extension_id="omni.ja@mozilla.org")
+    req = sign.make_signing_req(None, fmt, "file", keyid="newkeyid", extension_id="omni.ja@mozilla.org")
 
     assert req["keyid"] == "newkeyid"
     assert req["input"] is None
@@ -746,7 +789,7 @@ def test_signreq_task_omnija():
 
 def test_signreq_task_langpack():
     fmt = "autograph_langpack"
-    req = sign.make_signing_req(None, fmt, "newkeyid", extension_id="langpack-en-CA@firefox.mozilla.org")
+    req = sign.make_signing_req(None, fmt, "file", keyid="newkeyid", extension_id="langpack-en-CA@firefox.mozilla.org")
 
     assert req["keyid"] == "newkeyid"
     assert req["input"] is None
@@ -821,12 +864,15 @@ async def test_gpg_autograph(context, mocker, tmp_path):
         ]
     }
 
+    mocker.patch.object(sign, "verify_gpg")
+
     mocked_sign = mocker.patch.object(sign, "sign_with_autograph")
     mocked_sign.return_value = async_mock_return_value("--- FAKE SIG ---")
 
     result = await sign.sign_gpg_with_autograph(context, tmp, "autograph_gpg")
 
     assert result == [tmp, f"{tmp}.asc"]
+    sign.verify_gpg.assert_called_once_with(context, tmp, f"{tmp}.asc")
 
     with pytest.raises(SigningScriptError):
         result = await sign.sign_gpg_with_autograph(context, tmp, "gpg")
@@ -937,7 +983,7 @@ async def test_omnija_sign(tmpdir, mocker, context, orig, signed, sha256_expecte
 
     mocker.patch.object(sign, "sign_file_with_autograph", mocked_autograph)
     await sign.sign_omnija_with_autograph(context, copy_from, "autograph_omnija")
-    sha256_actual = sha256(open(copy_from, "rb").read()).hexdigest()
+    sha256_actual = file_digest(open(copy_from, "rb"), "sha256").hexdigest()
     assert sha256_actual == sha256_expected
 
 
@@ -1171,7 +1217,7 @@ async def test_authenticode_sign_authenticode_permanent_error(tmpdir, mocker, co
 
 
 @pytest.mark.asyncio
-async def test_authenticode_sign_gpg_temporary_error(tmpdir, mocker, context, caplog):
+async def test_sign_gpg_temporary_error(tmpdir, mocker, context, caplog):
     context.autograph_configs = {
         TEST_CERT_TYPE: [
             utils.Autograph(*["https://autograph-hsm.dev.mozaws.net", "alice", "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu", ["autograph_gpg"]])
@@ -1191,11 +1237,13 @@ async def test_authenticode_sign_gpg_temporary_error(tmpdir, mocker, context, ca
     mocked_session.post = mock.MagicMock(wraps=mocked_session.post)
 
     mocker.patch.object(context, "session", new=mocked_session)
+    mocker.patch.object(sign, "verify_gpg")
 
     test_file = tmpdir / "file.txt"
     test_file.write(b"hello world")
 
     await sign.sign_gpg_with_autograph(context, test_file, "autograph_gpg")
+    sign.verify_gpg.assert_called_once_with(context, f"{test_file}", f"{test_file}.asc")
     hashes = []
     for call in mocked_session.post.call_args_list:
         auth = call[1]["headers"]["Authorization"]
@@ -1474,3 +1522,78 @@ async def test_apple_notarize_stacked_unsupported(mocker, context):
                 "/app.bbb": {"full_path": "/app.bbb", "formats": ["apple_notarize_stacked"]},
             },
         )
+
+
+class MockedFilesSession:
+    def __init__(self, signed_files):
+        self.signed_files = signed_files
+
+    async def post(self, *args, **kwargs):
+        resp = mock.MagicMock()
+        resp.status = 200
+        resp.ok = True
+        future = asyncio.Future()
+        future.set_result([{"signed_files": self.signed_files}])
+        resp.json.return_value = future
+        return resp
+
+
+@pytest.mark.asyncio
+async def test_sign_rpm_pkg(mocker, context):
+    context.task = {"scopes": ["project:releng:signing:cert:dep-signing"]}
+    context.autograph_configs = {
+        "project:releng:signing:cert:dep-signing": [utils.Autograph("https://autograph.example.com", "user", "secret", ["autograph_rpmsign"], "keyid")]
+    }
+
+    signed_content = b"signed-rpm-content"
+
+    with tempfile.NamedTemporaryFile(suffix=".rpm", dir=context.config["work_dir"]) as f:
+        f.write(b"original-rpm-content")
+        f.flush()
+        rpm_path = f.name
+
+        session = MockedFilesSession([{"name": os.path.basename(rpm_path), "content": base64.b64encode(signed_content).decode()}])
+        mocker.patch.object(context, "session", session)
+
+        result = await sign.sign_rpm_pkg(context, rpm_path, "autograph_rpmsign")
+        assert result == rpm_path
+        with open(rpm_path, "rb") as rf:
+            assert rf.read() == signed_content
+
+
+@pytest.mark.asyncio
+async def test_sign_rpm_pkg_wrong_extension(context):
+    with pytest.raises(SigningScriptError, match="Expected a .rpm file"):
+        await sign.sign_rpm_pkg(context, "/path/to/file.txt", "autograph_rpmsign")
+
+
+def test_encode_multiple_files():
+    output_file = tempfile.TemporaryFile("w+b")
+    input_files = [
+        {"name": "file1.rpm", "content": BufferedRandom(BytesIO(b"content1"))},
+        {"name": "file2.rpm", "content": BufferedRandom(BytesIO(b"content2"))},
+    ]
+    signing_req = {"keyid": "testkey", "files": input_files}
+    sign._encode_multiple_files(output_file, signing_req)
+    output_file.seek(0)
+    result = json.loads(output_file.read().decode())
+    expected = [
+        {
+            "keyid": "testkey",
+            "files": [
+                {"name": "file1.rpm", "content": "Y29udGVudDE="},
+                {"name": "file2.rpm", "content": "Y29udGVudDI="},
+            ],
+        }
+    ]
+    assert result == expected
+
+
+@pytest.mark.asyncio
+async def test_verify_gpg(context):
+    context.task = {"scopes": ["project:releng:signing:cert:dep-signing"]}
+    context.config["gpg_pubkey"] = os.path.join(BASE_DIR, "src/signingscript/data/gpg_pubkey_dep.asc")
+    await set_up_gpg_keyring(context)
+    from_ = os.path.join(TEST_DATA_DIR, "SHA256SUMS")
+    to = os.path.join(TEST_DATA_DIR, "SHA256SUMS.asc")
+    await sign.verify_gpg(context, from_, to)

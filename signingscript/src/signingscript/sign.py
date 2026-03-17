@@ -789,8 +789,8 @@ async def _create_tarfile(context, to, files, compression, tmp_dir=None):
         raise SigningScriptError(e)
 
 
-def write_signing_req_to_disk(fp, signing_req):
-    """Write signing_req to fp.
+def _encode_single_file(fp, signing_req):
+    """Write signing_req for a single file to fp.
 
     Does proper base64 and json encoding.
     Tries not to hold onto a lot of memory.
@@ -816,6 +816,49 @@ def write_signing_req_to_disk(fp, signing_req):
         fp.write(b",")
     fp.seek(-1, 1)
     fp.write(b"}]")
+
+
+def write_signing_req_to_disk(fp, signing_req):
+    """Write signing_req to fp.
+
+    Does proper base64 and json encoding.
+    Tries not to hold onto a lot of memory.
+    """
+    if "files" in signing_req:
+        _encode_multiple_files(fp, signing_req)
+    else:
+        _encode_single_file(fp, signing_req)
+
+
+def _encode_multiple_files(fp, signing_req):
+    """Write signing_req to fp.
+
+    Does proper base64 and json encoding.
+    Tries not to hold onto a lot of memory.
+    """
+    _signing_req = signing_req.copy()
+    input_files = _signing_req.pop("files")
+    fp.write(b"[{")
+    for k, v in _signing_req.items():
+        fp.write(json.dumps(k).encode("utf8"))
+        fp.write(b":")
+        fp.write(json.dumps(v).encode("utf8"))
+        fp.write(b",")
+    fp.write(b'"files":[')
+    for i, input_file in enumerate(input_files):
+        if i > 0:
+            fp.write(b",")
+        fp.write(b'{"name":')
+        fp.write(json.dumps(os.path.basename(input_file["name"])).encode("utf8"))
+        fp.write(b',"content":"')
+        input_file["content"].seek(0)
+        while True:
+            block = input_file["content"].read(1020)
+            if not block:
+                break
+            fp.write(base64.b64encode(block))
+        fp.write(b'"}')
+    fp.write(b"]}]")
 
 
 def get_hawk_content_hash(request_body, content_type):
@@ -896,9 +939,12 @@ def _is_xpi_format(fmt):
 
 
 @time_function
-def make_signing_req(input_file, fmt, keyid=None, extension_id=None):
+def make_signing_req(input_, fmt, autograph_method, *, keyid=None, extension_id=None):
     """Make a signing request object to pass to autograph."""
-    sign_req = {"input": input_file}
+    if autograph_method == "files":
+        sign_req = {"files": [{"name": f.name, "content": f} for f in input_]}
+    else:
+        sign_req = {"input": input_}
 
     if keyid:
         sign_req["keyid"] = keyid
@@ -940,16 +986,16 @@ def _xpi_signing_options(fmt):
 
 
 @time_async_function
-async def sign_with_autograph(session, server, input_file, fmt, autograph_method, keyid=None, extension_id=None):
+async def sign_with_autograph(session, server, input_, fmt, autograph_method, keyid=None, extension_id=None):
     """Signs data with autograph and returns the result.
 
     Args:
         session (aiohttp.ClientSession): client session object
         server (Autograph): the server to connect to sign
-        input_file (file object): the source data to sign
+        input_: the source data to sign (a file object or a list of file objects if the method is "files")
         fmt (str): the format to sign with
         autograph_method (str): which autograph method to use to sign. must be
-                                one of 'file', 'hash', or 'data'
+                                one of 'file', 'hash', 'data', or 'files'
         keyid (str): which key to use on autograph (optional)
         extension_id (str): which id to send to autograph for the extension (optional)
 
@@ -961,11 +1007,11 @@ async def sign_with_autograph(session, server, input_file, fmt, autograph_method
         bytes: the signed data
 
     """
-    if autograph_method not in {"file", "hash", "data"}:
+    if autograph_method not in {"file", "hash", "data", "files"}:
         raise SigningScriptError(f"Unsupported autograph method: {autograph_method}")
 
     keyid = keyid or server.key_id
-    sign_req = make_signing_req(input_file, fmt, keyid, extension_id)
+    sign_req = make_signing_req(input_, fmt, autograph_method, keyid=keyid, extension_id=extension_id)
 
     url = f"{server.url}/sign/{autograph_method}"
 
@@ -976,6 +1022,8 @@ async def sign_with_autograph(session, server, input_file, fmt, autograph_method
 
     if autograph_method == "file":
         return sign_resp[0]["signed_file"]
+    elif autograph_method == "files":
+        return sign_resp[0]["signed_files"]
     else:
         return sign_resp[0]["signature"]
 
@@ -1012,6 +1060,11 @@ async def sign_file_with_autograph(context, from_, fmt, to=None, extension_id=No
     return to
 
 
+async def verify_gpg(context, from_, signature):
+    keyring = os.path.join(context.config["work_dir"], "trustedkeys.gpg")
+    await utils.execute_subprocess(["gpgv", "--keyring", str(keyring), str(signature), str(from_)])
+
+
 @time_async_function
 async def sign_gpg_with_autograph(context, from_, fmt, **kwargs):
     """Signs file with autograph and writes the results to a file.
@@ -1036,6 +1089,7 @@ async def sign_gpg_with_autograph(context, from_, fmt, **kwargs):
     signature = await sign_with_autograph(context.session, a, input_file, fmt, "data")
     with open(to, "w") as fout:
         fout.write(signature)
+    await verify_gpg(context, from_, to)
     return [from_, to]
 
 
@@ -1066,7 +1120,7 @@ async def sign_hash_with_autograph(context, hash_, fmt, keyid=None):
 
 @time_async_function
 async def sign_file_detached(context, file_, fmt, keyid=None, **kwargs):
-    """Signs the sha256 hash of a file and returns is along with a detached signature.
+    """Signs the sha256 hash of a file and returns it along with a detached signature.
 
     Args:
         context (Context): the signing context
@@ -1081,9 +1135,8 @@ async def sign_file_detached(context, file_, fmt, keyid=None, **kwargs):
     Returns:
         list: path to the original file and its detached signature named `file.sig`.
     """
-    h = hashlib.sha256()
     with open(file_, "rb") as fh:
-        h.update(fh.read())
+        h = hashlib.file_digest(fh, "sha256")
 
     signature = await sign_hash_with_autograph(context, h.digest(), fmt, keyid=keyid)
     detached_signature = f"{file_}.sig"
@@ -1149,6 +1202,19 @@ def verify_mar_signature(cert_type, fmt, mar, keyid=None):
         raise SigningScriptError(e)
 
 
+def validate_mar_channel(context, mar):
+    """Verify the mar channel matches an authorized pattern"""
+    cert_type = task.task_cert_type(context)
+    try:
+        channel_id = mar.productinfo[1]
+    except TypeError:
+        raise SigningScriptError("Can't find mar channel id")
+    allowed_channels = context.mar_channels.get(cert_type, [])
+    if any(fnmatch.fnmatch(channel_id, pattern) for pattern in allowed_channels):
+        return
+    raise SigningScriptError(f"Cannot use mar channel id {channel_id}, expected one of {allowed_channels}")
+
+
 @time_async_function
 async def sign_mar384_with_autograph_hash(context, from_, fmt, to=None, **kwargs):
     """Signs a hash with autograph, injects it into the file, and writes the result to arg `to` or `from_` if `to` is None.
@@ -1184,6 +1250,8 @@ async def sign_mar384_with_autograph_hash(context, from_, fmt, to=None, **kwargs
         tmp.seek(0)
 
         with MarReader(tmp) as m:
+            validate_mar_channel(context, m)
+
             hashes = m.calculate_hashes()
         h = hashes[0][1]
 
@@ -1606,6 +1674,35 @@ async def apple_notarize_openh264_plugin(context, path, *args, **kwargs):
     utils.mkdir(notarization_workdir)
     # The artifact from the openh264 plugin build task is already a .zip file.
     await _notarize_single(path, context.apple_credentials_path, staple=False)
+    return path
+
+
+@time_async_function
+async def sign_rpm_pkg(context, path, fmt, **kwargs):
+    """Sign an RPM package using autograph
+
+    Args:
+        context (Context): the signing context
+        path (str): the path of the RPM file to sign
+        fmt (str): the format to sign with
+
+    Returns:
+        str: the path to the signed RPM file
+    """
+    if not path.endswith(".rpm"):
+        raise SigningScriptError(f"Expected a .rpm file, got: {path}")
+
+    cert_type = task.task_cert_type(context)
+    autograph_config = get_autograph_config(context.autograph_configs, cert_type, [fmt], raise_on_empty=True)
+
+    with open(path, "rb") as f:
+        signed_files = await sign_with_autograph(context.session, autograph_config, [f], fmt, "files")
+
+    signed_file = signed_files[0]
+    signed_content = base64.b64decode(signed_file["content"])
+    with open(path, "wb") as f:
+        f.write(signed_content)
+
     return path
 
 

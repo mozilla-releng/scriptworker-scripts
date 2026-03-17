@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """Signing script."""
 
+import asyncio
 import json
 import logging
 import os
@@ -11,7 +12,7 @@ import scriptworker.client
 
 from signingscript.exceptions import SigningScriptError
 from signingscript.task import apple_notarize_stacked, build_filelist_dict, sign, task_cert_type, task_signing_formats
-from signingscript.utils import copy_to_dir, load_apple_notarization_configs, load_autograph_configs
+from signingscript.utils import copy_to_dir, load_apple_notarization_configs, load_autograph_configs, load_json
 
 log = logging.getLogger(__name__)
 
@@ -32,6 +33,8 @@ async def async_main(context):
                 raise Exception("GPG format is enabled but gpg_pubkey is not defined")
             if not os.path.exists(context.config["gpg_pubkey"]):
                 raise Exception("gpg_pubkey ({}) doesn't exist!".format(context.config["gpg_pubkey"]))
+            await set_up_gpg_keyring(context)
+            copy_to_dir(context.config["gpg_pubkey"], context.config["artifact_dir"], target="public/build/KEY")
 
         if {"autograph_widevine", "gcp_prod_autograph_widevine", "stage_autograph_widevine"}.intersection(all_signing_formats):
             if not context.config.get("widevine_cert"):
@@ -46,6 +49,10 @@ async def async_main(context):
 
         context.session = session
         context.autograph_configs = load_autograph_configs(context.config["autograph_configs"])
+        if "mar_channels" in context.config:
+            context.mar_channels = load_json(context.config["mar_channels"])
+        else:
+            context.mar_channels = {}
 
         # TODO: Make task.sign take in the whole filelist_dict and return a dict of output files.
         #       That would likely mean changing all behaviors to accept and deal with multiple files at once.
@@ -63,8 +70,6 @@ async def async_main(context):
             for source in output_files:
                 source = os.path.relpath(source, work_dir)
                 copy_to_dir(os.path.join(work_dir, source), context.config["artifact_dir"], target=source)
-            if {"autograph_gpg", "gcp_prod_autograph_gpg", "stage_autograph_gpg"}.intersection(set(path_dict["formats"])):
-                copy_to_dir(context.config["gpg_pubkey"], context.config["artifact_dir"], target="public/build/KEY")
 
         # notarization_stacked is a special format that takes in all files at once instead of sequentially like other formats
         # Should be fixed in https://github.com/mozilla-releng/scriptworker-scripts/issues/980
@@ -76,6 +81,18 @@ async def async_main(context):
                 copy_to_dir(os.path.join(work_dir, source), context.config["artifact_dir"], target=source)
 
     log.info("Done!")
+
+
+async def set_up_gpg_keyring(context):
+    with open(context.config["gpg_pubkey"], "rb") as pubkey, open(os.path.join(context.config["work_dir"], "trustedkeys.gpg"), "wb") as keyring:
+        p = await asyncio.create_subprocess_exec("gpg", "--dearmor", stdin=pubkey, stdout=keyring)
+        try:
+            ret = await asyncio.wait_for(p.wait(), timeout=2)
+        except TimeoutError:
+            p.kill()
+            ret = await p.wait()
+        if ret != 0:
+            raise SigningScriptError("Could not make gpg trusted keyring")
 
 
 def get_default_config(base_dir=None):

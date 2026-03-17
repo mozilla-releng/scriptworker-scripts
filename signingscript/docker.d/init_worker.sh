@@ -25,6 +25,7 @@ export HFSPLUS_PATH=$APP_DIR/signingscript/files/hfsplus
 
 export PASSWORDS_PATH=$CONFIG_DIR/passwords.json
 export APPLE_NOTARIZATION_CREDS_PATH=$CONFIG_DIR/apple_notarization_creds.json
+export MAR_CHANNELS_PATH=$CONFIG_DIR/mar-channels.json
 export GPG_PUBKEY_PATH=$APP_DIR/signingscript/src/signingscript/data/gpg_pubkey_dep.asc
 export WIDEVINE_CERT_PATH=$CONFIG_DIR/widevine.crt
 export AUTHENTICODE_TIMESTAMP_STYLE=old
@@ -92,6 +93,8 @@ case $ENV in
         test_var_set 'AUTOGRAPH_MAR_USERNAME'
         test_var_set 'AUTOGRAPH_OMNIJA_PASSWORD'
         test_var_set 'AUTOGRAPH_OMNIJA_USERNAME'
+        test_var_set 'AUTOGRAPH_RPMSIGN_USERNAME'
+        test_var_set 'AUTOGRAPH_RPMSIGN_PASSWORD'
         test_var_set 'AUTOGRAPH_WIDEVINE_PASSWORD'
         test_var_set 'AUTOGRAPH_WIDEVINE_USERNAME'
         test_var_set 'AUTOGRAPH_STAGE_AUTHENTICODE_SHA2_USERNAME'
@@ -106,6 +109,8 @@ case $ENV in
         test_var_set 'AUTOGRAPH_STAGE_OMNIJA_USERNAME'
         test_var_set 'AUTOGRAPH_STAGE_WIDEVINE_PASSWORD'
         test_var_set 'AUTOGRAPH_STAGE_WIDEVINE_USERNAME'
+        test_var_set 'AUTOGRAPH_STAGE_RPMSIGN_USERNAME'
+        test_var_set 'AUTOGRAPH_STAGE_RPMSIGN_PASSWORD'
         if [ "$COT_PRODUCT" = "firefox" ]; then
             test_var_set 'AUTOGRAPH_FENIX_PASSWORD'
             test_var_set 'AUTOGRAPH_FENIX_USERNAME'
@@ -204,6 +209,8 @@ case $ENV in
         test_var_set 'AUTOGRAPH_MAR_RELEASE_USERNAME'
         test_var_set 'AUTOGRAPH_OMNIJA_PASSWORD'
         test_var_set 'AUTOGRAPH_OMNIJA_USERNAME'
+        test_var_set 'AUTOGRAPH_RPMSIGN_USERNAME'
+        test_var_set 'AUTOGRAPH_RPMSIGN_PASSWORD'
         test_var_set 'AUTOGRAPH_WIDEVINE_PASSWORD'
         test_var_set 'AUTOGRAPH_WIDEVINE_USERNAME'
         if [ "$COT_PRODUCT" = "firefox" ]; then
@@ -274,3 +281,4 @@ esac
 
 $CONFIG_LOADER $TEMPLATE_DIR/passwords.yml $PASSWORDS_PATH
 $CONFIG_LOADER $TEMPLATE_DIR/apple_notarization_creds.yml $APPLE_NOTARIZATION_CREDS_PATH
+$CONFIG_LOADER $TEMPLATE_DIR/mar-channels.yml $MAR_CHANNELS_PATH

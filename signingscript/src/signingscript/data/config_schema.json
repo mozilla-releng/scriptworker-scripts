@@ -49,6 +49,9 @@
         },
         "authenticode_url": {
             "type": "string"
+        },
+        "mar_channels": {
+            "type": "string"
         }
     }
 }

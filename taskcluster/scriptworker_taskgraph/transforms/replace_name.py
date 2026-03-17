@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 """
-Create a task per python-version
+Substitute task name in other fields
 """
 
 from copy import deepcopy
@@ -53,26 +53,14 @@ def set_script_name(config, tasks):
 
 
 @transforms.add
-def tasks_per_python_version(config, tasks):
+def replace_name(config, tasks):
     fields = [
         "description",
-        "docker-repo",
         "run.command",
-        "worker.command",
-        "worker.docker-image",
     ]
     for task_raw in tasks:
-        for python_version in task_raw.pop("python-versions"):
-            task = deepcopy(task_raw)
-            subs = {"name": task["name"], "python_version": python_version}
-            for field in fields:
-                _resolve_replace_string(task, field, subs)
-            task["attributes"]["python-version"] = python_version
-            yield task
-
-
-@transforms.add
-def update_name_with_python_version(config, tasks):
-    for task in tasks:
-        task["name"] = "{}-python{}".format(task["name"], task["attributes"]["python-version"])
+        task = deepcopy(task_raw)
+        subs = {"name": task["name"]}
+        for field in fields:
+            _resolve_replace_string(task, field, subs)
         yield task

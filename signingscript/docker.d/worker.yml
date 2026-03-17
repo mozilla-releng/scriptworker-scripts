@@ -3,6 +3,7 @@ artifact_dir: { "$eval": "ARTIFACTS_DIR" }
 verbose: { "$eval": "VERBOSE == 'true'" }
 autograph_configs: { "$eval": "PASSWORDS_PATH" }
 apple_notarization_configs: { "$eval": "APPLE_NOTARIZATION_CREDS_PATH" }
+mar_channels: { "$eval": "MAR_CHANNELS_PATH" }
 taskcluster_scope_prefixes:
   $flatten:
     $match:

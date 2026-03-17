@@ -556,11 +556,21 @@ def test_get_submission_status(status_code, raises, mocked_response, exc):
     "submission_response, raises, exc",
     (
         ({"status": "PreProcessing"}, False, None),
+        ({"status": "Certification"}, False, None),
+        ({"status": "Release"}, False, None),
+        ({"status": "PendingPublication"}, False, None),
+        ({"status": "Publishing"}, False, None),
+        ({"status": "Published"}, False, None),
         # Max polling attempts
         ({"status": "CommitStarted"}, True, TimeoutError),
         ({"status": "PendingCommit"}, True, TimeoutError),
         # Failed
         ({"status": "CommitFailed"}, True, TaskError),
+        ({"status": "PreProcessingFailed"}, True, TaskError),
+        ({"status": "CertificationFailed"}, True, TaskError),
+        ({"status": "ReleaseFailed"}, True, TaskError),
+        ({"status": "PublishFailed"}, True, TaskError),
+        ({"status": "Canceled"}, True, TaskError),
     ),
 )
 def test_wait_for_commit_completion(monkeypatch, submission_response, raises, exc):

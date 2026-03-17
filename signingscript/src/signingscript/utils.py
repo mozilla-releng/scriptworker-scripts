@@ -1,7 +1,6 @@
 """Signingscript general utility functions."""
 
 import asyncio
-import functools
 import hashlib
 import json
 import logging
@@ -60,10 +59,8 @@ def get_hash(path, hash_type="sha512"):
 
     """
     # I'd love to make this async, but evidently file i/o is always ready
-    h = hashlib.new(hash_type)
     with open(path, "rb") as f:
-        for chunk in iter(functools.partial(f.read, 4096), b""):
-            h.update(chunk)
+        h = hashlib.file_digest(f, hash_type)
     return h.hexdigest()
 
 

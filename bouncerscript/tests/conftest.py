@@ -59,7 +59,6 @@ async def _fake_request(resp_status, method, url, *args, **kwargs):
     return resp
 
 
-@pytest.mark.asyncio
 @pytest_asyncio.fixture(scope="function")
 async def fake_session():
     session = aiohttp.ClientSession()
@@ -68,7 +67,6 @@ async def fake_session():
     await session.close()
 
 
-@pytest.mark.asyncio
 @pytest_asyncio.fixture(scope="function")
 async def fake_session_500():
     session = aiohttp.ClientSession()

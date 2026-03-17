@@ -16,7 +16,11 @@ from treescript.util.task import DONTBUILD_MSG, get_branch, get_dontbuild, get_v
 log = logging.getLogger(__name__)
 
 
-ALLOWED_BUMP_FILES = ("version.txt",)
+ALLOWED_BUMP_FILES = (
+    "version.txt",
+    "focus-ios/version.xcconfig",
+    "firefox-ios/Client/Configuration/version.xcconfig",
+)
 
 FileContents = Dict[str, str]
 
@@ -47,7 +51,7 @@ def _find_what_version_parser_to_use(file_, repo):
         raise TreeScriptError(exc) from exc
 
 
-def get_version(contents: str, version_cls: Type[BaseVersion]) -> BaseVersion:
+def get_version(contents: str, version_cls: Type[BaseVersion], is_xcconfig: bool = False) -> BaseVersion:
     """Parse the version from file contents.
 
     Args:
@@ -57,7 +61,11 @@ def get_version(contents: str, version_cls: Type[BaseVersion]) -> BaseVersion:
     Returns:
         BaseVersion: The parsed version object.
     """
-    lines = [line for line in contents.splitlines() if line and not line.startswith("#")]
+    if not is_xcconfig:
+        lines = [line for line in contents.splitlines() if line and not line.startswith("#")]
+    else:
+        # version.xcconfig files should only have a single line with APP_VERSION = 111
+        lines = [line.removeprefix("APP_VERSION = ") for line in contents.splitlines()]
     return version_cls.parse(lines[-1])
 
 
@@ -133,7 +141,7 @@ async def do_bump_version(client: GithubClient, files: List[str], next_version: 
         contents = file_contents[file_]
 
         VersionClass = _find_what_version_parser_to_use(file_, client.repo)
-        curver = get_version(contents, VersionClass)
+        curver = get_version(contents, VersionClass, file_.endswith(".xcconfig"))
         nextver = VersionClass.parse(next_version)
 
         if nextver < curver:

@@ -4,7 +4,7 @@ import tempfile
 import pytest
 from scriptworker.exceptions import TaskVerificationError
 
-from beetmoverscript.constants import BUILDHUB_ARTIFACT, HASH_BLOCK_SIZE, INSTALLER_ARTIFACTS
+from beetmoverscript.constants import BUILDHUB_ARTIFACT, INSTALLER_ARTIFACTS
 from beetmoverscript.utils import (
     _check_locale_consistency,
     exists_or_endswith,
@@ -36,18 +36,17 @@ from . import get_fake_checksums_manifest, get_fake_valid_task, get_test_jinja_e
 
 # get_hash {{{1
 def test_get_hash():
-    correct_sha1s = ("cb8aa4802996ac8de0436160e7bc0c79b600c222", "da39a3ee5e6b4b0d3255bfef95601890afd80709")
+    correct_sha1 = "69d0c3a5ff8d7374964cc8202fd713ad0ae9504a"
     text = b"Hello world from beetmoverscript!"
 
     with tempfile.NamedTemporaryFile(delete=True) as fp:
-        # we generate a file by repeatedly appending the `text` to make sure we
-        # overcome the HASH_BLOCK_SIZE chunk digest update line
-        count = int(HASH_BLOCK_SIZE / len(text)) * 2
+        count = int(1024 * 1024 / len(text)) * 2
         for i in range(count):
             fp.write(text)
+        fp.flush()
         sha1digest = get_hash(fp.name, hash_type="sha1")
 
-    assert sha1digest in correct_sha1s
+    assert sha1digest == correct_sha1
 
 
 # write_json {{{1

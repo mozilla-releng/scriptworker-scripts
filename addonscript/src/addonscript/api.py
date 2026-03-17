@@ -171,15 +171,7 @@ async def get_signed_xpi(context, download_info, destination_path):
         raise SignatureError(f"Wrong size for {download_path}, expected {download_size}, actual {size}")
     hashalg, amo_digest = download_hash.split(":", 1)
     with open(destination_path, "rb") as file:
-        # XXX use hashlib.file_digest on python 3.11
-        hash = hashlib.new(hashalg)
-        buf = bytearray(2**18)
-        view = memoryview(buf)
-        while True:
-            size = file.readinto(buf)
-            if size == 0:
-                break
-            hash.update(view[:size])
-        digest = hash.hexdigest()
+        hash = hashlib.file_digest(file, hashalg)
+    digest = hash.hexdigest()
     if digest != amo_digest:
         raise SignatureError(f"Wrong {hashalg} digest for {download_path}, expected {amo_digest}, actual {digest}")

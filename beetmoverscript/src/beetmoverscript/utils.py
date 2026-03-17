@@ -20,7 +20,6 @@ from scriptworker.utils import (
 from beetmoverscript.constants import (
     ARTIFACT_REGISTRY_ACTIONS,
     DIRECT_RELEASE_ACTIONS,
-    HASH_BLOCK_SIZE,
     MAVEN_ACTIONS,
     NORMALIZED_FILENAME_PLATFORMS,
     PARTNER_REPACK_ACTIONS,
@@ -40,13 +39,8 @@ JINJA_ENV = jinja2.Environment(loader=jinja2.PackageLoader("beetmoverscript"), u
 def get_hash(filepath, hash_type="sha512"):
     """Function to return the digest hash of a file based on filename and
     algorithm"""
-    digest = hashlib.new(hash_type)
     with open(filepath, "rb") as fobj:
-        while True:
-            chunk = fobj.read(HASH_BLOCK_SIZE)
-            if not chunk:
-                break
-            digest.update(chunk)
+        digest = hashlib.file_digest(fobj, hash_type)
     return digest.hexdigest()
 
 

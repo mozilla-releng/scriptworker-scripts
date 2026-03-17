@@ -43,7 +43,7 @@ async def _execute_command(command):
         stderr = (await proc.stderr.readline()).decode("utf-8").rstrip()
         if stderr:
             # Unfortunately a lot of outputs from rcodesign come out to stderr
-            log.warn(stderr)
+            log.warning(stderr)
             output_lines.append(stderr)
 
     exitcode = await proc.wait()
