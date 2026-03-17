@@ -101,6 +101,11 @@
                     "type": "boolean",
                     "default": false
                 },
+                "update_clobber_file": {
+                    "type": "boolean",
+                    "default": true
+                    "description": "Control whether the CLOBBER file at the root of the repository gets updated"
+                }
                 "incr_major_version": {
                     "type": "boolean",
                     "default": false,
