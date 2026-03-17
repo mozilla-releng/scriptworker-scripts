@@ -2,6 +2,22 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+FROM $DOCKER_IMAGE_PARENT AS flat_manager
+
+USER root
+RUN apt-get update && apt-get install --no-install-recommends -y curl gcc pkg-config libgirepository-2.0-dev libcairo2-dev
+
+USER app
+
+RUN uv venv /app/flat_manager_venv \
+ && . /app/flat_manager_venv/bin/activate \
+ && uv sync --no-dev --active --frozen --package pushflatpakscript --only-group flat-manager \
+ && curl -Ls \
+    https://github.com/flatpak/flat-manager/raw/100d44f761ba765552d2a799b5b7254b6a8b1e38/flat-manager-client | \
+    sed -e '1i#!/app/flat_manager_venv/bin/python' -e '1d' > /app/flat_manager_venv/bin/flat-manager-client \
+ && chmod 755 /app/flat_manager_venv/bin/flat-manager-client \
+ && echo "2e55c0d3797f948b5b2eb86b897d42ce318b829749a23b903d8a9ed7b3bcea59 /app/flat_manager_venv/bin/flat-manager-client" | sha256sum -c
+
 FROM $DOCKER_IMAGE_PARENT
 
 # %include pushflatpakscript
@@ -14,13 +30,9 @@ USER app
 
 RUN cp -R /app/pushflatpakscript/docker.d/* /app/docker.d/ \
  && . /app/.venv/bin/activate \
- && uv sync --no-dev --active --frozen --package pushflatpakscript \
- && deactivate \
- && uv venv /app/flat_manager_venv \
- && . /app/flat_manager_venv/bin/activate \
- && uv sync --no-dev --active --frozen --package pushflatpakscript --only-group flat-manager \
- && curl -Ls \
-    https://github.com/flatpak/flat-manager/raw/100d44f761ba765552d2a799b5b7254b6a8b1e38/flat-manager-client | \
-    sed -e '1i#!/app/flat_manager_venv/bin/python' -e '1d' > /app/flat_manager_venv/bin/flat-manager-client \
- && chmod 755 /app/flat_manager_venv/bin/flat-manager-client \
- && echo "2e55c0d3797f948b5b2eb86b897d42ce318b829749a23b903d8a9ed7b3bcea59 /app/flat_manager_venv/bin/flat-manager-client" | sha256sum -c
+ && uv sync --no-dev --active --frozen --package pushflatpakscript
+
+COPY --from=flat_manager /app/flat_manager_venv /app/flat_manager_venv
+
+# Ensure flat-manager-client minimally works (e.g. no missing libs)
+RUN /app/flat_manager_venv/bin/flat-manager-client --help
