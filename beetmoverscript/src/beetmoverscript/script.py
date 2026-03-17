@@ -1017,14 +1017,10 @@ async def upload_to_s3(context, s3_key, path, fail_on_unknown_mimetype=True):
 
 
 def setup_mimetypes():
+    """Ensure the MIME types database is set up with the types we care about"""
     mimetypes.init()
-    # in py3 we must exhaust the map so that add_type is actually invoked
-    list(
-        map(
-            lambda ext_mimetype: mimetypes.add_type(ext_mimetype[1], ext_mimetype[0]),
-            MIME_MAP.items(),
-        )
-    )
+    for ext, type_ in MIME_MAP.items():
+        mimetypes.add_type(type_, ext)
 
 
 def main(config_path=None):
