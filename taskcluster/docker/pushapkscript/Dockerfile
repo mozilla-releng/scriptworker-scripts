@@ -9,7 +9,7 @@ ADD --chown=app:app topsrcdir/pushapkscript /app/pushapkscript
 
 USER root
 RUN apt-get update \
- && apt-get install -y default-jdk \
+ && apt-get install -y default-jre-headless \
  && apt-get clean
 
 USER app

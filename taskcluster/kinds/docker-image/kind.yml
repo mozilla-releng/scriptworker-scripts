@@ -95,7 +95,7 @@ tasks:
         definition: base-test
         args:
             PYTHON_VERSION: *py311
-            APT_PACKAGES: default-jdk
+            APT_PACKAGES: default-jre-headless
 
     pushflatpakscript-test-py311:
         definition: base-test
@@ -114,7 +114,7 @@ tasks:
         definition: base-test
         args:
             PYTHON_VERSION: *py314
-            APT_PACKAGES: default-jdk
+            APT_PACKAGES: default-jre-headless
 
     pushflatpakscript-test-py314:
         definition: base-test
