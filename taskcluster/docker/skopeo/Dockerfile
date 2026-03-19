@@ -34,7 +34,7 @@ FROM debian:trixie@sha256:55a15a112b42be10bfc8092fcc40b6748dc236f7ef46a358d9392b
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update -qq \
     && apt-get dist-upgrade -y \
-    && apt-get install --no-install-recommends -y jq zstd python3-minimal curl \
+    && apt-get install --no-install-recommends -y jq zstd python3 curl ca-certificates \
     && apt-get clean
 
 COPY push_image.sh /usr/local/bin/
