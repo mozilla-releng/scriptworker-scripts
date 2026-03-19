@@ -22,7 +22,9 @@ RUN ln -s /app/docker.d/healthcheck /bin/healthcheck
 
 ARG APT_PACKAGES
 # Install extra requirements
-RUN /bin/sh -c "if [ \"${APT_PACKAGES}\" != \"\" ]; then apt-get update && apt-get install -y ${APT_PACKAGES} && apt-get clean; fi"
+RUN apt-get update && \
+    apt-get install --no-install-recommends -y git ${APT_PACKAGES} && \
+    apt-get clean
 
 # %include-run-task
 ENV SHELL=/bin/bash \

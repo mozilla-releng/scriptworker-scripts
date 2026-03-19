@@ -69,6 +69,8 @@ tasks:
         resources:
             - githubscript
             - scriptworker_client
+        worker:
+            docker-image: {in-tree: 'githubscript-test-py{matrix[python]}'}
     init:
         resources:
             - docker.d

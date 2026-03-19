@@ -9,7 +9,7 @@ ADD --chown=app:app topsrcdir/treescript /app/treescript
 
 USER root
 RUN apt-get update \
- && apt-get install -y mercurial \
+ && apt-get install --no-install-recommends -y mercurial \
  && apt-get clean \
  && cp /app/treescript/src/treescript/data/hgrc /etc/mercurial/hgrc.d/treescript.rc \
  && cp /app/treescript/docker.d/extensions.rc /etc/mercurial/hgrc.d/extensions.rc

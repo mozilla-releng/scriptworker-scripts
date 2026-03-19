@@ -16,7 +16,7 @@ USER root
 # Install msix
 # Install rcodesign
 RUN apt-get update \
- && apt-get install -y osslsigncode cmake clang gpg gpgv \
+ && apt-get install --no-install-recommends -y osslsigncode cmake make clang gpg gpgv git libicu-dev wget \
  && apt-get clean \
  && chown -R app:app /app \
  && cd /app/signingscript/docker.d \
