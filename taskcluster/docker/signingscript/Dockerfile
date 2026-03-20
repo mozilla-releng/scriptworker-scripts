@@ -2,6 +2,19 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+FROM $DOCKER_IMAGE_PARENT AS makemsix
+
+USER root
+
+RUN apt-get update \
+ && apt-get install --no-install-recommends -y cmake make clang git libicu-dev \
+ && apt-get clean
+
+ADD topsrcdir/signingscript/docker.d/build_msix_packaging.sh /app/msix-packaging/build_msix_packaging.sh
+
+# Build makemsix
+RUN cd /app/msix-packaging && bash build_msix_packaging.sh
+
 FROM $DOCKER_IMAGE_PARENT
 
 # %include signingscript
@@ -14,21 +27,20 @@ ADD --chown=app:app topsrcdir/vendored /app/vendored
 USER root
 
 # Install msix
-# Install rcodesign
+COPY --from=makemsix /app/msix-packaging/msix-packaging/.vs/bin/makemsix /usr/bin/makemsix
+COPY --from=makemsix /app/msix-packaging/msix-packaging/.vs/lib/libmsix.so /usr/lib/libmsix.so
+
+# Install system dependencies and rcodesign
 RUN apt-get update \
- && apt-get install --no-install-recommends -y osslsigncode cmake make clang gpg gpgv git libicu-dev wget \
+ && apt-get install --no-install-recommends -y osslsigncode gpg gpgv wget libicu76 \
  && apt-get clean \
- && chown -R app:app /app \
- && cd /app/signingscript/docker.d \
- && bash build_msix_packaging.sh \
- && cp msix-packaging/.vs/bin/makemsix /usr/bin \
- && cp msix-packaging/.vs/lib/libmsix.so /usr/lib \
- && cd .. \
- && rm -rf msix-packaging \
  && wget -qO- \
     https://github.com/indygreg/apple-platform-rs/releases/download/apple-codesign%2F0.29.0/apple-codesign-0.29.0-x86_64-unknown-linux-musl.tar.gz \
     | tar xvz -C /usr/bin --transform 's/.*\///g' --wildcards --no-anchored 'rcodesign' \
  && chmod +x /usr/bin/rcodesign
+
+# Ensure makemsix minimally works (e.g. no missing libs)
+RUN makemsix -?
 
 # Set user and workdir
 USER app
