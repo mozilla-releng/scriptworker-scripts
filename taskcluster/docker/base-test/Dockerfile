@@ -23,7 +23,7 @@ RUN ln -s /app/docker.d/healthcheck /bin/healthcheck
 ARG APT_PACKAGES
 # Install extra requirements
 RUN apt-get update && \
-    apt-get install --no-install-recommends -y git ${APT_PACKAGES} && \
+    apt-get install --no-install-recommends -y git media-types ${APT_PACKAGES} && \
     apt-get clean
 
 # %include-run-task
