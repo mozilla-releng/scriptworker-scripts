@@ -60,7 +60,10 @@ tasks:
         args:
             SCRIPT_NAME: bouncerscript
     githubscript:
+        definition: script
         parent: base
+        args:
+            SCRIPT_NAME: githubscript
     landoscript:
         definition: script
         parent: base
@@ -88,13 +91,6 @@ tasks:
         parent: base
 
     # Testing images
-    githubscript-test-py311:
-        definition: base-test
-        args:
-            PYTHON_VERSION: *py311
-            # tests expect mimetypes.guess_type to map *.apk to application/vnd.android.package-archive
-            APT_PACKAGES: media-types
-
     pushapkscript-test-py311:
         definition: base-test
         args:
@@ -113,13 +109,6 @@ tasks:
         args:
             PYTHON_VERSION: *py311
             APT_PACKAGES: osslsigncode cmake make clang gpg gpgv
-
-    githubscript-test-py314:
-        definition: base-test
-        args:
-            PYTHON_VERSION: *py314
-            # tests expect mimetypes.guess_type to map *.apk to application/vnd.android.package-archive
-            APT_PACKAGES: media-types
 
     pushapkscript-test-py314:
         definition: base-test
