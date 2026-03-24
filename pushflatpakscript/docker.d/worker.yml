@@ -21,8 +21,16 @@ token_locations:
             beta: { "$eval": "REPO_TOKEN_BETA_PATH" }
             stable: { "$eval": "REPO_TOKEN_STABLE_PATH" }
           'org.mozilla.thunderbird':
-            beta: { "$eval": "REPO_TOKEN_TB_BETA_PATH" }
-            stable: { "$eval": "REPO_TOKEN_TB_STABLE_PATH" }
+            $merge:
+              - $if: "defined('REPO_TOKEN_TB_BETA_PATH')"
+                then:
+                  beta: { "$eval": "REPO_TOKEN_TB_BETA_PATH" }
+              - $if: "defined('REPO_TOKEN_TB_STABLE_PATH')"
+                then:
+                  stable: { "$eval": "REPO_TOKEN_TB_STABLE_PATH" }
           'org.mozilla.thunderbird_esr':
-            stable: { "$eval": "REPO_TOKEN_TB_ESR_PATH" }
+            $merge:
+              - $if: "defined('REPO_TOKEN_TB_ESR_PATH')"
+                then:
+                  stable: { "$eval": "REPO_TOKEN_TB_ESR_PATH" }
   else: {}
