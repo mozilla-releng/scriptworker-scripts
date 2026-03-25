@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [11.0.1] - 2026-03-25
+
+### Changed
+
+* Set log level for `pyaxmlparser` to `WARNING`
+
 ## [11.0.0] - 2025-07-08
 
 ### Changed
