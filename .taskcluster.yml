@@ -79,6 +79,7 @@ tasks:
               - beetmoverscript
               - bitrisescript
               - bouncerscript
+              - builddecisionscript
               - githubscript
               # - iscript (iscript has special release via ronin_puppet repo)
               - landoscript
