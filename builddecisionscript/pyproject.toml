@@ -1,0 +1,58 @@
+[project]
+name = "builddecisionscript"
+version = "1.0.0"
+description = "Scriptworker script to create build decision tasks for hg-push and cron triggers"
+url = "https://github.com/mozilla-releng/scriptworker-scripts/"
+license = "MPL-2.0"
+readme = "README.md"
+authors = [
+    { name = "Mozilla Release Engineering", email = "release+python@mozilla.com" }
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+]
+dependencies = [
+    "attrs",
+    "json-e",
+    "jsonschema>4.18",
+    "pyyaml",
+    "redo",
+    "referencing",
+    "requests",
+    "scriptworker-client",
+    "slugid",
+    "taskcluster",
+]
+
+[dependency-groups]
+dev = [
+    "tox",
+    "tox-uv",
+    "coverage>=4.2",
+    "pytest",
+    "pytest-asyncio<1.0",
+    "pytest-cov",
+    "pytest-mock",
+    "pytest-scriptworker-client",
+    "responses",
+]
+
+[tool.uv.sources]
+scriptworker-client = { workspace = true }
+pytest-scriptworker-client = { workspace = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build]
+include = [
+    "src",
+]
+
+[tool.hatch.build.targets.wheel.sources]
+"src/" = ""
+
+[project.scripts]
+builddecisionscript = "builddecisionscript.script:main"
