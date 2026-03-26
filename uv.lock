@@ -786,6 +786,7 @@ dependencies = [
     { name = "scriptworker-client" },
     { name = "slugid" },
     { name = "taskcluster" },
+    { name = "taskcluster-taskgraph" },
 ]
 
 [package.dev-dependencies]
@@ -813,6 +814,7 @@ requires-dist = [
     { name = "scriptworker-client", editable = "scriptworker_client" },
     { name = "slugid" },
     { name = "taskcluster" },
+    { name = "taskcluster-taskgraph" },
 ]
 
 [package.metadata.requires-dev]

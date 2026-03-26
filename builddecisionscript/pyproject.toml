@@ -23,6 +23,7 @@ dependencies = [
     "scriptworker-client",
     "slugid",
     "taskcluster",
+    "taskcluster-taskgraph",
 ]
 
 [dependency-groups]
