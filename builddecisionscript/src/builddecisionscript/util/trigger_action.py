@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import json
 import logging
-import os
 
 import attr
 import jsone
@@ -142,14 +141,7 @@ class Hook:
         )
 
     def submit(self):
-        if "TASKCLUSTER_PROXY_URL" in os.environ:
-            hooks = taskcluster.Hooks(
-                {"rootUrl": os.environ["TASKCLUSTER_PROXY_URL"]},
-                session=SESSION,
-            )
-        else:
-            hooks = taskcluster.Hooks(taskcluster.optionsFromEnvironment(), session=SESSION)
-
+        hooks = taskcluster.Hooks(taskcluster.optionsFromEnvironment(), session=SESSION)
         logger.info("Triggering hook %s/%s", self.hook_group_id, self.hook_id)
         result = hooks.triggerHook(self.hook_group_id, self.hook_id, self.hook_payload)
         logger.info("Task Id: %s", result["status"]["taskId"])
