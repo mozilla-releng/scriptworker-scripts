@@ -113,7 +113,7 @@ def test_filter_relevant_actions(original_task, expected_action_names):
 
 
 @pytest.mark.parametrize("raises", (None, RuntimeError))
-def test_check_decision_task_scopes(mocker, raises):
+def test_check_decision_task_scopes(mocker, raises, fake_taskcluster_options):
     """Test how the function raises if scopes match or not."""
 
     def fake_satisfies(*args, **kwargs):
@@ -185,7 +185,7 @@ def test_check_decision_task_scopes(mocker, raises):
         ),
     ),
 )
-def test_render_action(mocker, actions, action_name, task_id, action_input, raises):
+def test_render_action(mocker, actions, action_name, task_id, action_input, raises, fake_taskcluster_options):
     """Add coverage to ``render_action``, largely testing the raises."""
 
     class fake_session:
@@ -237,7 +237,7 @@ def test_hook_display():
     hook.display()
 
 
-def test_hook_submit(mocker):
+def test_hook_submit(mocker, fake_taskcluster_options):
     """Add coverage to Hook.submit"""
     mocker.patch.object(taskcluster, "Hooks")
     hook = trigger_action.Hook(

@@ -7,6 +7,7 @@ import logging
 import taskcluster
 
 from ..util.http import SESSION
+from ..util.taskcluster import get_taskcluster_options
 from ..util.trigger_action import render_action
 
 logger = logging.getLogger(__name__)
@@ -14,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 def find_decision_task(repository, revision):
     """Given repository and revision, find the taskId of the decision task."""
-    index = taskcluster.Index(taskcluster.optionsFromEnvironment(), session=SESSION)
+    index = taskcluster.Index(get_taskcluster_options(), session=SESSION)
     decision_index = f"{repository.trust_domain}.v2.{repository.project}.revision.{revision}.taskgraph.decision"
     logger.info("Looking for index: %s", decision_index)
     task_id = index.findTask(decision_index)["taskId"]

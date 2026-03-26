@@ -4,7 +4,6 @@
 
 import json
 import logging
-import os
 
 import attr
 import jsone
@@ -13,6 +12,7 @@ import slugid
 import taskcluster
 
 from .util.http import SESSION
+from .util.taskcluster import get_taskcluster_options
 
 logger = logging.getLogger(__name__)
 
@@ -50,12 +50,5 @@ class Task:
 
     def submit(self):
         logger.info("Task Id: %s", self.task_id)
-
-        if "TASKCLUSTER_PROXY_URL" in os.environ:
-            queue = taskcluster.Queue(
-                {"rootUrl": os.environ["TASKCLUSTER_PROXY_URL"]},
-                session=SESSION,
-            )
-        else:
-            queue = taskcluster.Queue(taskcluster.optionsFromEnvironment(), session=SESSION)
+        queue = taskcluster.Queue(get_taskcluster_options(), session=SESSION)
         queue.createTask(self.task_id, self.task_payload)

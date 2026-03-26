@@ -8,7 +8,7 @@ import pytest
 import taskcluster
 
 
-def test_find_decision_task(mocker):
+def test_find_decision_task(mocker, fake_taskcluster_options):
     """Mock ``Index`` and return a task id."""
     find_task = {"taskId": "found_task_id"}
     fake_index = mocker.MagicMock()

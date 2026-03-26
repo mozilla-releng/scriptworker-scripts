@@ -64,7 +64,7 @@ def test_display_task():
     task.display()
 
 
-def test_submit_task():
+def test_submit_task(fake_taskcluster_options):
     """Add coverage for ``Task.submit``."""
     task_id = "asdf"
     task_payload = {"foo": "bar"}

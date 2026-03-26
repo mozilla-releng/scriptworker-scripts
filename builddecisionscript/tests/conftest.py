@@ -2,7 +2,36 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 
+from unittest.mock import patch
+
 import pytest
+
+_FAKE_TC_OPTIONS = {
+    "rootUrl": "https://tc.example.com",
+    "credentials": {
+        "clientId": "test-client",
+        "accessToken": "test-token",
+    },
+}
+
+
+@pytest.fixture
+def fake_taskcluster_options():
+    with (
+        patch(
+            "builddecisionscript.decision.get_taskcluster_options",
+            return_value=_FAKE_TC_OPTIONS,
+        ),
+        patch(
+            "builddecisionscript.util.trigger_action.get_taskcluster_options",
+            return_value=_FAKE_TC_OPTIONS,
+        ),
+        patch(
+            "builddecisionscript.cron.action.get_taskcluster_options",
+            return_value=_FAKE_TC_OPTIONS,
+        ),
+    ):
+        yield
 
 PULSE_MESSAGE = {
     "payload": {

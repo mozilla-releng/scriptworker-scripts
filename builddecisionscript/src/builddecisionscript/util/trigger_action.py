@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import json
 import logging
-import os
 
 import attr
 import jsone
@@ -23,6 +22,7 @@ import taskcluster
 
 from . import scopes
 from .http import SESSION
+from .taskcluster import get_taskcluster_options
 
 logger = logging.getLogger(__name__)
 
@@ -63,8 +63,8 @@ def _filter_relevant_actions(actions_json, original_task):
 
 
 def _check_decision_task_scopes(decision_task_id, hook_group_id, hook_id):
-    queue = taskcluster.Queue(taskcluster.optionsFromEnvironment(), session=SESSION)
-    auth = taskcluster.Auth(taskcluster.optionsFromEnvironment(), session=SESSION)
+    queue = taskcluster.Queue(get_taskcluster_options(), session=SESSION)
+    auth = taskcluster.Auth(get_taskcluster_options(), session=SESSION)
     decision_task = queue.task(decision_task_id)
     decision_task_scopes = auth.expandScopes({"scopes": decision_task["scopes"]})["scopes"]
     in_tree_scope = f"in-tree:hook-action:{hook_group_id}/{hook_id}"
@@ -78,7 +78,7 @@ def _check_decision_task_scopes(decision_task_id, hook_group_id, hook_id):
 
 
 def render_action(*, action_name, task_id, decision_task_id, action_input):
-    queue = taskcluster.Queue(taskcluster.optionsFromEnvironment(), session=SESSION)
+    queue = taskcluster.Queue(get_taskcluster_options(), session=SESSION)
 
     logger.debug("Fetching actions.json...")
     actions_url = queue.buildUrl("getLatestArtifact", decision_task_id, "public/actions.json")
@@ -142,14 +142,7 @@ class Hook:
         )
 
     def submit(self):
-        if "TASKCLUSTER_PROXY_URL" in os.environ:
-            hooks = taskcluster.Hooks(
-                {"rootUrl": os.environ["TASKCLUSTER_PROXY_URL"]},
-                session=SESSION,
-            )
-        else:
-            hooks = taskcluster.Hooks(taskcluster.optionsFromEnvironment(), session=SESSION)
-
+        hooks = taskcluster.Hooks(get_taskcluster_options(), session=SESSION)
         logger.info("Triggering hook %s/%s", self.hook_group_id, self.hook_id)
         result = hooks.triggerHook(self.hook_group_id, self.hook_id, self.hook_payload)
         logger.info("Task Id: %s", result["status"]["taskId"])

@@ -21,11 +21,13 @@ import pytest
     ),
 )
 def test_get_secret(secret_name, secret, secret_key, expected):
-    """Mock the secrets fetch, and test which values we get back."""
-    fake_res = MagicMock()
-    fake_res.json.return_value = secret
-    fake_session = MagicMock()
-    fake_session.get.return_value = fake_res
+    fake_secrets_client = MagicMock()
+    fake_secrets_client.get.return_value = secret
 
-    with patch.object(secrets, "SESSION", new=fake_session):
+    with (
+        patch("builddecisionscript.secrets.get_taskcluster_options", return_value={}),
+        patch("builddecisionscript.secrets.taskcluster.Secrets", return_value=fake_secrets_client),
+    ):
         assert secrets.get_secret(secret_name, secret_key=secret_key) == expected
+
+    fake_secrets_client.get.assert_called_once_with(secret_name)
