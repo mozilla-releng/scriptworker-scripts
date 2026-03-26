@@ -7,9 +7,9 @@ import traceback
 from pathlib import Path
 
 from requests.exceptions import HTTPError
+from taskgraph.util.keyed_by import evaluate_keyed_by
 
 from ..repository import NoPushesError
-from taskgraph.util.keyed_by import evaluate_keyed_by
 from ..util.schema import Schema
 from . import action, decision
 from .util import calculate_time, match_utc
