@@ -103,9 +103,9 @@
                 },
                 "update_clobber_file": {
                     "type": "boolean",
-                    "default": true
+                    "default": true,
                     "description": "Control whether the CLOBBER file at the root of the repository gets updated"
-                }
+                },
                 "incr_major_version": {
                     "type": "boolean",
                     "default": false,

@@ -1,11 +1,11 @@
 import json
 from aiohttp import ClientResponseError
 import pytest
-from scriptworker.client import STATUSES, TaskVerificationError
+from scriptworker.client import STATUSES, TaskVerificationError, validate_task_schema
 from pytest_scriptworker_client import get_files_payload
 
 from landoscript.errors import LandoscriptError, MergeConflictError
-from landoscript.script import async_main
+from landoscript.script import async_main, get_default_config
 from .conftest import (
     assert_lando_submission_response,
     assert_status_response,
@@ -327,6 +327,20 @@ async def test_missing_scopes(aioresponses, github_installation_responses, conte
         assert "required scope(s) not present" in e.args[0]
         for m in missing:
             assert m in e.args[0]
+
+
+def test_task_schema(context):
+    payload = {
+        "actions": ["tag", "version_bump"],
+        "lando_repo": "repo_name",
+        "version_bump_info": {
+            "files": ["browser/config/version.txt"],
+            "next_version": "135.0",
+        },
+    }
+    context.task = {"payload": payload}
+    context.config = get_default_config()
+    assert validate_task_schema(context) is None
 
 
 @pytest.mark.asyncio

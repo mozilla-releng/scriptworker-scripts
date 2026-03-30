@@ -10,6 +10,8 @@ FROM python:$PYTHON_VERSION
 
 COPY --from=uv /uv /bin
 
+RUN apt-get update && apt-get install -y --no-install-recommends media-types && apt-get clean
+
 RUN ln -s /app/docker.d/healthcheck /bin/healthcheck \
  && groupadd --gid 10001 app \
  && useradd -g app --uid 10001 --shell /usr/sbin/nologin --create-home --home-dir /app app
