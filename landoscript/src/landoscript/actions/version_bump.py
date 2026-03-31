@@ -1,10 +1,8 @@
 import json
 import logging
 import os.path
-import re
 import typing
 from dataclasses import dataclass
-from typing import Optional
 
 from gql.transport.exceptions import TransportError
 from mozilla_version.gecko import GeckoVersion
@@ -20,7 +18,7 @@ from landoscript.util.version import find_what_version_parser_to_use
 
 log = logging.getLogger(__name__)
 
-# A list of files that this action is allowed to operate on.
+# Files that use plain-text version strings (one version per file).
 ALLOWED_BUMP_FILES = (
     "browser/config/version.txt",
     "browser/config/version_display.txt",
@@ -31,11 +29,38 @@ ALLOWED_BUMP_FILES = (
     "mail/config/version_display.txt",
 )
 
+# Subset of ALLOWED_BUMP_FILES that are JSON manifests requiring
+# manifest-specific version extraction and replacement logic.
+# Only files explicitly listed here will trigger that code path.
+JSON_MANIFEST_BUMP_FILES = frozenset(
+    [
+        "browser/extensions/newtab/manifest.json",
+    ]
+)
+
 
 @dataclass(frozen=True)
 class VersionBumpInfo:
+    next_version: str
     files: list[str]
-    next_version: Optional[str] = None
+
+
+def parse_manifest_version(orig_contents: str) -> BaseVersion:
+    """Extract and parse the version field from a JSON manifest."""
+    manifest = json.loads(orig_contents)
+    return BaseVersion.parse(manifest["version"])
+
+
+def apply_manifest_version_bump(orig: str, next_: BaseVersion) -> str:
+    """Update the version field in a JSON manifest and re-serialize.
+
+    Preserves the trailing newline of the original file if present."""
+    manifest = json.loads(orig)
+    manifest["version"] = str(next_)
+    result = json.dumps(manifest, indent=2)
+    if orig.endswith("\n"):
+        result += "\n"
+    return result
 
 
 async def run(
@@ -89,12 +114,8 @@ async def run(
                 log.info(f"{file}: Version bumping skipped due to unchanged values")
                 continue
 
-            if file.endswith(".json"):
-                modified = re.sub(
-                    r'("version":\s*")' + re.escape(str(cur)) + r'"',
-                    rf'\g<1>{next_}"',
-                    orig,
-                )
+            if file in JSON_MANIFEST_BUMP_FILES:
+                modified = apply_manifest_version_bump(orig, next_)
             else:
                 modified = orig.replace(str(cur), str(next_))
             if orig == modified:
@@ -131,10 +152,9 @@ async def run(
 
 
 def get_cur_and_next_version(filename, orig_contents, next_version, munge_next_version):
-    if filename.endswith(".json"):
-        manifest = json.loads(orig_contents)
-        cur = BaseVersion.parse(manifest["version"])
-        next_ = cur.bump("minor_number")
+    if filename in JSON_MANIFEST_BUMP_FILES:
+        cur = parse_manifest_version(orig_contents)
+        next_ = BaseVersion.parse(next_version)
         return cur, next_
 
     VersionClass: BaseVersion = find_what_version_parser_to_use(filename)

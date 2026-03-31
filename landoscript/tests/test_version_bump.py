@@ -5,7 +5,7 @@ from pytest_scriptworker_client import get_files_payload
 
 from landoscript.errors import LandoscriptError
 from landoscript.script import async_main
-from landoscript.actions.version_bump import ALLOWED_BUMP_FILES
+from landoscript.actions.version_bump import ALLOWED_BUMP_FILES, JSON_MANIFEST_BUMP_FILES
 from landoscript.util.version import _VERSION_CLASS_PER_BEGINNING_OF_PATH
 
 from .conftest import (
@@ -395,7 +395,7 @@ def test_no_overlaps_in_version_classes():
 def test_all_bump_files_have_version_class():
     for bump_file in ALLOWED_BUMP_FILES:
         # JSON manifests use BaseVersion directly and bypass the version class lookup
-        if bump_file.endswith(".json"):
+        if bump_file in JSON_MANIFEST_BUMP_FILES:
             continue
         assert any([bump_file.startswith(path) for path in _VERSION_CLASS_PER_BEGINNING_OF_PATH])
 
@@ -422,6 +422,7 @@ async def test_json_manifest_bump(aioresponses, github_installation_responses, c
         "lando_repo": "repo_name",
         "version_bump_info": {
             "files": [MANIFEST_FILE],
+            "next_version": expected_version,
         },
     }
     setup_github_graphql_responses(aioresponses, get_files_payload({MANIFEST_FILE: _manifest(initial_version)}))
@@ -447,6 +448,7 @@ async def test_json_manifest_file_not_found(aioresponses, github_installation_re
         "lando_repo": "repo_name",
         "version_bump_info": {
             "files": [MANIFEST_FILE],
+            "next_version": "151.1.0",
         },
     }
     setup_github_graphql_responses(aioresponses, get_files_payload({MANIFEST_FILE: None}))
