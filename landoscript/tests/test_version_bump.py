@@ -394,4 +394,68 @@ def test_no_overlaps_in_version_classes():
 
 def test_all_bump_files_have_version_class():
     for bump_file in ALLOWED_BUMP_FILES:
+        # JSON manifests use BaseVersion directly and bypass the version class lookup
+        if bump_file.endswith(".json"):
+            continue
         assert any([bump_file.startswith(path) for path in _VERSION_CLASS_PER_BEGINNING_OF_PATH])
+
+
+MANIFEST_FILE = "browser/extensions/newtab/manifest.json"
+
+
+def _manifest(version):
+    import json as _json
+    return _json.dumps({"manifest_version": 2, "name": "New Tab", "version": version}, indent=2)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "initial_version,expected_version",
+    [
+        pytest.param("151.0.0", "151.1.0", id="initial_after_merge_day"),
+        pytest.param("151.1.0", "151.2.0", id="normal_minor_bump"),
+    ],
+)
+async def test_json_manifest_bump(aioresponses, github_installation_responses, context, initial_version, expected_version):
+    payload = {
+        "actions": ["version_bump"],
+        "lando_repo": "repo_name",
+        "version_bump_info": {
+            "files": [MANIFEST_FILE],
+        },
+    }
+    setup_github_graphql_responses(aioresponses, get_files_payload({MANIFEST_FILE: _manifest(initial_version)}))
+    await run_test(
+        aioresponses,
+        github_installation_responses,
+        context,
+        payload,
+        ["version_bump"],
+        assert_func=lambda req: assert_success(
+            req,
+            ["Automatic version bump", "NO BUG", "a=release", "CLOSED TREE"],
+            {MANIFEST_FILE: f'  "version": "{initial_version}"'},
+            {MANIFEST_FILE: f'  "version": "{expected_version}"'},
+        ),
+    )
+
+
+@pytest.mark.asyncio
+async def test_json_manifest_file_not_found(aioresponses, github_installation_responses, context):
+    payload = {
+        "actions": ["version_bump"],
+        "lando_repo": "repo_name",
+        "version_bump_info": {
+            "files": [MANIFEST_FILE],
+        },
+    }
+    setup_github_graphql_responses(aioresponses, get_files_payload({MANIFEST_FILE: None}))
+    await run_test(
+        aioresponses,
+        github_installation_responses,
+        context,
+        payload,
+        ["version_bump"],
+        err=LandoscriptError,
+        errmsg="does not exist",
+    )

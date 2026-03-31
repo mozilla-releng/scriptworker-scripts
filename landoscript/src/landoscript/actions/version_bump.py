@@ -1,7 +1,10 @@
+import json
 import logging
 import os.path
+import re
 import typing
 from dataclasses import dataclass
+from typing import Optional
 
 from gql.transport.exceptions import TransportError
 from mozilla_version.gecko import GeckoVersion
@@ -21,6 +24,7 @@ log = logging.getLogger(__name__)
 ALLOWED_BUMP_FILES = (
     "browser/config/version.txt",
     "browser/config/version_display.txt",
+    "browser/extensions/newtab/manifest.json",
     "config/milestone.txt",
     "mobile/android/version.txt",
     "mail/config/version.txt",
@@ -30,8 +34,8 @@ ALLOWED_BUMP_FILES = (
 
 @dataclass(frozen=True)
 class VersionBumpInfo:
-    next_version: str
     files: list[str]
+    next_version: Optional[str] = None
 
 
 async def run(
@@ -85,9 +89,17 @@ async def run(
                 log.info(f"{file}: Version bumping skipped due to unchanged values")
                 continue
 
-            modified = orig.replace(str(cur), str(next_))
+            if file.endswith(".json"):
+                modified = re.sub(
+                    r'("version":\s*")' + re.escape(str(cur)) + r'"',
+                    rf'\g<1>{next_}"',
+                    orig,
+                )
+            else:
+                modified = orig.replace(str(cur), str(next_))
             if orig == modified:
-                raise LandoscriptError("file not modified, this should be impossible")
+                log.warning(f"{file}: version replacement produced no change, skipping")
+                continue
 
             log.info(f"{file}: successfully bumped! new contents are:")
             log_file_contents(modified)
@@ -119,6 +131,12 @@ async def run(
 
 
 def get_cur_and_next_version(filename, orig_contents, next_version, munge_next_version):
+    if filename.endswith(".json"):
+        manifest = json.loads(orig_contents)
+        cur = BaseVersion.parse(manifest["version"])
+        next_ = cur.bump("minor_number")
+        return cur, next_
+
     VersionClass: BaseVersion = find_what_version_parser_to_use(filename)
     lines = [line for line in orig_contents.splitlines() if line and not line.startswith("#")]
     cur = VersionClass.parse(lines[-1])
