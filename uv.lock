@@ -15,6 +15,7 @@ members = [
     "beetmoverscript",
     "bitrisescript",
     "bouncerscript",
+    "builddecisionscript",
     "configloader",
     "githubscript",
     "iscript",
@@ -779,6 +780,65 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/1f/d9/d5340b43cf5fbe7fe5a083d237e5338cc1caa73bea523be1c5e452c26290/brotlicffi-1.2.0.1-pp311-pypy311_pp73-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:37cb587d32bf7168e2218c455e22e409ad1f3157c6c71945879a311f3e6b6abf", size = 406710, upload-time = "2026-03-05T19:54:07.272Z" },
     { url = "https://files.pythonhosted.org/packages/a3/82/dbced4c1e0792efdf23fd90ff6d2a320c64ff4dfef7aacc85c04fde9ddd2/brotlicffi-1.2.0.1-pp311-pypy311_pp73-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:9d6ba65dd528892b4d9960beba2ae011a753620bcfc66cf6fa3cee18d7b0baa4", size = 402787, upload-time = "2026-03-05T19:54:08.73Z" },
     { url = "https://files.pythonhosted.org/packages/ef/6f/534205ba7590c9a8716a614f270c5c2ec419b5b7079b3f9cd31b7b5580de/brotlicffi-1.2.0.1-pp311-pypy311_pp73-win_amd64.whl", hash = "sha256:f2a5575653b0672638ba039b82fda56854934d7a6a24d4b8b5033f73ab43cbc1", size = 375108, upload-time = "2026-03-05T19:54:10.079Z" },
+]
+
+[[package]]
+name = "builddecisionscript"
+version = "1.0.0"
+source = { editable = "builddecisionscript" }
+dependencies = [
+    { name = "attrs" },
+    { name = "json-e" },
+    { name = "jsonschema" },
+    { name = "pyyaml" },
+    { name = "redo" },
+    { name = "referencing" },
+    { name = "requests" },
+    { name = "scriptworker-client" },
+    { name = "slugid" },
+    { name = "taskcluster" },
+    { name = "taskcluster-taskgraph" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "coverage" },
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "pytest-cov" },
+    { name = "pytest-mock" },
+    { name = "pytest-scriptworker-client" },
+    { name = "responses" },
+    { name = "tox" },
+    { name = "tox-uv" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "attrs" },
+    { name = "json-e" },
+    { name = "jsonschema", specifier = ">4.18" },
+    { name = "pyyaml" },
+    { name = "redo" },
+    { name = "referencing" },
+    { name = "requests" },
+    { name = "scriptworker-client", editable = "scriptworker_client" },
+    { name = "slugid" },
+    { name = "taskcluster" },
+    { name = "taskcluster-taskgraph" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "coverage", specifier = ">=4.2" },
+    { name = "pytest" },
+    { name = "pytest-asyncio", specifier = "<1.0" },
+    { name = "pytest-cov" },
+    { name = "pytest-mock" },
+    { name = "pytest-scriptworker-client", editable = "scriptworker_client/packages/pytest-scriptworker-client" },
+    { name = "responses" },
+    { name = "tox" },
+    { name = "tox-uv" },
 ]
 
 [[package]]
