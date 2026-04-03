@@ -154,7 +154,6 @@
                         }
                     },
                     "required": [
-                        "next_version",
                         "files"
                     ]
                 },

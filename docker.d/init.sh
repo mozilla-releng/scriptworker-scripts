@@ -25,7 +25,7 @@ if [ "$ENV" == "prod" ]; then
   test_var_set 'ED25519_PRIVKEY'
 fi
 case $COT_PRODUCT in
-  firefox|thunderbird)
+  firefox|thunderbird|xpi)
     ;;
   *)
     test_var_set 'GITHUB_OAUTH_TOKEN'
