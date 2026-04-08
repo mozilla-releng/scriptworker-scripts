@@ -59,6 +59,11 @@ tasks:
         parent: base
         args:
             SCRIPT_NAME: bouncerscript
+    builddecisionscript:
+        definition: script
+        parent: base
+        args:
+            SCRIPT_NAME: builddecisionscript
     githubscript:
         definition: script
         parent: base
