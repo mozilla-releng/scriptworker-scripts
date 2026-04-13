@@ -29,6 +29,7 @@ dev = [
     "pytest-asyncio",
     "pytest-cov",
     "requests-mock",
+    "responses",
 ]
 
 [tool.uv.sources]

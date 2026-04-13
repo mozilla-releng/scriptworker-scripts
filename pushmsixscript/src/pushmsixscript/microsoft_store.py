@@ -10,6 +10,7 @@ from copy import copy
 import requests
 from azure.storage.blob import BlobClient
 from scriptworker_client.exceptions import TaskError, TimeoutError
+from urllib3.util.retry import Retry
 
 from pushmsixscript import task
 
@@ -40,6 +41,19 @@ DEFAULT_LISTINGS = {
     }
 }
 DEFAULT_ALLOW_TARGET = {"Desktop": True, "Mobile": False, "Holographic": False, "Xbox": False}
+
+
+def _build_session():
+    retry = Retry(
+        total=MAX_RETRIES,
+        status_forcelist=[500, 502, 503, 504],
+        # All methods, including PUT/POST, we rely on `_check_for_pending_submission` to avoid duplicates
+        allowed_methods=None,
+        backoff_factor=1,
+    )
+    session = requests.Session()
+    session.mount("https://", requests.adapters.HTTPAdapter(max_retries=retry))
+    return session
 
 
 def push(config, msix_file_paths, channel, publish_mode=None):
@@ -93,8 +107,7 @@ def _store_session(config):
     url = f"{login_url}/{tenant_id}/oauth2/token"
     body = f"grant_type=client_credentials&client_id={client_id}&client_secret={client_secret}&resource={token_resource}"
     headers = {"Content-Type": "application/x-www-form-urlencoded; charset=utf-8"}
-    with requests.Session() as session:
-        session.mount("https://", requests.adapters.HTTPAdapter(max_retries=MAX_RETRIES))
+    with _build_session() as session:
         response = session.post(url, body, headers=headers, timeout=int(config["request_timeout_seconds"]))
         response.raise_for_status()
         return response.json().get("access_token")
@@ -102,8 +115,7 @@ def _store_session(config):
 
 def _push_to_store(config, channel, msix_file_paths, publish_mode, access_token):
     headers = {"Authorization": f"Bearer {access_token}", "Content-type": "application/json", "User-Agent": "Python"}
-    with requests.Session() as session:
-        session.mount("https://", requests.adapters.HTTPAdapter(max_retries=MAX_RETRIES))
+    with _build_session() as session:
         log.info(">> checking for pending submissions...")
         _check_for_pending_submission(config, channel, session, headers)
         log.info(">> creating a new submission...")
