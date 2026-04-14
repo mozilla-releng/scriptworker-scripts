@@ -3069,6 +3069,7 @@ dev = [
     { name = "pytest-asyncio" },
     { name = "pytest-cov" },
     { name = "requests-mock" },
+    { name = "responses" },
     { name = "tox" },
     { name = "tox-uv" },
 ]
@@ -3089,6 +3090,7 @@ dev = [
     { name = "pytest-asyncio" },
     { name = "pytest-cov" },
     { name = "requests-mock" },
+    { name = "responses" },
     { name = "tox" },
     { name = "tox-uv" },
 ]

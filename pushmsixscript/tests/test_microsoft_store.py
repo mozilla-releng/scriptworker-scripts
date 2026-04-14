@@ -1,9 +1,11 @@
 import tempfile
 from unittest.mock import patch
+from urllib3.util.retry import Retry
 
 import pytest
 import requests
 import requests_mock
+import responses
 
 from pushmsixscript import microsoft_store
 from scriptworker_client.exceptions import TaskError, TimeoutError
@@ -77,6 +79,22 @@ def test_check_for_pending_submission(status_code, pending, raises, exc):
                     microsoft_store._check_for_pending_submission(CONFIG, channel, session, headers)
             else:
                 microsoft_store._check_for_pending_submission(CONFIG, channel, session, headers)
+
+
+@pytest.mark.parametrize("method,verb", [("POST", responses.POST), ("PUT", responses.PUT)])
+@pytest.mark.parametrize("status", (500, 502, 503, 504))
+def test_build_session_retries_transient_5xx(monkeypatch, method, verb, status):
+    monkeypatch.setattr(Retry, "sleep", lambda *a, **kw: None)
+    url = "https://fake-store.example.com/resource"
+
+    with responses.RequestsMock() as rsps:
+        rsps.add(verb, url, body="err", status=status)
+        rsps.add(verb, url, body="err", status=status)
+        rsps.add(verb, url, json={"ok": True}, status=200)
+        with microsoft_store._build_session() as session:
+            resp = session.request(method, url)
+        assert resp.status_code == 200
+        rsps.assert_call_count(url, 3)
 
 
 @pytest.mark.parametrize(
