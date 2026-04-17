@@ -1,3 +1,4 @@
+import json
 import logging
 import os.path
 import typing
@@ -17,10 +18,11 @@ from landoscript.util.version import find_what_version_parser_to_use
 
 log = logging.getLogger(__name__)
 
-# A list of files that this action is allowed to operate on.
 ALLOWED_BUMP_FILES = (
     "browser/config/version.txt",
     "browser/config/version_display.txt",
+    "browser/extensions/newtab/manifest.json",
+    "browser/extensions/webcompat/manifest.json",
     "config/milestone.txt",
     "mobile/android/version.txt",
     "mail/config/version.txt",
@@ -32,6 +34,12 @@ ALLOWED_BUMP_FILES = (
 class VersionBumpInfo:
     next_version: str
     files: list[str]
+
+
+def parse_manifest_version(orig_contents: str) -> BaseVersion:
+    """Extract and parse the version field from a JSON manifest."""
+    manifest = json.loads(orig_contents)
+    return BaseVersion.parse(manifest["version"])
 
 
 async def run(
@@ -119,6 +127,11 @@ async def run(
 
 
 def get_cur_and_next_version(filename, orig_contents, next_version, munge_next_version):
+    if filename.endswith(".json"):
+        cur = parse_manifest_version(orig_contents)
+        next_ = BaseVersion.parse(next_version)
+        return cur, next_
+
     VersionClass: BaseVersion = find_what_version_parser_to_use(filename)
     lines = [line for line in orig_contents.splitlines() if line and not line.startswith("#")]
     cur = VersionClass.parse(lines[-1])
