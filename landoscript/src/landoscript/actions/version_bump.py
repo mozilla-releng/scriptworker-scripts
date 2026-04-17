@@ -95,7 +95,8 @@ async def run(
 
             modified = orig.replace(str(cur), str(next_))
             if orig == modified:
-                raise LandoscriptError("file not modified, this should be impossible")
+                log.warning(f"{file}: version replacement produced no change, skipping")
+                continue
 
             log.info(f"{file}: successfully bumped! new contents are:")
             log_file_contents(modified)
