@@ -1217,6 +1217,45 @@ async def test_authenticode_sign_authenticode_permanent_error(tmpdir, mocker, co
 
 
 @pytest.mark.asyncio
+async def test_winsign_helper_clears_stale_outfile_between_retries(tmpdir, mocker):
+    """_winsign_helper must remove the stale -new outfile before each retry, so
+    osslsigncode doesn't bail with "Overwriting an existing file is not supported."
+    after a transient first-attempt failure.
+    """
+    infile = os.path.join(tmpdir, "helper.exe")
+    outfile = infile + "-new"
+    with open(infile, "wb") as f:
+        f.write(b"unsigned")
+
+    calls = {"n": 0}
+
+    async def mocked_winsign(_infile, _outfile, *args, **kwargs):
+        calls["n"] += 1
+        # Real osslsigncode bails out if -out already exists, so mirror that here:
+        # if the helper didn't clear the stale outfile, surface it as a test failure.
+        if os.path.exists(_outfile):
+            raise AssertionError("Overwriting an existing file is not supported.")
+        # Simulate osslsigncode writing the -new file on every invocation — including
+        # the failing one (winsign returns False for transient post-sign hiccups).
+        with open(_outfile, "wb") as f:
+            f.write(b"signed")
+        if calls["n"] == 1:
+            return False
+        return True
+
+    mocker.patch.object(winsign.sign, "sign_file", mocked_winsign)
+
+    # First attempt: winsign returns False -> helper raises. outfile is left behind.
+    with pytest.raises(SigningScriptError):
+        await sign._winsign_helper("boom", infile, outfile, "sha256", [], None)
+    assert os.path.exists(outfile)
+
+    # Second attempt: helper must unlink the stale outfile before calling sign_file.
+    await sign._winsign_helper("boom", infile, outfile, "sha256", [], None)
+    assert calls["n"] == 2
+
+
+@pytest.mark.asyncio
 async def test_sign_gpg_temporary_error(tmpdir, mocker, context, caplog):
     context.autograph_configs = {
         TEST_CERT_TYPE: [
