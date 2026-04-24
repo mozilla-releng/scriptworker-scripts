@@ -1706,13 +1706,50 @@ async def sign_rpm_pkg(context, path, fmt, **kwargs):
     return path
 
 
+async def _notarize_wait_staple_batch(context, paths, attempts):
+    """Serial notarize-submit, notary-wait, then staple for a list of paths.
+
+    No-op on empty list. Each step wraps the rcodesign call in retry_async
+    with the given attempt budget, raising RCodesignError on exhaustion.
+    """
+    if not paths:
+        return
+    submissions_map = {}
+    for path in paths:
+        submissions_map[path] = await retry_async(
+            func=rcodesign_notarize,
+            args=(path, context.apple_credentials_path),
+            attempts=attempts,
+            retry_exceptions=RCodesignError,
+        )
+    for path, submission_id in submissions_map.items():
+        await retry_async(
+            func=rcodesign_notary_wait,
+            args=(submission_id, context.apple_credentials_path),
+            attempts=attempts,
+            retry_exceptions=RCodesignError,
+        )
+    for path in submissions_map.keys():
+        await retry_async(
+            func=rcodesign_staple,
+            args=[path],
+            attempts=attempts,
+            retry_exceptions=RCodesignError,
+        )
+
+
 @time_async_function
 async def apple_notarize_stacked(context, filelist_dict):
     """
     Notarizes multiple packages using rcodesign.
-    Submits everything before polling for status.
+
+    Fully notarizes and staples .pkg paths first, then probes each .app with
+    a short-retry staple attempt. .apps that fail the probe fall back to the
+    full notarize/wait/staple pipeline. This avoids redundant notarization
+    requests for .apps that become valid transitively via their parent .pkg.
     """
     ATTEMPTS = 5
+    STAPLE_PROBE_RETRY_KWARGS = {"attempts": 3, "sleeptime_kwargs": {"delay_factor": 15}}
 
     relpath_index_map = {}
     paths_to_notarize = []
@@ -1742,34 +1779,34 @@ async def apple_notarize_stacked(context, filelist_dict):
         else:
             raise SigningScriptError(f"Unsupported file extension: {extension} for file {relpath}")
 
-    # notarization submissions map (path -> submission_id)
-    submissions_map = {}
-    # Submit to notarization one by one
-    for path in paths_to_notarize:
-        submissions_map[path] = await retry_async(
-            func=rcodesign_notarize,
-            args=(path, context.apple_credentials_path),
-            attempts=ATTEMPTS,
-            retry_exceptions=RCodesignError,
-        )
+    pkg_paths = [p for p in paths_to_notarize if p.endswith(".pkg")]
+    app_paths = [p for p in paths_to_notarize if p.endswith(".app")]
 
-    # Notary wait all files
-    for path, submission_id in submissions_map.items():
-        await retry_async(
-            func=rcodesign_notary_wait,
-            args=(submission_id, context.apple_credentials_path),
-            attempts=ATTEMPTS,
-            retry_exceptions=RCodesignError,
-        )
+    # Phase A: full notarize/wait/staple pipeline for every .pkg
+    await _notarize_wait_staple_batch(context, pkg_paths, ATTEMPTS)
 
-    # Staple files
-    for path in submissions_map.keys():
-        await retry_async(
-            func=rcodesign_staple,
-            args=[path],
-            attempts=ATTEMPTS,
-            retry_exceptions=RCodesignError,
-        )
+    # Phase B: staple probe per .app; success means the .app was transitively
+    # validated by its parent .pkg in Phase A. When no .pkg ran in Phase A,
+    # there's no parent ticket to wait for, so probe just once (no retry).
+    # The single-attempt probe also covers the split-task case: .apps and
+    # .pkgs can be notarized in separate tasks with an app->pkg dependency
+    # in CI, so by the time the .app task runs its parent .pkg is already
+    # stapled and the probe succeeds on the first try.
+    probe_kwargs = STAPLE_PROBE_RETRY_KWARGS if pkg_paths else {"attempts": 1}
+    apps_needing_notarization = []
+    for app_path in app_paths:
+        try:
+            await retry_async(
+                func=rcodesign_staple,
+                args=[app_path],
+                retry_exceptions=RCodesignError,
+                **probe_kwargs,
+            )
+        except RCodesignError:
+            apps_needing_notarization.append(app_path)
+
+    # Phase C: full pipeline fallback for .apps that failed the probe
+    await _notarize_wait_staple_batch(context, apps_needing_notarization, ATTEMPTS)
 
     # Wrap up
     stapled_files = []

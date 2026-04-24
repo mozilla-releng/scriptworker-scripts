@@ -1487,10 +1487,102 @@ async def test_apple_notarize_stacked(mocker, context):
             "/app2.pkg": {"full_path": "/app2.pkg", "formats": ["apple_notarize_stacked"]},
         },
     )
-    # one for each file format
+    # Phase A notarizes/waits the 2 .pkgs; the 1 .app is transitively validated
+    # by its parent .pkg, so only its Phase B staple probe runs (no notarize/wait).
+    assert notarize.await_count == 2
+    assert wait.await_count == 2
+    assert staple.await_count == 3
+
+
+@pytest.mark.asyncio
+async def test_apple_notarize_stacked_probe_fallback(mocker, context):
+    """.app staple probe fails -> fall back to full notarize/wait/staple."""
+
+    async def no_retry(func=None, args=(), kwargs=None, attempts=1, retry_exceptions=Exception, **_):
+        kwargs = kwargs or {}
+        return await func(*args, **kwargs)
+
+    mocker.patch.object(sign, "retry_async", new=no_retry)
+
+    notarize = mock.AsyncMock()
+    mocker.patch.object(sign, "rcodesign_notarize", notarize)
+    wait = mock.AsyncMock()
+    mocker.patch.object(sign, "rcodesign_notary_wait", wait)
+
+    app_probe_failures = {"remaining": 1}
+
+    async def staple_side_effect(path):
+        if path.endswith(".app") and app_probe_failures["remaining"] > 0:
+            app_probe_failures["remaining"] -= 1
+            raise sign.RCodesignError("simulated probe failure")
+        return None
+
+    staple = mock.AsyncMock(side_effect=staple_side_effect)
+    mocker.patch.object(sign, "rcodesign_staple", staple)
+
+    mocker.patch.object(sign, "_extract_tarfile", noop_async)
+    mocker.patch.object(sign, "_create_tarfile", noop_async)
+    mocker.patch.object(sign.os, "listdir", lambda *_: ["/foo.pkg", "/baz.app", "/foobar"])
+    mocker.patch.object(sign.os, "walk", lambda *_: [("/", None, ["foo.pkg", "baz.app"])])
+    mocker.patch.object(sign.shutil, "rmtree", noop_sync)
+    mocker.patch.object(sign.utils, "mkdir", noop_sync)
+    mocker.patch.object(sign.utils, "copy_to_dir", noop_sync)
+
+    await sign.apple_notarize_stacked(
+        context,
+        {
+            "/app.tar.gz": {"full_path": "/app.tar.gz", "formats": ["apple_notarize_stacked"]},
+            "/app2.pkg": {"full_path": "/app2.pkg", "formats": ["apple_notarize_stacked"]},
+        },
+    )
+    # Phase A: 2 .pkgs notarized + waited + stapled.
+    # Phase B: 1 probe attempt on the .app (raises).
+    # Phase C: fallback notarize + wait + staple for that .app.
     assert notarize.await_count == 3
     assert wait.await_count == 3
-    assert staple.await_count == 3
+    assert staple.await_count == 4
+    fallback_notarize = [c for c in notarize.await_args_list if c.args[0].endswith(".app")]
+    assert len(fallback_notarize) == 1
+
+
+@pytest.mark.asyncio
+async def test_apple_notarize_stacked_no_pkg_single_probe(mocker, context):
+    """When no .pkg is in the batch, .apps get a single-attempt probe, then Phase C."""
+    notarize = mock.AsyncMock()
+    mocker.patch.object(sign, "rcodesign_notarize", notarize)
+    wait = mock.AsyncMock()
+    mocker.patch.object(sign, "rcodesign_notary_wait", wait)
+
+    # Probe fails once; fallback staple in Phase C succeeds.
+    app_probe_failures = {"remaining": 1}
+
+    async def staple_side_effect(path):
+        if path.endswith(".app") and app_probe_failures["remaining"] > 0:
+            app_probe_failures["remaining"] -= 1
+            raise sign.RCodesignError("simulated probe failure")
+        return None
+
+    staple = mock.AsyncMock(side_effect=staple_side_effect)
+    mocker.patch.object(sign, "rcodesign_staple", staple)
+
+    mocker.patch.object(sign, "_extract_tarfile", noop_async)
+    mocker.patch.object(sign, "_create_tarfile", noop_async)
+    # tar.gz extracts to a .app only (no .pkg alongside)
+    mocker.patch.object(sign.os, "listdir", lambda *_: ["/baz.app", "/foobar"])
+    mocker.patch.object(sign.os, "walk", lambda *_: [("/", None, ["baz.app"])])
+    mocker.patch.object(sign.shutil, "rmtree", noop_sync)
+    mocker.patch.object(sign.utils, "mkdir", noop_sync)
+    mocker.patch.object(sign.utils, "copy_to_dir", noop_sync)
+
+    await sign.apple_notarize_stacked(
+        context,
+        {"/app.tar.gz": {"full_path": "/app.tar.gz", "formats": ["apple_notarize_stacked"]}},
+    )
+    # No .pkgs -> Phase A empty. Phase B probes once (fails, no retry).
+    # Phase C notarizes/waits/staples the .app.
+    assert notarize.await_count == 1
+    assert wait.await_count == 1
+    assert staple.await_count == 2  # 1 probe (raises) + 1 Phase C staple (succeeds)
 
 
 @pytest.mark.asyncio
