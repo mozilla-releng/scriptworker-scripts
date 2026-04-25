@@ -11,6 +11,7 @@ import json
 import logging
 import lzma
 import os
+import pathlib
 import re
 import resource
 import shutil
@@ -1387,6 +1388,12 @@ async def merge_omnija_files(orig, signed, to):
 # sign_authenticode_file {{{1
 async def _winsign_helper(error_message, *args, **kwargs):
     """Raise an exception if winsign.sign.sign_file returns False to enable retries."""
+    # winsign.sign.sign_file signature is (infile, outfile, ...), so outfile is args[1].
+    # On a prior failed attempt, osslsigncode may have already written outfile to disk;
+    # leaving it there makes the next attempt fail with "Overwriting an existing file
+    # is not supported." — masking the original transient error.
+    outfile = args[1]
+    pathlib.Path(outfile).unlink(missing_ok=True)
     if not await winsign.sign.sign_file(*args, **kwargs):
         raise SigningScriptError(error_message)
 
