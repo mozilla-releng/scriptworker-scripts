@@ -20,11 +20,12 @@ case $ENV in
     export API_ROOT="https://admin.stage.balrog.nonprod.webservices.mozgcp.net/api"
     export STAGE_API_ROOT="https://admin.stage.balrog.nonprod.webservices.mozgcp.net/api"
     ;;
-  prod)
+  mozcloud-prod|prod)
     export API_ROOT="https://aus4-admin.mozilla.org/api"
     export STAGE_API_ROOT="https://admin.stage.balrog.nonprod.webservices.mozgcp.net/api"
     ;;
   *)
+    echo "Unknown ENV: $ENV"
     exit 1
     ;;
 esac
