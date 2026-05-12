@@ -11,12 +11,13 @@ from . import fake_redo_retry
 
 
 @pytest.mark.parametrize(
-    "repository_type, repo_url, revision, raises, expected_url",
+    "repository_type, repo_url, token, revision, raises, expected_url",
     (
         (
             # HG, no revision
             "hg",
             "https://hg.mozilla.org/fake_repo",
+            None,
             None,
             False,
             "https://hg.mozilla.org/fake_repo/raw-file/default/fake_path",
@@ -25,6 +26,7 @@ from . import fake_redo_retry
             # HG, revision
             "hg",
             "https://hg.mozilla.org/fake_repo",
+            None,
             "rev",
             False,
             "https://hg.mozilla.org/fake_repo/raw-file/rev/fake_path",
@@ -34,6 +36,7 @@ from . import fake_redo_retry
             "git",
             "https://github.com/org/repo",
             None,
+            None,
             False,
             "https://api.github.com/repos/org/repo/contents/fake_path",
         ),
@@ -42,6 +45,7 @@ from . import fake_redo_retry
             "git",
             "https://github.com/org/repo/",
             None,
+            None,
             False,
             "https://api.github.com/repos/org/repo/contents/fake_path",
         ),
@@ -49,6 +53,16 @@ from . import fake_redo_retry
             # Git, revision
             "git",
             "https://github.com/org/repo",
+            None,
+            "rev",
+            False,
+            "https://api.github.com/repos/org/repo/contents/fake_path?ref=rev",
+        ),
+        (
+            # Git, revision, token
+            "git",
+            "https://github.com/org/repo",
+            "mytoken",
             "rev",
             False,
             "https://api.github.com/repos/org/repo/contents/fake_path?ref=rev",
@@ -57,6 +71,7 @@ from . import fake_redo_retry
             # Raise on private git url
             "git",
             "git@github.com:org/repo",
+            None,
             "rev",
             Exception,
             None,
@@ -65,6 +80,7 @@ from . import fake_redo_retry
             # Raise on unrecognized git url
             "git",
             "https://unknown-git-server.com:org/repo",
+            None,
             "rev",
             Exception,
             None,
@@ -74,12 +90,13 @@ from . import fake_redo_retry
             "unknown",
             None,
             None,
+            None,
             Exception,
             None,
         ),
     ),
 )
-def test_get_file(mocker, repository_type, repo_url, revision, raises, expected_url):
+def test_get_file(mocker, repository_type, repo_url, token, revision, raises, expected_url):
     """Add coverage to ``Repository.get_file``."""
 
     fake_session = mocker.MagicMock()
@@ -90,6 +107,7 @@ def test_get_file(mocker, repository_type, repo_url, revision, raises, expected_
     repo = repository.Repository(
         repo_url=repo_url,
         repository_type=repository_type,
+        github_token=token,
     )
     if raises:
         with pytest.raises(raises):
@@ -99,6 +117,8 @@ def test_get_file(mocker, repository_type, repo_url, revision, raises, expected_
         expected_headers = {}
         if repo_url.startswith("https://github.com"):
             expected_headers = {"Accept": "application/vnd.github.raw+json"}
+        if token:
+            expected_headers["Authorization"] = f"token {token}"
         fake_session.get.assert_called_with(expected_url, headers=expected_headers, timeout=60)
 
 
