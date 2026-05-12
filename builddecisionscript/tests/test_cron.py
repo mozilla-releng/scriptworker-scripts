@@ -33,6 +33,14 @@ def test_load_jobs_404(mocker):
     assert cron.load_jobs(fake_repo, "rev") == {}
 
 
+def test_load_jobs_500(mocker):
+    fake_repo = mocker.MagicMock()
+    fake_response = mocker.MagicMock()
+    fake_response.status_code = 500
+    fake_repo.get_file.side_effect = requests.exceptions.HTTPError(response=fake_response)
+    with pytest.raises(requests.exceptions.HTTPError):
+        cron.load_jobs(fake_repo, "rev") == {}
+
 @pytest.mark.parametrize(
     "job, match_utc_bool, project, expected",
     (
