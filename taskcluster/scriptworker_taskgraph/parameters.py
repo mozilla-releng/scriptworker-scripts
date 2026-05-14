@@ -3,8 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
+from typing import Literal, Optional
+
 from taskgraph.parameters import extend_parameters_schema
-from voluptuous import Any, Optional
+from taskgraph.util.schema import Schema
 
 PROJECT_SPECIFIC_PREFIXES = {
     "refs/heads/dev-": "dev",
@@ -23,14 +25,17 @@ def get_defaults(_):
     }
 
 
-scriptworker_schema = {
-    Optional("docker_tag"): Any(str, None),
-    Optional("script_name"): Any(str, None),
-    Optional("script_revision"): Any(str, None),
-    Optional("shipping_phase"): Any("build", "promote", None),
-}
+ScriptworkerSchema = Schema.from_dict(
+    {
+        "docker_tag": Optional[str],
+        "script_name": Optional[str],
+        "script_revision": Optional[str],
+        "shipping_phase": Optional[Literal["build", "promote"]],
+    },
+    name="ScriptworkerSchema",
+)
 
-extend_parameters_schema(scriptworker_schema, defaults_fn=get_defaults)
+extend_parameters_schema(ScriptworkerSchema, defaults_fn=get_defaults)
 
 
 def get_decision_parameters(graph_config, parameters):
