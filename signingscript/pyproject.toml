@@ -40,6 +40,9 @@ dev = [
     "pytest-mock",
 ]
 
+[tool.uv.sources]
+scriptworker = { git = "https://github.com/mozilla-releng/scriptworker", branch = "hneiva/cot-logs" }
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
