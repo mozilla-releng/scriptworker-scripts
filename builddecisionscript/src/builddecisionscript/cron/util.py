@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-
 import datetime
 import logging
 import os
@@ -53,14 +52,10 @@ def calculate_time():
             time = datetime.datetime.utcfromtimestamp(int(os.environ["CRON_TIME"]))
             logger.info("cron time: %s", time)
         else:
-            logger.warning(
-                "using current time for time; try setting $CRON_TIME to a timestamp"
-            )
+            logger.warning("using current time for time; try setting $CRON_TIME to a timestamp")
             time = datetime.datetime.utcnow()
     else:
-        queue = taskcluster.Queue(
-            {"rootUrl": os.environ["TASKCLUSTER_PROXY_URL"]}, session=SESSION
-        )
+        queue = taskcluster.Queue({"rootUrl": os.environ["TASKCLUSTER_PROXY_URL"]}, session=SESSION)
         task = queue.task(os.environ["TASK_ID"])
         # the task's `created` time is close to when the hook ran, although that
         # may be some time ago if task execution was delayed

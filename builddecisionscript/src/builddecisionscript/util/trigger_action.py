@@ -18,6 +18,7 @@ import os
 import attr
 import jsone
 import jsonschema
+
 import taskcluster
 
 from . import scopes
@@ -35,13 +36,7 @@ def _is_task_in_context(context, task_tags):
     a given task, if that task's tags match one of the tag-sets given
     in the context property for the action.
     """
-    return any(
-        all(
-            tag in task_tags and task_tags[tag] == tag_set[tag]
-            for tag in tag_set.keys()
-        )
-        for tag_set in context
-    )
+    return any(all(tag in task_tags and task_tags[tag] == tag_set[tag] for tag in tag_set.keys()) for tag_set in context)
 
 
 def _filter_relevant_actions(actions_json, original_task):
@@ -71,17 +66,14 @@ def _check_decision_task_scopes(decision_task_id, hook_group_id, hook_id):
     queue = taskcluster.Queue(taskcluster.optionsFromEnvironment(), session=SESSION)
     auth = taskcluster.Auth(taskcluster.optionsFromEnvironment(), session=SESSION)
     decision_task = queue.task(decision_task_id)
-    decision_task_scopes = auth.expandScopes({"scopes": decision_task["scopes"]})[
-        "scopes"
-    ]
+    decision_task_scopes = auth.expandScopes({"scopes": decision_task["scopes"]})["scopes"]
     in_tree_scope = f"in-tree:hook-action:{hook_group_id}/{hook_id}"
 
     if not scopes.satisfies(have=decision_task_scopes, require=[in_tree_scope]):
         raise RuntimeError(
             "Action is misconfigured: "
             f"decision task's scopes do not include {in_tree_scope}\n"
-            "Decision Task {decision_task_id} has scopes:\n"
-            + "\n".join(f"  - {scope}" for scope in decision_task_scopes)
+            "Decision Task {decision_task_id} has scopes:\n" + "\n".join(f"  - {scope}" for scope in decision_task_scopes)
         )
 
 
@@ -89,9 +81,7 @@ def render_action(*, action_name, task_id, decision_task_id, action_input):
     queue = taskcluster.Queue(taskcluster.optionsFromEnvironment(), session=SESSION)
 
     logger.debug("Fetching actions.json...")
-    actions_url = queue.buildUrl(
-        "getLatestArtifact", decision_task_id, "public/actions.json"
-    )
+    actions_url = queue.buildUrl("getLatestArtifact", decision_task_id, "public/actions.json")
     actions_response = SESSION.get(actions_url)
     actions_response.raise_for_status()
     actions_json = actions_response.json()
@@ -106,17 +96,12 @@ def render_action(*, action_name, task_id, decision_task_id, action_input):
     relevant_actions = _filter_relevant_actions(actions_json, task_definition)
 
     if action_name not in relevant_actions:
-        raise LookupError(
-            f"{action_name} action is not available for this task. "
-            f"Available: {sorted(relevant_actions.keys())}"
-        )
+        raise LookupError(f"{action_name} action is not available for this task. Available: {sorted(relevant_actions.keys())}")
 
     action = relevant_actions[action_name]
 
     if action["kind"] != "hook":
-        raise NotImplementedError(
-            f"Unable to submit actions with '{action['kind']}' kind."
-        )
+        raise NotImplementedError(f"Unable to submit actions with '{action['kind']}' kind.")
 
     _check_decision_task_scopes(
         decision_task_id,
@@ -163,9 +148,7 @@ class Hook:
                 session=SESSION,
             )
         else:
-            hooks = taskcluster.Hooks(
-                taskcluster.optionsFromEnvironment(), session=SESSION
-            )
+            hooks = taskcluster.Hooks(taskcluster.optionsFromEnvironment(), session=SESSION)
 
         logger.info("Triggering hook %s/%s", self.hook_group_id, self.hook_id)
         result = hooks.triggerHook(self.hook_group_id, self.hook_id, self.hook_payload)

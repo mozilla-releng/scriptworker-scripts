@@ -1,7 +1,7 @@
 import pytest
 import referencing.exceptions
 
-import build_decision.util.schema as schema
+import builddecisionscript.util.schema as schema
 
 
 def test_remote_ref():

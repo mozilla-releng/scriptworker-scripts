@@ -7,6 +7,7 @@ requires-python = ">=3.11"
 members = [
     "addonscript",
     "balrogscript",
+    "builddecisionscript",
     "beetmoverscript",
     "bitrisescript",
     "bouncerscript",

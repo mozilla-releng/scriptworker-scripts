@@ -11,9 +11,7 @@ def satisfies(*, have, require):
     assert isinstance(require, list)
     for req_scope in require:
         for have_scope in have:
-            if have_scope == req_scope or (
-                have_scope.endswith("*") and req_scope.startswith(have_scope[:-1])
-            ):
+            if have_scope == req_scope or (have_scope.endswith("*") and req_scope.startswith(have_scope[:-1])):
                 break
         else:
             return False

@@ -1,10 +1,11 @@
-import json
-import os
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import builddecisionscript.cron.action as action
 import pytest
-import taskcluster
 
-import build_decision.cron.action as action
+import taskcluster
 
 
 def test_find_decision_task(mocker):
@@ -32,11 +33,10 @@ def test_run_trigger_action(mocker, include_cron_input, extra_input, dry_run):
     job = {
         "action-name": "action",
     }
-    env = {}
+    cron_input = None
     if include_cron_input:
         job["include-cron-input"] = True
         cron_input = {"cron_input": {"one": "two"}}
-        env["HOOK_PAYLOAD"] = json.dumps(cron_input)
         expected_input.update(cron_input)
 
     if extra_input:
@@ -48,7 +48,6 @@ def test_run_trigger_action(mocker, include_cron_input, extra_input, dry_run):
         return fake_hook
 
     fake_hook = mocker.MagicMock()
-    mocker.patch.object(os, "environ", new=env)
     mocker.patch.object(action, "find_decision_task", return_value="decision_task_id")
     mocker.patch.object(action, "render_action", new=fake_render_action)
     action.run_trigger_action(
@@ -56,6 +55,7 @@ def test_run_trigger_action(mocker, include_cron_input, extra_input, dry_run):
         job,
         repository=None,
         push_info={"revision": "rev"},
+        cron_input=cron_input,
         dry_run=dry_run,
     )
     if not dry_run:

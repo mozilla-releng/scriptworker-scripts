@@ -2,9 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-
 import copy
-import json
 import logging
 import os
 import shlex
@@ -32,25 +30,18 @@ def make_arguments(job):
     return arguments
 
 
-def run_decision_task(job_name, job, *, repository, push_info, dry_run):
+def run_decision_task(job_name, job, *, repository, push_info, cron_input=None, dry_run):
     """Generate a basic decision task, based on the root .taskcluster.yml"""
     push_info = copy.deepcopy(push_info)
     push_info["owner"] = "cron"
 
-    taskcluster_yml = repository.get_file(
-        ".taskcluster.yml", revision=push_info["revision"]
-    )
+    taskcluster_yml = repository.get_file(".taskcluster.yml", revision=push_info["revision"])
 
     arguments = make_arguments(job)
 
-    cron_input = {}
-    if job.get("include-cron-input") and "HOOK_PAYLOAD" in os.environ:
-        cron_hook_payload = json.loads(os.environ["HOOK_PAYLOAD"])
-        logger.info(
-            "Cron Hook Payload:\n%s",
-            json.dumps(cron_hook_payload, indent=4, sort_keys=True),
-        )
-        cron_input.update(cron_hook_payload)
+    effective_cron_input = {}
+    if job.get("include-cron-input") and cron_input:
+        effective_cron_input.update(cron_input)
 
     cron_info = {
         "task_id": os.environ.get("TASK_ID", "<cron task id>"),
@@ -58,7 +49,7 @@ def run_decision_task(job_name, job, *, repository, push_info, dry_run):
         "job_symbol": job["treeherder-symbol"],
         # args are shell-quoted since they are given to `bash -c`
         "quoted_args": " ".join(shlex.quote(a) for a in arguments),
-        "input": cron_input,
+        "input": effective_cron_input,
     }
 
     task = render_tc_yml(

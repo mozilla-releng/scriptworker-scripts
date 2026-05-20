@@ -1,8 +1,11 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+import builddecisionscript.repository as repository
 import pytest
 import redo
 import yaml
-
-import build_decision.repository as repository
 
 from . import fake_redo_retry
 
@@ -96,9 +99,7 @@ def test_get_file(mocker, repository_type, repo_url, revision, raises, expected_
         expected_headers = {}
         if repo_url.startswith("https://github.com"):
             expected_headers = {"Accept": "application/vnd.github.raw+json"}
-        fake_session.get.assert_called_with(
-            expected_url, headers=expected_headers, timeout=60
-        )
+        fake_session.get.assert_called_with(expected_url, headers=expected_headers, timeout=60)
 
 
 @pytest.mark.parametrize(
@@ -263,7 +264,6 @@ def test_git_push_info(mocker, branch, revision, repo_url, token, raises, expect
     fake_response.json.return_value = objects
 
     mocker.patch.object(repository, "SESSION", new=fake_session)
-
     # We can't seem to mock the @redo.retriable decorator before it wraps the
     # function, but we can reach into @redo.retriable, which calls redo.retry,
     # and mock redo.retry

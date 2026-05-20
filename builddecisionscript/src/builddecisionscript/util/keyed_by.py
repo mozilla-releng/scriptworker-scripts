@@ -54,11 +54,7 @@ def evaluate_keyed_by(value, item_name, attributes):
             default: 12
     """
     while True:
-        if (
-            not isinstance(value, dict)
-            or len(value) != 1
-            or not list(value.keys())[0].startswith("by-")
-        ):
+        if not isinstance(value, dict) or len(value) != 1 or not list(value.keys())[0].startswith("by-"):
             return value
 
         keyed_by = list(value.keys())[0][3:]  # strip off 'by-' prefix
@@ -68,31 +64,20 @@ def evaluate_keyed_by(value, item_name, attributes):
         if len(alternatives) == 1 and "default" in alternatives:
             # Error out when only 'default' is specified as only alternatives,
             # because we don't need to by-{keyed_by} there.
-            raise Exception(
-                f"Keyed-by '{keyed_by}' unnecessary with only value 'default' "
-                f"found, when determining item {item_name}"
-            )
+            raise Exception(f"Keyed-by '{keyed_by}' unnecessary with only value 'default' found, when determining item {item_name}")
 
         if key is None:
             if "default" in alternatives:
                 value = alternatives["default"]
                 continue
             else:
-                raise Exception(
-                    f"No attribute {keyed_by} and no value for 'default' found "
-                    f"while determining item {item_name}"
-                )
+                raise Exception(f"No attribute {keyed_by} and no value for 'default' found while determining item {item_name}")
 
         matches = keymatch(alternatives, key)
         if len(matches) > 1:
-            raise Exception(
-                f"Multiple matching values for {keyed_by} {key!r} found while "
-                f"determining item {item_name}"
-            )
+            raise Exception(f"Multiple matching values for {keyed_by} {key!r} found while determining item {item_name}")
         elif matches:
             value = matches[0]
             continue
 
-        raise Exception(
-            f"No {keyed_by} matching {key!r} nor 'default' found while determining item {item_name}"
-        )
+        raise Exception(f"No {keyed_by} matching {key!r} nor 'default' found while determining item {item_name}")

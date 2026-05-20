@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-
 import attr
 import yaml
 from jsonschema.validators import validator_for
@@ -23,9 +22,7 @@ class Schema:
     _schema = attr.ib()
     _validator = attr.ib(
         init=False,
-        default=attr.Factory(
-            lambda self: _get_validator(self._schema), takes_self=True
-        ),
+        default=attr.Factory(lambda self: _get_validator(self._schema), takes_self=True),
     )
 
     @classmethod

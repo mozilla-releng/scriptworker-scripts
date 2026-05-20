@@ -1,9 +1,11 @@
-import json
+# This Source Code Form is subject to the terms of the Mozilla Public License,
+# v. 2.0. If a copy of the MPL was not distributed with this file, You can
+# obtain one at http://mozilla.org/MPL/2.0/.
+
 import os
 
+import builddecisionscript.git_push as git_push
 import pytest
-
-import build_decision.git_push as git_push
 
 HOOK_PAYLOAD = {
     "base_ref": None,
@@ -33,15 +35,13 @@ def test_build_decision(mocker, dry_run):
     mocker.patch.object(
         os,
         "environ",
-        new={
-            "TASKCLUSTER_ROOT_URL": taskcluster_root_url,
-            "HOOK_PAYLOAD": json.dumps(HOOK_PAYLOAD),
-        },
+        new={"TASKCLUSTER_ROOT_URL": taskcluster_root_url},
     )
     mock_render = mocker.patch.object(git_push, "render_tc_yml", return_value=fake_task)
 
     git_push.build_decision(
         repository=fake_repo,
+        hook_payload=HOOK_PAYLOAD,
         dry_run=dry_run,
     )
 

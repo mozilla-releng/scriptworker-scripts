@@ -1,13 +1,16 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 import io
 import json
-import os
 
+import builddecisionscript.util.scopes as scopes
+import builddecisionscript.util.trigger_action as trigger_action
 import pytest
 import requests
-import taskcluster
 
-import build_decision.util.scopes as scopes
-import build_decision.util.trigger_action as trigger_action
+import taskcluster
 
 from . import TEST_DATA_DIR
 
@@ -105,9 +108,7 @@ def test_filter_relevant_actions(original_task, expected_action_names):
     """Compare task tags against action.json's actions."""
     with open(TEST_DATA_DIR / "actions.json") as fh:
         actions_json = json.load(fh)
-    relevant_actions = trigger_action._filter_relevant_actions(
-        actions_json, original_task
-    )
+    relevant_actions = trigger_action._filter_relevant_actions(actions_json, original_task)
     assert set(relevant_actions.keys()) == expected_action_names
 
 
@@ -125,16 +126,9 @@ def test_check_decision_task_scopes(mocker, raises):
 
     if raises:
         with pytest.raises(raises):
-            trigger_action._check_decision_task_scopes(
-                "decision_task_id", "hook_group_id", "hook_id"
-            )
+            trigger_action._check_decision_task_scopes("decision_task_id", "hook_group_id", "hook_id")
     else:
-        assert (
-            trigger_action._check_decision_task_scopes(
-                "decision_task_id", "hook_group_id", "hook_id"
-            )
-            is None
-        )
+        assert trigger_action._check_decision_task_scopes("decision_task_id", "hook_group_id", "hook_id") is None
 
 
 @pytest.mark.parametrize(
@@ -243,15 +237,8 @@ def test_hook_display():
     hook.display()
 
 
-@pytest.mark.parametrize("has_proxy_url", (True, False))
-def test_hook_submit(mocker, has_proxy_url):
+def test_hook_submit(mocker):
     """Add coverage to Hook.submit"""
-
-    env = {}
-    if has_proxy_url:
-        env["TASKCLUSTER_PROXY_URL"] = "fake_proxy_urL"
-
-    mocker.patch.object(os, "environ", new=env)
     mocker.patch.object(taskcluster, "Hooks")
     hook = trigger_action.Hook(
         hook_group_id="group_id",

@@ -1,10 +1,14 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 import datetime
 import os
 
+import builddecisionscript.cron.util as util
 import pytest
-import taskcluster
 
-import build_decision.cron.util as util
+import taskcluster
 
 UTCNOW = datetime.datetime(2022, 4, 14, 20, 45, 50, 123345)
 CREATED_STR = "2022-04-14T19:08:37.357Z"

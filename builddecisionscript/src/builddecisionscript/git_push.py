@@ -13,18 +13,17 @@ from .decision import render_tc_yml
 logger = logging.getLogger(__name__)
 
 
-def build_decision(*, repository, dry_run):
-    logging.info("Running build-decision task")
+def build_decision(*, repository, hook_payload, dry_run):
+    logging.info("Running build-decision git-push task")
 
-    payload = json.loads(os.environ["HOOK_PAYLOAD"])
-    logger.info("Hook Payload:\n%s", json.dumps(payload, indent=4, sort_keys=True))
+    logger.info("Hook Payload:\n%s", json.dumps(hook_payload, indent=4, sort_keys=True))
 
     event = {
-        "after": payload["sha"],
-        "base_ref": payload.get("base_ref"),
-        "before": payload["base_sha"],
-        "pusher": {"email": payload["owner"]},
-        "ref": payload["ref"],
+        "after": hook_payload["sha"],
+        "base_ref": hook_payload.get("base_ref"),
+        "before": hook_payload["base_sha"],
+        "pusher": {"email": hook_payload["owner"]},
+        "ref": hook_payload["ref"],
         "repository": {
             "name": repository.repo_path.split("/")[-1],
             "full_name": repository.repo_path,

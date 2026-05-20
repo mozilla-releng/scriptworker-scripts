@@ -1,8 +1,11 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 import os
 
+import builddecisionscript.cron.decision as decision
 import pytest
-
-import build_decision.cron.decision as decision
 
 
 @pytest.mark.parametrize(
@@ -42,15 +45,10 @@ def test_make_arguments(job, expected):
 
 @pytest.fixture
 def run_decision_task(mocker):
-    mocker.patch.object(
-        os, "environ", new={"TASKCLUSTER_ROOT_URL": "http://taskcluster.local"}
-    )
+    mocker.patch.object(os, "environ", new={"TASKCLUSTER_ROOT_URL": "http://taskcluster.local"})
     job_name = "abc"
 
-    def inner(job=None, dry_run=False, env=None):
-        if env:
-            mocker.patch.dict(os.environ, env)
-
+    def inner(job=None, dry_run=False, cron_input=None):
         job = job or {}
         job.setdefault("treeherder-symbol", "x")
 
@@ -70,6 +68,7 @@ def run_decision_task(mocker):
             job,
             repository=mocks["repo"],
             push_info={"revision": "rev"},
+            cron_input=cron_input,
             dry_run=dry_run,
         )
 
@@ -89,22 +88,21 @@ def test_dry_run(run_decision_task, dry_run):
         mocks["hook"].submit.assert_not_called()
 
 
-def test_cron_input(mocker, run_decision_task):
-    mocker.patch.object(
-        os, "environ", new={"TASKCLUSTER_ROOT_URL": "http://taskcluster.local"}
-    )
+def test_cron_input(run_decision_task):
+    # No cron_input
     mock = run_decision_task()["render"]
     mock.assert_called_once()
     kwargs = mock.call_args_list[0][1]
     assert kwargs["cron"]["input"] == {}
 
-    env = {"HOOK_PAYLOAD": '{"foo": "bar"}'}
-    mock = run_decision_task(env=env)["render"]
+    # cron_input provided but include-cron-input not set in job
+    mock = run_decision_task(cron_input={"foo": "bar"})["render"]
     mock.assert_called_once()
     kwargs = mock.call_args_list[0][1]
     assert kwargs["cron"]["input"] == {}
 
-    mock = run_decision_task({"include-cron-input": True}, env=env)["render"]
+    # cron_input provided and include-cron-input set
+    mock = run_decision_task({"include-cron-input": True}, cron_input={"foo": "bar"})["render"]
     mock.assert_called_once()
     kwargs = mock.call_args_list[0][1]
     assert kwargs["cron"]["input"] == {"foo": "bar"}

@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-
 import logging
 import traceback
 from pathlib import Path
@@ -40,7 +39,6 @@ def load_jobs(repository, revision):
 
     # resolve keyed_by fields in each job
     jobs = cron_yml["jobs"]
-
     return {j["name"]: j for j in jobs}
 
 
@@ -60,7 +58,7 @@ def should_run(job, *, time, project):
     return True
 
 
-def run_job(job_name, job, *, repository, push_info, dry_run=False):
+def run_job(job_name, job, *, repository, push_info, cron_input=None, dry_run=False):
     job_type = job["job"]["type"]
     if job_type in JOB_TYPES:
         JOB_TYPES[job_type](
@@ -68,13 +66,14 @@ def run_job(job_name, job, *, repository, push_info, dry_run=False):
             job["job"],
             repository=repository,
             push_info=push_info,
+            cron_input=cron_input or {},
             dry_run=dry_run,
         )
     else:
         raise Exception(f"job type {job_type} not recognized")
 
 
-def run(*, repository, branch, force_run, dry_run):
+def run(*, repository, branch, force_run, cron_input=None, dry_run):
     time = calculate_time()
 
     try:
@@ -96,6 +95,7 @@ def run(*, repository, branch, force_run, dry_run):
             jobs[job_name],
             repository=repository,
             push_info=push_info,
+            cron_input=cron_input,
             dry_run=dry_run,
         )
         return
@@ -110,6 +110,7 @@ def run(*, repository, branch, force_run, dry_run):
                     job,
                     repository=repository,
                     push_info=push_info,
+                    cron_input=cron_input,
                     dry_run=dry_run,
                 )
             except Exception as exc:
@@ -117,9 +118,7 @@ def run(*, repository, branch, force_run, dry_run):
                 # would leave other jobs un-run.
                 failed_jobs.append((job_name, exc))
                 traceback.print_exc()
-                logger.error(
-                    f'cron job "{job_name}" run failed; continuing to next job'
-                )
+                logger.error(f'cron job "{job_name}" run failed; continuing to next job')
 
         else:
             logger.info(f'not running cron job "{job_name}"')
@@ -130,12 +129,9 @@ def run(*, repository, branch, force_run, dry_run):
 def _format_and_raise_error_if_any(failed_jobs):
     if failed_jobs:
         failed_job_names = [job_name for job_name, _ in failed_jobs]
-        failed_job_names_with_exceptions = (
-            f'"{job_name}": "{exc}"' for job_name, exc in failed_jobs
-        )
+        failed_job_names_with_exceptions = (f'"{job_name}": "{exc}"' for job_name, exc in failed_jobs)
         raise RuntimeError(
-            "Cron jobs {} couldn't be triggered properly. "
-            "Reason(s):\n * {}\nSee logs above for details.".format(
+            "Cron jobs {} couldn't be triggered properly. Reason(s):\n * {}\nSee logs above for details.".format(
                 failed_job_names, "\n * ".join(failed_job_names_with_exceptions)
             )
         )

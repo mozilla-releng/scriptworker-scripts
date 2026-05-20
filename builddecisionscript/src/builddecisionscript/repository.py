@@ -29,11 +29,9 @@ class Repository:
 
     def get_file(self, path, *, revision=None):
         """
-        Get `.taskcluster.yml` from 'default' (or the given revision) at the named
-        repo_path.  Note that this does not parse the yml (so that it can be hashed
+        Get a file from 'default' (or the given revision) at the named path.
+        Note that this does not parse the yml (so that it can be hashed
         in its original form).
-
-        If the file is not found, this returns None.
         """
         headers = {}
 
@@ -55,22 +53,15 @@ class Repository:
                     headers["Authorization"] = f"token {self.github_token}"
                 headers["Accept"] = "application/vnd.github.raw+json"
             elif repo_url.startswith("git@github.com:"):
-                raise Exception(
-                    f"Don't know how to get file from private github repo: {repo_url}"
-                )
+                raise Exception(f"Don't know how to get file from private github repo: {repo_url}")
             else:
-                raise Exception(
-                    "Don't know how to determine get file for non-github "
-                    f"repo: {repo_url}"
-                )
+                raise Exception(f"Don't know how to determine get file for non-github repo: {repo_url}")
         else:
             raise Exception(f"Unknown repository_type {self.repository_type}!")
 
         res = SESSION.get(url, headers=headers, timeout=60)
         res.raise_for_status()
-        tcyml = res.text
-
-        return yaml.safe_load(tcyml)
+        return yaml.safe_load(res.text)
 
     @redo.retriable(
         attempts=5,
@@ -102,24 +93,16 @@ class Repository:
                 # If we query immediately after a push, hg.mozilla.org might
                 # report that there are no pushes associated to a changeset.
                 # We retry, since this tends to be a transient error.
-                raise NoPushesError(
-                    f"Changeset {revset} has no associated pushes. "
-                    "Maybe the push log has not been updated?"
-                )
+                raise NoPushesError(f"Changeset {revset} has no associated pushes. Maybe the push log has not been updated?")
             elif len(pushes) != 1:
-                raise ValueError(
-                    f"Changeset {revset} has {len(pushes)} associated pushes; "
-                    "only one supported."
-                )
+                raise ValueError(f"Changeset {revset} has {len(pushes)} associated pushes; only one supported.")
             [(push_id, push_info)] = pushes.items()
             changesets = push_info["changesets"]
             first_pushed_revision = changesets[0]
             base_revision = first_pushed_revision["parents"][0]
             tip_revision = changesets[-1]["node"]
             if revision and revision != tip_revision:
-                raise ValueError(
-                    f"Changeset {revision} is not the tip {tip_revision} of the associated push."
-                )
+                raise ValueError(f"Changeset {revision} is not the tip {tip_revision} of the associated push.")
 
             return {
                 "owner": push_info["user"],
@@ -138,10 +121,7 @@ class Repository:
             if self.github_token:
                 headers["Authorization"] = f"token {self.github_token}"
             if repo_url.startswith("https://github.com/"):
-                url = (
-                    f"https://api.github.com"
-                    f"/repos/{self.repo_path}/git/ref/heads/{branch}"
-                )
+                url = f"https://api.github.com/repos/{self.repo_path}/git/ref/heads/{branch}"
                 res = SESSION.get(url, headers=headers, timeout=60)
                 res.raise_for_status()
                 return {
@@ -149,30 +129,20 @@ class Repository:
                     "revision": res.json()["object"]["sha"],
                 }
             elif repo_url.startswith("git@github.com:"):
-                raise Exception(
-                    "Don't know how to determine revision for private github "
-                    f"repo: {repo_url}"
-                )
+                raise Exception(f"Don't know how to determine revision for private github repo: {repo_url}")
             else:
-                raise Exception(
-                    "Don't know how to determine revision for for non-github "
-                    f"repo: {repo_url}"
-                )
+                raise Exception(f"Don't know how to determine revision for non-github repo: {repo_url}")
         else:
             raise Exception(f"Unknown repository_type {self.repository_type}!")
 
     @property
     def repo_path(self):
-        if self.repository_type == "hg" and self.repo_url.startswith(
-            "https://hg.mozilla.org/"
-        ):
+        if self.repository_type == "hg" and self.repo_url.startswith("https://hg.mozilla.org/"):
             return self.repo_url.replace("https://hg.mozilla.org/", "", 1).rstrip("/")
-        elif self.repository_type == "git" and self.repo_url.startswith(
-            "https://github.com/"
-        ):
+        elif self.repository_type == "git" and self.repo_url.startswith("https://github.com/"):
             return self.repo_url.replace("https://github.com/", "", 1).rstrip("/")
         else:
-            raise AttributeError(f"no repo_path available for project {self.alias}")
+            raise AttributeError(f"no repo_path available for {self.repo_url}")
 
     def to_json(self):
         return {

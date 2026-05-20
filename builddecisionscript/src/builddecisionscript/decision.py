@@ -9,6 +9,7 @@ import os
 import attr
 import jsone
 import slugid
+
 import taskcluster
 
 from .util.http import SESSION
@@ -18,9 +19,9 @@ logger = logging.getLogger(__name__)
 
 def render_tc_yml(tc_yml, **context):
     """
-    Render .taskcluster.yml into an array of tasks.  This provides a context
-    that is similar to that provided by actions and crons, but with `tasks-for`
-    set to `hg-push`.
+    Render .taskcluster.yml into a single task.  The context is similar to
+    that provided by actions and crons, but with `tasks_for` set to the
+    appropriate value for the trigger type.
     """
     ownTaskId = slugid.nice()
     context["ownTaskId"] = ownTaskId
@@ -56,7 +57,5 @@ class Task:
                 session=SESSION,
             )
         else:
-            queue = taskcluster.Queue(
-                taskcluster.optionsFromEnvironment(), session=SESSION
-            )
+            queue = taskcluster.Queue(taskcluster.optionsFromEnvironment(), session=SESSION)
         queue.createTask(self.task_id, self.task_payload)

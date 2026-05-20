@@ -1,9 +1,12 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+import builddecisionscript.cron as cron
 import pytest
 import requests.exceptions
 import yaml
-
-import build_decision.cron as cron
-from build_decision.repository import NoPushesError
+from builddecisionscript.repository import NoPushesError
 
 from . import TEST_DATA_DIR
 
@@ -26,9 +29,7 @@ def test_load_jobs_404(mocker):
     fake_repo = mocker.MagicMock()
     fake_response = mocker.MagicMock()
     fake_response.status_code = 404
-    fake_repo.get_file.side_effect = requests.exceptions.HTTPError(
-        response=fake_response
-    )
+    fake_repo.get_file.side_effect = requests.exceptions.HTTPError(response=fake_response)
     assert cron.load_jobs(fake_repo, "rev") == {}
 
 
@@ -182,7 +183,7 @@ def test_run(mocker, force_run, jobs):
 
 
 def test_run_no_pushes(mocker):
-    """Ensure that running cron.hook does nothing when no pushes are found,
+    """Ensure that running cron.run does nothing when no pushes are found,
     and doesn't raise an Exception."""
     fake_repo = mocker.MagicMock()
 

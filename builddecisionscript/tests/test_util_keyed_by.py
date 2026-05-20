@@ -1,6 +1,6 @@
 import pytest
 
-import build_decision.util.keyed_by as keyed_by
+import builddecisionscript.util.keyed_by as keyed_by
 
 
 @pytest.mark.parametrize(

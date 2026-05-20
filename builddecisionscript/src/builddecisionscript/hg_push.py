@@ -2,7 +2,6 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 
-import json
 import logging
 import os
 import time
@@ -24,36 +23,33 @@ def timed(description):
 MAX_TIME_DRIFT = 3 * 24 * 60 * 60
 
 
-def get_revision_from_pulse_message():
-    pulse_message = json.loads(os.environ["PULSE_MESSAGE"])
-    logger.info(
-        "Pulse Message:\n%s", json.dumps(pulse_message, indent=4, sort_keys=True)
-    )
+def get_revision_from_pulse_message(pulse_message):
+    logger.info("Pulse Message:\n%s", pulse_message)
 
     pulse_payload = pulse_message["payload"]
     if pulse_payload["type"] != "changegroup.1":
         logger.info("Not a changegroup.1 message")
-        return
+        return None
 
     push_count = len(pulse_payload["data"]["pushlog_pushes"])
     if push_count != 1:
         logger.info("Message has %d pushes; only one supported", push_count)
-        return
+        return None
 
     head_count = len(pulse_payload["data"]["heads"])
     if head_count != 1:
         logger.info("Message has %d heads; only one supported", head_count)
-        return
+        return None
 
     return pulse_payload["data"]["heads"][0]
 
 
-def build_decision(*, repository, dry_run):
-    logging.info("Running build-decision task")
+def build_decision(*, repository, taskcluster_yml_repo, pulse_message, dry_run):
+    logging.info("Running build-decision hg-push task")
     # The hg-push hook can be triggered manually, so we throw out everything
     # from the input, other than the revision, and get the pushinfo from
     # hg.mozilla.org.
-    revision = get_revision_from_pulse_message()
+    revision = get_revision_from_pulse_message(pulse_message)
 
     with timed("Fetching push info"):
         push = repository.get_push_info(revision=revision)
@@ -63,7 +59,10 @@ def build_decision(*, repository, dry_run):
         return
 
     with timed("Fetching .taskcluster.yml"):
-        taskcluster_yml = repository.get_file(".taskcluster.yml", revision=revision)
+        if taskcluster_yml_repo is None:
+            taskcluster_yml = repository.get_file(".taskcluster.yml", revision=revision)
+        else:
+            taskcluster_yml = taskcluster_yml_repo.get_file(".taskcluster.yml")
 
     with timed("Rendering task"):
         task = render_tc_yml(
