@@ -1,0 +1,32 @@
+[project]
+name = "build-decision"
+version = "1.0.0"
+description = "Administration of runtime configuration (Taskcluster settings) for Firefox CI"
+authors = [
+    { name = "Mozilla Release Engineering", email = "release+build-decision@mozilla.com" },
+]
+readme = "README.txt"
+classifiers = [
+    "Programming Language :: Python :: 3",
+]
+dependencies = [
+    "attrs",
+    "json-e",
+    "jsonschema>4.18",
+    "pyyaml",
+    "redo",
+    "referencing",
+    "requests",
+    "slugid",
+    "taskcluster",
+]
+
+[dependency-groups]
+dev = ["coverage", "flake8", "pytest", "pytest-cov", "pytest-mock"]
+
+[project.scripts]
+build-decision = "build_decision.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.11.7,<0.12.0"]
+build-backend = "uv_build"
