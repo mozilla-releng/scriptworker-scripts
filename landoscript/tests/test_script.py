@@ -1,4 +1,5 @@
 import json
+import logging
 from aiohttp import ClientResponseError
 import pytest
 from scriptworker.client import STATUSES, TaskVerificationError, validate_task_schema
@@ -363,6 +364,62 @@ async def test_ignore_closed_tree_properly_errors(aioresponses, github_installat
         err=TaskVerificationError,
         errmsg="ignore_closed_tree is only respected in l10n_bump and android_l10n_sync",
     )
+
+
+def _make_version_bump_payload():
+    return {
+        "actions": ["version_bump"],
+        "lando_repo": "repo_name",
+        "version_bump_info": {
+            "files": ["browser/config/version.txt"],
+            "next_version": "135.0",
+        },
+    }
+
+
+@pytest.mark.asyncio
+async def test_submit_to_lando_4xx_logs_body(aioresponses, github_installation_responses, context, caplog):
+    payload = _make_version_bump_payload()
+    submit_uri, _, _, scopes = setup_test(aioresponses, github_installation_responses, context, payload, ["version_bump"])
+    setup_github_graphql_responses(aioresponses, get_files_payload({"browser/config/version.txt": "134.0"}))
+
+    error_body = '{"details": "User foo@example.com is not allowed to use this API for repo repo_name."}'
+    aioresponses.post(submit_uri, status=403, body=error_body)
+    context.task = {"payload": payload, "scopes": scopes}
+
+    with caplog.at_level(logging.ERROR, logger="landoscript.lando"):
+        with pytest.raises(LandoscriptError):
+            await async_main(context)
+
+    assert error_body in caplog.text
+
+
+@pytest.mark.asyncio
+async def test_submit_to_lando_4xx_raises_landoscript_error(aioresponses, github_installation_responses, context):
+    payload = _make_version_bump_payload()
+    submit_uri, _, _, scopes = setup_test(aioresponses, github_installation_responses, context, payload, ["version_bump"])
+    setup_github_graphql_responses(aioresponses, get_files_payload({"browser/config/version.txt": "134.0"}))
+
+    aioresponses.post(submit_uri, status=403, body="{}")
+    context.task = {"payload": payload, "scopes": scopes}
+
+    with pytest.raises(LandoscriptError):
+        await async_main(context)
+
+
+@pytest.mark.asyncio
+async def test_submit_to_lando_4xx_does_not_retry(aioresponses, github_installation_responses, context):
+    payload = _make_version_bump_payload()
+    submit_uri, _, _, scopes = setup_test(aioresponses, github_installation_responses, context, payload, ["version_bump"])
+    setup_github_graphql_responses(aioresponses, get_files_payload({"browser/config/version.txt": "134.0"}))
+
+    aioresponses.post(submit_uri, status=403, body="{}")
+    context.task = {"payload": payload, "scopes": scopes}
+
+    with pytest.raises(LandoscriptError):
+        await async_main(context)
+
+    assert_lando_submission_response(aioresponses.requests, submit_uri, attempts=1)
 
 
 @pytest.mark.asyncio
