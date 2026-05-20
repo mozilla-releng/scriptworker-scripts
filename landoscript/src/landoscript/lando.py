@@ -57,17 +57,21 @@ async def submit(
     url = f"{lando_api}/repo/{lando_repo}"
     json = {"actions": actions}
 
-    async with timeout(30):
-        log.info(f"submitting POST request to {url}")
+    async def _post():
+        resp = await session.post(url, json=json, headers=_get_auth_headers(lando_token))
+        if resp.status >= 400:
+            body = await resp.text()
+            log.error(f"POST to {url} failed with {resp.status}: {body}")
+            if resp.status < 500:
+                raise LandoscriptError(f"POST to {url} failed with {resp.status}: {body}")
+        resp.raise_for_status()
+        return resp
 
+    log.info(f"submitting POST request to {url}")
+
+    async with timeout(30):
         submit_resp = await retry_async(
-            session.post,
-            args=(url,),
-            kwargs={
-                "json": json,
-                "raise_for_status": True,
-                "headers": _get_auth_headers(lando_token),
-            },
+            _post,
             attempts=10,
             retry_exceptions=ClientResponseError,
             sleeptime_callback=sleeptime_callback or calculate_sleep_time,
