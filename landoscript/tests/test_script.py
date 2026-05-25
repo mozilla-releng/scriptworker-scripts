@@ -5,7 +5,7 @@ from scriptworker.client import STATUSES, TaskVerificationError, validate_task_s
 from pytest_scriptworker_client import get_files_payload
 
 from landoscript.errors import LandoscriptError, MergeConflictError
-from landoscript.script import async_main, get_default_config
+from landoscript.script import async_main, get_default_config, validate_scopes
 from .conftest import (
     assert_lando_submission_response,
     assert_status_response,
@@ -261,52 +261,102 @@ async def test_no_actions(aioresponses, github_installation_responses, context):
     )
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "scopes,missing",
+    "scopes,actions,version_bump_files,missing",
     (
         pytest.param(
-            [
-                "project:releng:lando:action:tag",
-                "project:releng:lando:action:version_bump",
-            ],
-            [
-                "project:releng:lando:repo:repo_name",
-            ],
+            {"project:releng:lando:action:tag", "project:releng:lando:action:version_bump"},
+            ["tag", "version_bump"],
+            ("browser/config/version.txt",),
+            {"project:releng:lando:repo:repo_name"},
             id="missing_repo_scope",
         ),
         pytest.param(
-            [
-                "project:releng:lando:repo:repo_name",
-                "project:releng:lando:action:tag",
-            ],
-            [
-                "project:releng:lando:action:version_bump",
-            ],
-            id="missing_one_action_scope",
+            {"project:releng:lando:repo:repo_name", "project:releng:lando:action:tag"},
+            ["tag", "version_bump"],
+            ("browser/config/version.txt",),
+            {"project:releng:lando:action:version_bump:file:browser/config/version.txt"},
+            id="missing_version_bump_scope",
         ),
         pytest.param(
-            [
-                "project:releng:lando:repo:repo_name",
-            ],
-            [
-                "project:releng:lando:action:tag",
-                "project:releng:lando:action:version_bump",
-            ],
-            id="missing_two_action_scopes",
+            {"project:releng:lando:repo:repo_name"},
+            ["tag", "version_bump"],
+            ("browser/config/version.txt",),
+            {"project:releng:lando:action:tag", "project:releng:lando:action:version_bump:file:browser/config/version.txt"},
+            id="missing_multiple_scopes",
         ),
         pytest.param(
-            [],
-            [
-                "project:releng:lando:repo:repo_name",
-                "project:releng:lando:action:tag",
-                "project:releng:lando:action:version_bump",
-            ],
-            id="no_scopes",
+            {"project:releng:lando:repo:repo_name", "project:releng:lando:action:version_bump:file:browser/config/version.txt"},
+            ["version_bump"],
+            ("browser/config/version.txt", "config/milestone.txt"),
+            {"project:releng:lando:action:version_bump:file:config/milestone.txt"},
+            id="missing_one_of_two_file_scopes",
+        ),
+        pytest.param(
+            {"project:releng:lando:repo:repo_name", "project:releng:lando:action:version_bump:file:browser/config/version.txt"},
+            ["version_bump"],
+            ("config/milestone.txt",),
+            {"project:releng:lando:action:version_bump:file:config/milestone.txt"},
+            id="wrong_file_scope",
         ),
     ),
 )
-async def test_missing_scopes(aioresponses, github_installation_responses, context, scopes, missing):
+def test_validate_scopes_raises_on_missing(scopes, actions, version_bump_files, missing):
+    try:
+        validate_scopes(scopes, "repo_name", actions, version_bump_files)
+        assert False, "should've raised TaskVerificationError"
+    except TaskVerificationError as e:
+        assert "required scope(s) not present" in e.args[0]
+        for m in missing:
+            assert m in e.args[0]
+
+
+@pytest.mark.parametrize(
+    "scopes,actions,version_bump_files",
+    (
+        pytest.param(
+            {"project:releng:lando:repo:repo_name", "project:releng:lando:action:version_bump"},
+            ["version_bump"],
+            ("browser/config/version.txt",),
+            id="legacy_general_scope",
+        ),
+        pytest.param(
+            {"project:releng:lando:repo:repo_name", "project:releng:lando:action:version_bump:file:browser/config/version.txt"},
+            ["version_bump"],
+            ("browser/config/version.txt",),
+            id="file_specific_single_file",
+        ),
+        pytest.param(
+            {
+                "project:releng:lando:repo:repo_name",
+                "project:releng:lando:action:version_bump:file:browser/config/version.txt",
+                "project:releng:lando:action:version_bump:file:config/milestone.txt",
+            },
+            ["version_bump"],
+            ("browser/config/version.txt", "config/milestone.txt"),
+            id="file_specific_multi_file",
+        ),
+        pytest.param(
+            {"project:releng:lando:repo:repo_name", "project:releng:lando:action:version_bump"},
+            ["version_bump"],
+            ("browser/config/version.txt", "config/milestone.txt"),
+            id="legacy_general_scope_multiple_files",
+        ),
+        pytest.param(
+            {"project:releng:lando:repo:repo_name", "project:releng:lando:action:tag"},
+            ["tag"],
+            (),
+            id="no_version_bump_action",
+        ),
+    ),
+)
+def test_validate_scopes_passes(scopes, actions, version_bump_files):
+    validate_scopes(scopes, "repo_name", actions, version_bump_files)
+
+
+@pytest.mark.asyncio
+async def test_missing_scopes(aioresponses, github_installation_responses, context):
+    """Verify async_main raises when scopes are missing, exercising the full payload extraction path."""
     payload = {
         "actions": ["tag", "version_bump"],
         "lando_repo": "repo_name",
@@ -315,18 +365,66 @@ async def test_missing_scopes(aioresponses, github_installation_responses, conte
             "next_version": "135.0",
         },
     }
-
     setup_test(aioresponses, github_installation_responses, context, payload, ["version_bump"])
-
-    context.task = {"payload": payload, "scopes": scopes}
+    context.task = {"payload": payload, "scopes": []}
 
     try:
         await async_main(context)
         assert False, "should've raised TaskVerificationError"
     except TaskVerificationError as e:
         assert "required scope(s) not present" in e.args[0]
-        for m in missing:
-            assert m in e.args[0]
+
+
+@pytest.mark.asyncio
+async def test_legacy_scope_accepted_by_async_main(aioresponses, github_installation_responses, context):
+    """Verify async_main still accepts the legacy general scope during the transition period."""
+    payload = {
+        "actions": ["version_bump"],
+        "lando_repo": "repo_name",
+        "version_bump_info": {
+            "files": ["browser/config/version.txt"],
+            "next_version": "135.0",
+        },
+    }
+    submit_uri, status_uri, job_id, _ = setup_test(aioresponses, github_installation_responses, context, payload, ["version_bump"])
+    setup_github_graphql_responses(aioresponses, get_files_payload({"browser/config/version.txt": "134.0"}))
+    aioresponses.post(submit_uri, status=202, payload={"job_id": job_id, "status_url": str(status_uri), "message": "foo", "started_at": "2025-03-08T12:25:00Z"})
+    aioresponses.get(status_uri, status=200, payload={"commits": ["abcdef123"], "push_id": job_id, "status": "LANDED"})
+
+    context.task = {
+        "payload": payload,
+        "scopes": [
+            "project:releng:lando:repo:repo_name",
+            "project:releng:lando:action:version_bump",
+        ],
+    }
+    await async_main(context)
+
+
+@pytest.mark.asyncio
+async def test_file_specific_scope_accepted_by_async_main(aioresponses, github_installation_responses, context):
+    """Verify async_main correctly passes version_bump_files from the payload to validate_scopes."""
+    payload = {
+        "actions": ["version_bump"],
+        "lando_repo": "repo_name",
+        "version_bump_info": {
+            "files": ["browser/config/version.txt"],
+            "next_version": "135.0",
+        },
+    }
+    submit_uri, status_uri, job_id, _ = setup_test(aioresponses, github_installation_responses, context, payload, ["version_bump"])
+    setup_github_graphql_responses(aioresponses, get_files_payload({"browser/config/version.txt": "134.0"}))
+    aioresponses.post(submit_uri, status=202, payload={"job_id": job_id, "status_url": str(status_uri), "message": "foo", "started_at": "2025-03-08T12:25:00Z"})
+    aioresponses.get(status_uri, status=200, payload={"commits": ["abcdef123"], "push_id": job_id, "status": "LANDED"})
+
+    context.task = {
+        "payload": payload,
+        "scopes": [
+            "project:releng:lando:repo:repo_name",
+            "project:releng:lando:action:version_bump:file:browser/config/version.txt",
+        ],
+    }
+    await async_main(context)
 
 
 def test_task_schema(context):
