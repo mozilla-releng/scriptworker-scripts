@@ -12,6 +12,7 @@ SCHEMA_MAP = {
     "mark-as-merged": "mark_as_merged_schema_file",
     "create-new-release": "create_new_release_schema_file",
     "update-product-channel-version": "update_product_channel_version_schema_file",
+    "create-new-nightly-release": "create_new_nightly_release_schema_file",
 }
 
 

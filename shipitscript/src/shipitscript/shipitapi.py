@@ -189,3 +189,32 @@ class Release_V2(object):
         """
         resp = self._request(api_endpoint=f"/merge-automation/{automation_id}", method="PATCH", data="", headers=headers).content
         return resp
+
+    def get_nightly_metadata(self, product, channel, buildid, headers=None):
+        headers = headers if headers else {}
+        params = {"product": product, "channel": channel, "buildid": buildid}
+
+        try:
+            response = self._request(api_endpoint=f"/nightly-release?{urllib.parse.urlencode(params)}", method="GET", headers=headers)
+            return response.json()
+        except Exception:
+            log.error(f"Caught error while getting metadata for {product}, {channel}, {buildid}!", exc_info=True)
+            raise
+
+    def create_new_nightly_release(self, product, channel, buildid, version, locales, headers=None):
+        headers = headers if headers else {}
+        data = json.dumps(
+            {
+                "product": product,
+                "channel": channel,
+                "buildid": buildid,
+                "version": version,
+                "locales": locales,
+            }
+        )
+        try:
+            response = self._request(api_endpoint="/nightly-release", method="POST", data=data, headers=headers)
+            return response.json()
+        except Exception:
+            log.error(f"Caught error while creating new nightly release: {product}, {channel}, {buildid}", exc_info=True)
+            raise

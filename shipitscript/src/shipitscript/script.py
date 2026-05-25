@@ -114,12 +114,32 @@ def update_product_channel_version_action(context):
         ship_actions.update_product_channel_version(shipit_config, product, channel, version)
 
 
+def create_new_nightly_release_action(context):
+    payload = context.task["payload"]
+    shipit_config = context.ship_it_instance_config
+    product = payload["product"]
+    channel = payload["channel"]
+    version = payload["version"]
+    buildid = payload["buildid"]
+    locales = payload["locales"]
+    nightly = ship_actions.get_nightly_metadata(shipit_config, product, channel, buildid)
+    if nightly:
+        assert len(nightly) == 1, "Found multiple nightlies for the same buildid?"
+        nightly = nightly[0]
+        if nightly["version"] != version or nightly["locales"] != locales:
+            log.error("Nightly already exists, but version and/or locales don't match!")
+            sys.exit(1)
+    else:
+        ship_actions.create_new_nightly_release(shipit_config, product, channel, buildid, version, locales)
+
+
 # ACTION_MAP {{{1
 ACTION_MAP = {
     "mark-as-shipped": mark_as_shipped_action,
     "mark-as-merged": mark_as_merged_action,
     "create-new-release": create_new_release_action,
     "update-product-channel-version": update_product_channel_version_action,
+    "create-new-nightly-release": create_new_nightly_release_action,
 }
 
 
@@ -134,6 +154,7 @@ def get_default_config():
         "mark_as_shipped_schema_file": os.path.join(data_dir, "mark_as_shipped_task_schema.json"),
         "mark_as_merged_schema_file": os.path.join(data_dir, "mark_as_merged_task_schema.json"),
         "create_new_release_schema_file": os.path.join(data_dir, "create_new_release_task_schema.json"),
+        "create_new_nightly_release_schema_file": os.path.join(data_dir, "create_new_nightly_release_task_schema.json"),
     }
 
 
