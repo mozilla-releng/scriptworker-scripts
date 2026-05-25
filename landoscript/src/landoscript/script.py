@@ -29,11 +29,17 @@ def get_default_config(base_dir: str = "") -> dict:
     return default_config
 
 
-def validate_scopes(scopes: set, lando_repo: str, actions: list[str]):
-    expected_scopes = {
-        f"project:releng:lando:repo:{lando_repo}",
-        *[f"project:releng:lando:action:{action}" for action in actions],
-    }
+def validate_scopes(scopes: set, lando_repo: str, actions: list[str], version_bump_files: tuple[str, ...] = ()):
+    expected_scopes = {f"project:releng:lando:repo:{lando_repo}"}
+    for action in actions:
+        if action == "version_bump":
+            if "project:releng:lando:action:version_bump" in scopes:
+                # Legacy transition scope — remove this block once all repos generate file-specific scopes.
+                expected_scopes.add("project:releng:lando:action:version_bump")
+            else:
+                expected_scopes.update(f"project:releng:lando:action:version_bump:file:{f}" for f in version_bump_files)
+        else:
+            expected_scopes.add(f"project:releng:lando:action:{action}")
     missing = expected_scopes - scopes
     if missing:
         raise scriptworker.client.TaskVerificationError(f"required scope(s) not present: {', '.join(missing)}")
@@ -41,8 +47,8 @@ def validate_scopes(scopes: set, lando_repo: str, actions: list[str]):
 
 def sanity_check_payload(payload, scopes, lando_repo):
     """Additional verification past what the task schema does."""
-    # validate scopes - these raise if there's any scope issues
-    validate_scopes(scopes, lando_repo, payload["actions"])
+    version_bump_files = tuple(payload.get("version_bump_info", {}).get("files", ())) if "version_bump" in payload["actions"] else ()
+    validate_scopes(scopes, lando_repo, payload["actions"], version_bump_files)
     if len(payload["actions"]) < 1:
         raise TaskVerificationError("must provide at least one action!")
 
