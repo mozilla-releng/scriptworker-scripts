@@ -123,3 +123,16 @@ def update_product_channel_version(shipit_config, product, channel, version):
     log.info(f"Updating the current version of {product} {channel} to {version}...")
     response = release_api.update_product_channel_version(product, channel, version, headers=headers)
     log.info(response["message"])
+
+
+def get_nightly_metadata(shipit_config, product, channel, buildid):
+    release_api, headers = get_shipit_api_instance(shipit_config)
+    log.info(f"Getting metadata for nightly: {product}, {channel}, {buildid}")
+    return release_api.get_nightly_metadata(product, channel, buildid, headers=headers)
+
+
+def create_new_nightly_release(shipit_config, product, channel, buildid, version, locales):
+    release_api, headers = get_shipit_api_instance(shipit_config)
+    log.info(f"Creating new nightly release: {product}, {channel}, {buildid}")
+    release_api.create_new_nightly_release(product, channel, buildid, version, locales, headers=headers)
+    log.info("New nightly release successfully created")
