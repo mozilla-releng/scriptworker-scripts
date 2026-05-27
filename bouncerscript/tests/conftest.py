@@ -1,4 +1,3 @@
-import asyncio
 import functools
 import json
 
@@ -108,8 +107,7 @@ async def fake_ClientError_throwing_session():
     async def _fake_request(method, url, *args, **kwargs):
         raise aiohttp.ClientError
 
-    loop = asyncio.get_event_loop()
-    session = aiohttp.ClientSession(loop=loop)
+    session = aiohttp.ClientSession()
     session._request = _fake_request
     return session
 
@@ -119,7 +117,6 @@ async def fake_TimeoutError_throwing_session():
     async def _fake_request(method, url, *args, **kwargs):
         raise aiohttp.ServerTimeoutError
 
-    loop = asyncio.get_event_loop()
-    session = aiohttp.ClientSession(loop=loop)
+    session = aiohttp.ClientSession()
     session._request = _fake_request
     return session

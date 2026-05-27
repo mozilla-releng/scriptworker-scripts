@@ -690,7 +690,7 @@ dev = [
     { name = "coverage", specifier = ">=4.2" },
     { name = "mock" },
     { name = "pytest" },
-    { name = "pytest-asyncio", specifier = "<1.0" },
+    { name = "pytest-asyncio" },
     { name = "pytest-cov" },
     { name = "pytest-mock" },
     { name = "tox" },
