@@ -26,8 +26,7 @@ dev = [
     "coverage",
     "mock",
     "pytest",
-    # we use the event_loop fixture
-    "pytest-asyncio<1.0",
+    "pytest-asyncio",
     "pytest-cov",
     "pytest-mock",
 ]
