@@ -88,3 +88,51 @@ async def test_sign_pkg_behavior(mocker, tmpdir):
 
     # The "signed" package should exist in the artifact dir.
     assert os.path.isfile(os.path.join(artifact_dir, "public", "build", "example.pkg"))
+
+
+@pytest.mark.asyncio
+async def test_sign_pkg_behavior_no_pkg_cert_id(mocker, tmpdir):
+    artifact_dir = os.path.join(str(tmpdir), "artifact")
+    work_dir = os.path.join(str(tmpdir), "work")
+    config = {
+        "artifact_dir": artifact_dir,
+        "work_dir": work_dir,
+        "mac_config": {
+            "dep": {
+                "designated_requirements": "",
+                "zipfile_cmd": "zip",
+                "notarize_type": "single_zip",
+                "signing_keychain": "keychain_path",
+                "sign_with_entitlements": False,
+                "base_bundle_id": "org.test",
+                "identity": "id",
+                "keychain_password": "keychain_password",
+                "apple_asc_provider": "apple_asc_provider",
+                "create_pkg": True,
+            }
+        },
+    }
+    task = {
+        "scopes": [
+            "project:releng:signing:cert:dep-signing",
+        ],
+        "payload": {
+            "upstreamArtifacts": [
+                {"taskId": "task-identifer", "paths": ["public/build/example.tar.gz", "public/build/example.pkg"], "formats": ["mac_single_file"]},
+            ]
+        },
+    }
+    symlink_upstream(config, task)
+
+    async def fail_run_command(cmd, **kwargs):
+        raise AssertionError("run_command must not be invoked when pkg_cert_id is unset")
+
+    mocker.patch.object(pkg, "run_command", new=fail_run_command)
+    mocker.patch.object(pkg, "unlock_keychain", new=noop_async)
+    mocker.patch.object(pkg, "update_keychain_search_path", new=noop_async)
+    mocker.patch.object(pkg, "get_sign_config", return_value=config["mac_config"]["dep"])
+
+    await pkg.sign_pkg_behavior(config, task)
+
+    # The unsigned package should be copied through to the artifact dir.
+    assert os.path.isfile(os.path.join(artifact_dir, "public", "build", "example.pkg"))
