@@ -36,8 +36,17 @@ async def sign_pkg_behavior(config, task):
     await unlock_keychain(sign_config["signing_keychain"], sign_config["keychain_password"])
     await update_keychain_search_path(config, sign_config["signing_keychain"])
 
-    if "pkg_cert_id" not in sign_config:
-        raise IScriptError("Unable to find installer signing cert!")
+    if not sign_config.get("pkg_cert_id"):
+        # We currently don't sign pkgs in dep
+        log.info("no pkg_cert_id configured, skipping")
+        unsigned_apps = []
+        for app in get_app_paths(config, task):
+            if not app.orig_path.endswith(".pkg"):
+                continue
+            app.pkg_path = app.orig_path
+            unsigned_apps.append(app)
+        await copy_pkgs_to_artifact_dir(config, unsigned_apps)
+        return
 
     sign_cmd = ["productsign", "--keychain", sign_config["signing_keychain"], "--sign", sign_config["pkg_cert_id"]]
     signed_apps = []
