@@ -73,7 +73,7 @@ dev = [
     { name = "freezegun" },
     { name = "mock" },
     { name = "pytest" },
-    { name = "pytest-asyncio", specifier = "<1.0" },
+    { name = "pytest-asyncio" },
     { name = "pytest-cov" },
     { name = "pytest-mock" },
     { name = "tox" },
