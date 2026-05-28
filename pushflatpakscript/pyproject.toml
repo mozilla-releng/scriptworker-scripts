@@ -27,11 +27,6 @@ dev = [
     "pytest-asyncio",
     "pytest-cov",
 ]
-flat-manager = [
-    "aiohttp",
-    "pygobject>=3.52",
-    "tenacity",
-]
 
 [build-system]
 requires = ["hatchling"]

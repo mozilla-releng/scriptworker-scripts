@@ -5,18 +5,11 @@
 FROM $DOCKER_IMAGE_PARENT AS flat_manager
 
 USER root
-RUN apt-get update && apt-get install --no-install-recommends -y curl gcc pkg-config libgirepository-2.0-dev libcairo2-dev
-
-USER app
-
-RUN uv venv /app/flat_manager_venv \
- && . /app/flat_manager_venv/bin/activate \
- && uv sync --no-dev --active --frozen --package pushflatpakscript --only-group flat-manager \
- && curl -Ls \
-    https://github.com/flatpak/flat-manager/raw/100d44f761ba765552d2a799b5b7254b6a8b1e38/flat-manager-client | \
-    sed -e '1i#!/app/flat_manager_venv/bin/python' -e '1d' > /app/flat_manager_venv/bin/flat-manager-client \
- && chmod 755 /app/flat_manager_venv/bin/flat-manager-client \
- && echo "2e55c0d3797f948b5b2eb86b897d42ce318b829749a23b903d8a9ed7b3bcea59 /app/flat_manager_venv/bin/flat-manager-client" | sha256sum -c
+RUN apt-get update && apt-get install --no-install-recommends -y curl \
+ && curl -fLo /flat-manager-client --retry 5 --retry-delay 10 \
+    https://github.com/flatpak/flat-manager/releases/download/0.5.0/flat-manager-client.amd64 \
+ && echo "9733a148ac185bc8d7fb0429a43f9ad7d934635760bb71933658642c697f87c9  /flat-manager-client" | sha256sum -c \
+ && chmod 755 /flat-manager-client
 
 FROM $DOCKER_IMAGE_PARENT
 
@@ -32,7 +25,7 @@ RUN cp -R /app/pushflatpakscript/docker.d/* /app/docker.d/ \
  && . /app/.venv/bin/activate \
  && uv sync --no-dev --active --frozen --package pushflatpakscript
 
-COPY --from=flat_manager /app/flat_manager_venv /app/flat_manager_venv
+COPY --from=flat_manager /flat-manager-client /app/bin/flat-manager-client
 
 # Ensure flat-manager-client minimally works (e.g. no missing libs)
-RUN /app/flat_manager_venv/bin/flat-manager-client --help
+RUN /app/bin/flat-manager-client --help
