@@ -17,7 +17,7 @@ from scriptworker_client.exceptions import TaskVerificationError
 from . import touch
 
 
-def test_get_upstream_artifacts_full_paths_per_task_id():
+def test_get_upstream_artifacts_full_paths_per_task_id(tmp_path):
     artifacts_to_succeed = [
         {"paths": ["public/file_a1"], "taskId": "dependency1", "taskType": "signing"},
         {
@@ -61,7 +61,7 @@ def test_get_upstream_artifacts_full_paths_per_task_id():
         ]
     }
     config = {}
-    config["work_dir"] = os.path.abspath("some/path")
+    config["work_dir"] = str(tmp_path)
 
     task["payload"]["upstreamArtifacts"].extend(artifacts_to_succeed)
     for artifact in artifacts_to_succeed:
@@ -99,7 +99,7 @@ def test_get_upstream_artifacts_full_paths_per_task_id():
     }
 
 
-def test_fail_get_upstream_artifacts_full_paths_per_task_id():
+def test_fail_get_upstream_artifacts_full_paths_per_task_id(tmp_path):
     task = {}
     task["payload"] = {
         "upstreamArtifacts": [
@@ -111,16 +111,17 @@ def test_fail_get_upstream_artifacts_full_paths_per_task_id():
         ]
     }
     config = {}
-    config["work_dir"] = os.path.abspath("some/path")
+    config["work_dir"] = str(tmp_path)
     with pytest.raises(TaskVerificationError):
         get_upstream_artifacts_full_paths_per_task_id(config, task)
 
 
-def test_get_and_check_single_upstream_artifact_full_path():
+def test_get_and_check_single_upstream_artifact_full_path(tmp_path):
     task = {}
     config = {}
-    config["work_dir"] = os.path.abspath("some/path")
+    config["work_dir"] = str(tmp_path)
     folder = os.path.join(config["work_dir"], "cot", "dependency1")
+    os.makedirs(os.path.join(folder, "public"))
     touch(os.path.join(folder, "public/file_a"))
 
     assert get_and_check_single_upstream_artifact_full_path(config, "dependency1", "public/file_a") == os.path.join(
@@ -134,9 +135,9 @@ def test_get_and_check_single_upstream_artifact_full_path():
         get_and_check_single_upstream_artifact_full_path(config, "non-existing-dep", "public/file_a")
 
 
-def test_get_single_upstream_artifact_full_path():
+def test_get_single_upstream_artifact_full_path(tmp_path):
     config = {}
-    config["work_dir"] = os.path.abspath("some/path")
+    config["work_dir"] = str(tmp_path)
     os.path.join(config["work_dir"], "cot", "dependency1")
 
     assert get_single_upstream_artifact_full_path(config, "dependency1", "public/file_a") == os.path.join(
