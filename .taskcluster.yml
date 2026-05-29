@@ -3,6 +3,8 @@ version: 1
 reporting: checks-v1
 policy:
     pullRequests: public
+hooks:
+    - name: lint/pre-commit-v1
 tasks:
     - $let:
           trustDomain: scriptworker
