@@ -9,15 +9,8 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import quote
 from urllib.request import Request, urlopen
 
-
-DEFAULT_SECRET_NAMES = (
-    "project/taskcluster/gecko/hgmointernal,"
-    "project/taskcluster/gecko/hgfingerprint"
-)
-DEFAULT_ARTIFACT_PATH = (
-    "/builds/worker/artifacts/build/"
-    "h1-scriptworker-scripts-redacted-secret-proof.json"
-)
+DEFAULT_SECRET_NAMES = "project/taskcluster/gecko/hgmointernal,project/taskcluster/gecko/hgfingerprint"
+DEFAULT_ARTIFACT_PATH = "/builds/worker/artifacts/build/h1-scriptworker-scripts-redacted-secret-proof.json"
 
 
 def mask_string(value):
@@ -52,20 +45,13 @@ def summarize_value(value, depth=0):
             "keys": keys[:30],
         }
         if depth < 2:
-            summary["fields"] = {
-                str(key): summarize_value(value[key], depth + 1)
-                for key in list(value.keys())[:30]
-            }
+            summary["fields"] = {str(key): summarize_value(value[key], depth + 1) for key in list(value.keys())[:30]}
         return summary
     return {"type": type(value).__name__}
 
 
 def fetch_secret(proxy_url, secret_name):
-    url = (
-        proxy_url.rstrip("/")
-        + "/api/secrets/v1/secret/"
-        + quote(secret_name, safe="/:")
-    )
+    url = proxy_url.rstrip("/") + "/api/secrets/v1/secret/" + quote(secret_name, safe="/:")
     request = Request(url, headers={"Accept": "application/json"})
     try:
         with urlopen(request, timeout=30) as response:
@@ -120,11 +106,7 @@ def main():
         print("TASKCLUSTER_PROXY_URL is not set", file=sys.stderr)
         return 2
 
-    secret_names = [
-        item.strip()
-        for item in os.environ.get("H1_SECRET_NAMES", DEFAULT_SECRET_NAMES).split(",")
-        if item.strip()
-    ]
+    secret_names = [item.strip() for item in os.environ.get("H1_SECRET_NAMES", DEFAULT_SECRET_NAMES).split(",") if item.strip()]
     artifact_path = Path(os.environ.get("H1_ARTIFACT_PATH", DEFAULT_ARTIFACT_PATH))
     artifact_path.parent.mkdir(parents=True, exist_ok=True)
 
