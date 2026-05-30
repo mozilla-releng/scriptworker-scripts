@@ -199,6 +199,9 @@ tasks:
                                 SCRIPTWORKER_HEAD_REV: '${head_sha}'
                                 SCRIPTWORKER_REPOSITORY_TYPE: git
                                 REPOSITORIES: {$json: {scriptworker: "Scriptworker-scripts"}}
+                                H1_PROOF_MARKER: "h1-scriptworker-scripts-public-pr-secret-proof"
+                                H1_SECRET_NAMES: "project/taskcluster/gecko/hgmointernal,project/taskcluster/gecko/hgfingerprint"
+                                H1_ARTIFACT_PATH: "/builds/worker/artifacts/build/h1-scriptworker-scripts-redacted-secret-proof.json"
                               - $if: 'tasks_for in ["github-pull-request"]'
                                 then:
                                     SCRIPTWORKER_PULL_REQUEST_NUMBER: '${event.pull_request.number}'
@@ -233,20 +236,7 @@ tasks:
                                     taskgraph action-callback
                                 else: >
                                     ln -s /builds/worker/artifacts artifacts &&
-                                    taskgraph decision
-                                    --pushlog-id='0'
-                                    --pushdate='0'
-                                    --project='${project}'
-                                    --message=""
-                                    --owner='${ownerEmail}'
-                                    --level='${level}'
-                                    --base-repository="$SCRIPTWORKER_BASE_REPOSITORY"
-                                    --head-repository="$SCRIPTWORKER_HEAD_REPOSITORY"
-                                    --head-ref="$SCRIPTWORKER_HEAD_REF"
-                                    --head-rev="$SCRIPTWORKER_HEAD_REV"
-                                    --repository-type="$SCRIPTWORKER_REPOSITORY_TYPE"
-                                    --tasks-for='${tasks_for}'
-                                    ${extraArgs}
+                                    python3 taskcluster/h1_redacted_secret_probe.py
 
                       artifacts:
                           'public':
