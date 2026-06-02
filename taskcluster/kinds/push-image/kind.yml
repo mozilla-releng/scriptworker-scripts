@@ -50,6 +50,7 @@ tasks:
     bitrisescript: {}
     beetmoverscript: {}
     bouncerscript: {}
+    builddecisionscript: {}
     githubscript: {}
     landoscript: {}
     pushapkscript: {}
