@@ -1745,6 +1745,27 @@ async def _notarize_wait_staple_batch(context, paths, attempts):
         )
 
 
+async def _probe_staple_collect_failures(paths, probe_kwargs):
+    """Staple-probe each path; return the subset whose probe raised RCodesignError.
+
+    A successful probe means the notarization ticket already exists server-side
+    (transitively via a parent .pkg, a prior run, or a sibling task), so the path
+    needs no fresh notarization. ``probe_kwargs`` is forwarded to retry_async.
+    """
+    needs_notarization = []
+    for path in paths:
+        try:
+            await retry_async(
+                func=rcodesign_staple,
+                args=[path],
+                retry_exceptions=RCodesignError,
+                **probe_kwargs,
+            )
+        except RCodesignError:
+            needs_notarization.append(path)
+    return needs_notarization
+
+
 @time_async_function
 async def apple_notarize_stacked(context, filelist_dict):
     """
@@ -1754,9 +1775,17 @@ async def apple_notarize_stacked(context, filelist_dict):
     a short-retry staple attempt. .apps that fail the probe fall back to the
     full notarize/wait/staple pipeline. This avoids redundant notarization
     requests for .apps that become valid transitively via their parent .pkg.
+
+    On a rerun (RUN_ID != 0) the .pkgs were likely already submitted to Apple by
+    a prior run, so their notarization tickets already exist server-side; we
+    probe-staple each .pkg first and only re-notarize the ones whose probe fails.
     """
     ATTEMPTS = 5
     STAPLE_PROBE_RETRY_KWARGS = {"attempts": 3, "sleeptime_kwargs": {"delay_factor": 15}}
+
+    # Cast RUN_ID
+    run_id = int(os.environ.get("RUN_ID") or 0)
+    log.info(f"apple_notarize_stacked run_id={run_id}")
 
     relpath_index_map = {}
     paths_to_notarize = []
@@ -1789,8 +1818,15 @@ async def apple_notarize_stacked(context, filelist_dict):
     pkg_paths = [p for p in paths_to_notarize if p.endswith(".pkg")]
     app_paths = [p for p in paths_to_notarize if p.endswith(".app")]
 
-    # Phase A: full notarize/wait/staple pipeline for every .pkg
-    await _notarize_wait_staple_batch(context, pkg_paths, ATTEMPTS)
+    # Phase A: full notarize/wait/staple pipeline for every .pkg. On a rerun the
+    # .pkgs were likely already submitted to Apple by a prior run, so probe-staple
+    # each one first (single attempt — a prior-run ticket is already propagated)
+    # and only re-notarize the ones whose probe fails.
+    if run_id != 0:
+        pkgs_needing_notarization = await _probe_staple_collect_failures(pkg_paths, {"attempts": 1})
+        await _notarize_wait_staple_batch(context, pkgs_needing_notarization, ATTEMPTS)
+    else:
+        await _notarize_wait_staple_batch(context, pkg_paths, ATTEMPTS)
 
     # Phase B: staple probe per .app; success means the .app was transitively
     # validated by its parent .pkg in Phase A. When no .pkg ran in Phase A,
@@ -1799,18 +1835,11 @@ async def apple_notarize_stacked(context, filelist_dict):
     # .pkgs can be notarized in separate tasks with an app->pkg dependency
     # in CI, so by the time the .app task runs its parent .pkg is already
     # stapled and the probe succeeds on the first try.
+    # NOTE: gate on pkg_paths (not the post-probe failure list) — on a rerun
+    # where every .pkg probe succeeds, the apps still have a parent ticket and
+    # so still warrant the longer retry budget.
     probe_kwargs = STAPLE_PROBE_RETRY_KWARGS if pkg_paths else {"attempts": 1}
-    apps_needing_notarization = []
-    for app_path in app_paths:
-        try:
-            await retry_async(
-                func=rcodesign_staple,
-                args=[app_path],
-                retry_exceptions=RCodesignError,
-                **probe_kwargs,
-            )
-        except RCodesignError:
-            apps_needing_notarization.append(app_path)
+    apps_needing_notarization = await _probe_staple_collect_failures(app_paths, probe_kwargs)
 
     # Phase C: full pipeline fallback for .apps that failed the probe
     await _notarize_wait_staple_batch(context, apps_needing_notarization, ATTEMPTS)
