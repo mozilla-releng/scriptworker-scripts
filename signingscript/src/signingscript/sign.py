@@ -1822,6 +1822,10 @@ async def apple_notarize_stacked(context, filelist_dict):
     # .pkgs were likely already submitted to Apple by a prior run, so probe-staple
     # each one first (single attempt — a prior-run ticket is already propagated)
     # and only re-notarize the ones whose probe fails.
+    # The probe only succeeds for submissions Apple has already finished
+    # processing (Accepted); a .pkg still in flight from the prior run can't be
+    # stapled yet, so it falls through and gets re-submitted. In order to fix this
+    # corner case we'd need to persist submission ids across runs.
     if run_id != 0:
         pkgs_needing_notarization = await _probe_staple_collect_failures(pkg_paths, {"attempts": 1})
         await _notarize_wait_staple_batch(context, pkgs_needing_notarization, ATTEMPTS)
