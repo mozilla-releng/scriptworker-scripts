@@ -20,7 +20,7 @@ case $ENV in
     export API_ROOT="https://admin.stage.balrog.nonprod.webservices.mozgcp.net/api"
     export STAGE_API_ROOT="https://admin.stage.balrog.nonprod.webservices.mozgcp.net/api"
     ;;
-  mozcloud-prod|prod)
+  prod)
     export API_ROOT="https://aus4-admin.mozilla.org/api"
     export STAGE_API_ROOT="https://admin.stage.balrog.nonprod.webservices.mozgcp.net/api"
     ;;
@@ -37,12 +37,6 @@ case $COT_PRODUCT in
         export AUTH0_AUDIENCE="balrog-cloudops-stage"
         ;;
       prod)
-        export AUTH0_AUDIENCE="balrog-production"
-        ;;
-      # temporary environment to allow validation of new production environment
-      # when `aus4-admin.mozilla.org` is pointed at mozcloud prod this can go away
-      mozcloud-prod)
-        export API_ROOT="https://admin.prod.balrog.prod.webservices.mozgcp.net/api"
         export AUTH0_AUDIENCE="balrog-production"
         ;;
       *)
