@@ -35,7 +35,10 @@ class VersionFile:
 class MergeInfo:
     to_branch: str
     fetch_version_from: str
+    # TODO: to_revision should be required after all callers are updated to use it
+    to_revision: str = ""
     from_branch: str = ""
+    from_revision: str = ""
     base_tag: str = ""
     end_tag: str = ""
     merge_old_head: bool = False
@@ -44,6 +47,9 @@ class MergeInfo:
     version_files: list[VersionFile] = field(default_factory=list)
     replacements: list[list[str]] = field(default_factory=list)
     regex_replacements: list[list[str]] = field(default_factory=list)
+
+    # TODO: add __post_init__ to require `from_revision` when `from_branch` is
+    # present after all callers are already doing so
 
     @classmethod
     def from_payload_data(cls, payload_data) -> Self:
@@ -59,6 +65,8 @@ async def run(
 ) -> list[LandoAction]:
     to_branch = merge_info.to_branch
     from_branch = merge_info.from_branch
+    to_revision = merge_info.to_revision
+    from_revision = merge_info.from_revision
     end_tag = merge_info.end_tag
     base_tag = merge_info.base_tag
     merge_old_head = merge_info.merge_old_head
@@ -67,9 +75,23 @@ async def run(
     actions = []
 
     log.info("Starting merge day operations!")
-    to_version = await get_version(github_client, version_file, to_branch)
+    if not to_revision:
+        # TODO: remove this fallback once `to_revision` is required
+        to_revision = await github_client.get_branch_head_oid(to_branch)
+
+    to_version = await get_version(github_client, version_file, to_revision)
+
     log.info(f"to_version is: {to_version}")
     if end_tag:
+        # `end_revision` is purposely made to be whatever the current tip of `to_branch`
+        # is when a landoscript task runs (as opposed to, eg: using the `to_revision`).
+        # This guards against a task being created, something being pushed to the
+        # `to_branch`, and then the `END` tag ending up on an outdated revision.
+        # Even in a case where multiple versions of the same task are scheduled
+        # and race against one another the tag cannot end up in the wrong place so
+        # long as the `version` in it was fetched from a concrete revision. (If a race
+        # does take place, the second task will attempt to move a tag, which will
+        # fail the task.)
         end_revision = await github_client.get_branch_head_oid(to_branch)
         # End tag specifically uses the `to_version` _before_ we bump it
         # (because we're declaring its current version as "done")
@@ -84,10 +106,21 @@ async def run(
     # at that point. If there's no `from_branch`, whatever is currently on `to_branch`
     # is correct.
     if from_branch:
-        bump_version = await get_version(github_client, version_file, from_branch)
-        bump_branch = from_branch
+        if from_revision:
+            bump_version = await get_version(github_client, version_file, from_revision)
+            # Unlike tagging the `to_branch`, tagging the `from_branch` must be done
+            # against a concrete revision known at task scheduling time. This is because
+            # that revision is used as the merge target, and the tag must go on that
+            # specific revision.
+            end_revision = from_revision
+        else:
+            # TODO: remove this fallback once `from_revision` is being passed whenever
+            # `from_branch is
+            bump_version = await get_version(github_client, version_file, from_branch)
+            end_revision = await github_client.get_branch_head_oid(from_branch)
+
+        bump_revision = end_revision
         log.info(f"from_branch is present, got bump_version from it: {bump_version}")
-        end_revision = await github_client.get_branch_head_oid(from_branch)
 
         # base tagging _only_ happens when we have a `from_branch` -- these are
         # scenarios where we're uplifting one branch to another, and beginning a new
@@ -108,11 +141,11 @@ async def run(
             raise TaskVerificationError("'from_branch' is required when merge_old_head is True or version_files are present")
 
         bump_version = to_version
-        bump_branch = to_branch
+        bump_revision = to_revision
         log.info(f"from_branch is not present, using to_version as bump_version: {bump_version}")
 
     if merge_info.l10n_bump_info:
-        actions.extend(await l10n_bump.run(github_client, github_config, public_artifact_dir, bump_branch, merge_info.l10n_bump_info, False, True))
+        actions.extend(await l10n_bump.run(github_client, github_config, public_artifact_dir, bump_revision, merge_info.l10n_bump_info, False, True))
 
     if merge_info.version_files:
         log.info("Performing version bumps")
@@ -142,7 +175,7 @@ async def run(
             await version_bump.run(
                 github_client,
                 public_artifact_dir,
-                bump_branch,
+                bump_revision,
                 version_bump_infos,
                 dontbuild=False,
                 munge_next_version=False,
@@ -163,7 +196,7 @@ async def run(
         for r in regex_replacements:
             needed_files.append(r[0])
 
-        orig_contents = await github_client.get_files(needed_files, bump_branch)
+        orig_contents = await github_client.get_files(needed_files, bump_revision)
         # At the moment, there are no known cases of needing to replace with
         # a suffix...so we simply don't handle that here!
         new_contents = process_replacements(bump_version, replacements, regex_replacements, orig_contents)
@@ -174,7 +207,7 @@ async def run(
 
     if update_clobber_file:
         log.info("Touching clobber file")
-        orig_clobber_file = (await github_client.get_files("CLOBBER", bump_branch))["CLOBBER"]
+        orig_clobber_file = (await github_client.get_files("CLOBBER", bump_revision))["CLOBBER"]
         if orig_clobber_file is None:
             raise LandoscriptError("Couldn't find CLOBBER file in repository!")
 

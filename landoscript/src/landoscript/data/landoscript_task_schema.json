@@ -97,6 +97,14 @@
                         "beta"
                     ]
                 },
+                "from_revision": {
+                    "type": "string",
+                    "description": "The revision on the from_branch to fetch its current version from, tag with `_BASE` tags, and use as the target revision for merge actions."
+                },
+                "to_revision": {
+                    "type": "string",
+                    "description": "The revision on the to_branch to fetch its current version from and use to base l10n bumps, version bumps, and replacements on."
+                },
                 "merge_old_head": {
                     "type": "boolean",
                     "default": false
