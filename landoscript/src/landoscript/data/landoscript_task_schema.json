@@ -97,6 +97,12 @@
                         "beta"
                     ]
                 },
+                "from_revision": {
+                    "type": "string"
+                },
+                "to_revision": {
+                    "type": "string"
+                },
                 "merge_old_head": {
                     "type": "boolean",
                     "default": false

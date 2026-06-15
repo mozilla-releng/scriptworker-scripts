@@ -1,3 +1,16 @@
+# LEGACY merge_day tests -- DO NOT ADD NEW TESTS HERE.
+#
+# These tests cover the *old* merge_day payload format, where version
+# information is fetched at runtime from the file named by `fetch_version_from`
+# and tag names contain a `{major_version}` placeholder. They are kept
+# verbatim from before the migration to explicit `to_branch_version`/
+# `from_branch_version` payloads so that we retain coverage of the old format
+# while callers are migrated.
+#
+# Once every caller passes versions explicitly, delete this entire file along
+# with the code blocks marked "legacy merge_day support" in
+# src/landoscript/actions/merge_day.py.
+
 from collections import defaultdict
 import pytest
 from pytest_scriptworker_client import get_files_payload
@@ -26,7 +39,6 @@ from .conftest import (
             {
                 "end_tag": "FIREFOX_NIGHTLY_{major_version}_END",
                 "to_branch": "main",
-                "to_revision": "abcdef",
                 "replacements": [
                     [
                         "services/sync/modules/constants.sys.mjs",
@@ -71,7 +83,6 @@ from .conftest import (
             {
                 "end_tag": "FIREFOX_NIGHTLY_{major_version}_END",
                 "to_branch": "main",
-                "to_revision": "abcdef",
                 "replacements": [
                     [
                         "services/sync/modules/constants.sys.mjs",
@@ -116,7 +127,6 @@ from .conftest import (
             {
                 "end_tag": "FIREFOX_NIGHTLY_{major_version}_END",
                 "to_branch": "main",
-                "to_revision": "abcdef",
                 "regex_replacements": [
                     [
                         "browser/extensions/webcompat/manifest.json",
@@ -166,12 +176,14 @@ async def test_success_bump_main(
         "dry_run": dry_run,
     }
 
-    end_tag_target_ref = merge_info["to_revision"]
+    end_tag_target_ref = "ghijkl654321"
 
     setup_github_graphql_responses(
         aioresponses,
-        # existing version at `to_revision`
+        # existing version in `to_branch`
         get_files_payload({merge_info["fetch_version_from"]: "137.0a1"}),
+        # branch ref for `end` tag
+        {"data": {"repository": {"object": {"oid": end_tag_target_ref}}}},
         # fetch of original contents of files to bump, if we expect any replacements
         get_files_payload(initial_values if expected_bumps else {}),
         # fetch of original contents of `replacements` and `regex_replacements` files
@@ -204,7 +216,6 @@ async def test_success_bump_main(
 async def test_success_bump_esr(patch_date, aioresponses, github_installation_responses, context):
     merge_info = {
         "to_branch": "esr128",
-        "to_revision": "abcdef",
         "version_files": [
             {"filename": "config/milestone.txt", "version_bump": "minor"},
             {"filename": "browser/config/version.txt", "version_bump": "minor"},
@@ -238,7 +249,7 @@ async def test_success_bump_esr(patch_date, aioresponses, github_installation_re
 
     setup_github_graphql_responses(
         aioresponses,
-        # existing version at `to_revision`
+        # existing version in `to_branch`
         get_files_payload({merge_info["fetch_version_from"]: "128.9.0"}),
         # fetch of original contents of files to bump
         *[get_files_payload(iv) for iv in initial_values_by_expected_version.values()],
@@ -266,7 +277,6 @@ async def test_success_bump_esr(patch_date, aioresponses, github_installation_re
 async def test_success_early_to_late_beta(patch_date, aioresponses, github_installation_responses, context):
     merge_info = {
         "to_branch": "beta",
-        "to_revision": "abcdef",
         "replacements": [
             [
                 "build/defines.sh",
@@ -378,9 +388,7 @@ async def test_success_main_to_beta_merge_day(patch_date, aioresponses, github_i
         "end_tag": "FIREFOX_BETA_{major_version}_END",
         "base_tag": "FIREFOX_BETA_{major_version}_BASE",
         "to_branch": "beta",
-        "to_revision": "abcdef",
         "from_branch": "main",
-        "from_revision": "ghijkl",
         "replacements": [
             [
                 "browser/config/mozconfigs/linux64/l10n-mozconfig",
@@ -448,8 +456,8 @@ async def test_success_main_to_beta_merge_day(patch_date, aioresponses, github_i
         "lando_repo": "repo_name",
         "merge_info": merge_info,
     }
-    end_tag_target_ref = "abcdef"
-    base_tag_target_ref = "ghijkl"
+    end_tag_target_ref = "ghijkl654321"
+    base_tag_target_ref = "mnopqr987654"
 
     submit_uri, status_uri, job_id, scopes = setup_test(aioresponses, github_installation_responses, context, payload, ["merge_day"])
 
@@ -460,10 +468,14 @@ async def test_success_main_to_beta_merge_day(patch_date, aioresponses, github_i
 
     setup_github_graphql_responses(
         aioresponses,
-        # existing version at `to_revision`
+        # existing version in `to_branch`
         get_files_payload({merge_info["fetch_version_from"]: "139.0b11"}),
-        # existing version at `from_revision`
+        # branch ref for `end` tag
+        {"data": {"repository": {"object": {"oid": end_tag_target_ref}}}},
+        # existing version in `from_branch`
         get_files_payload({merge_info["fetch_version_from"]: "140.0a1"}),
+        # branch ref for `base` tag
+        {"data": {"repository": {"object": {"oid": base_tag_target_ref}}}},
     )
 
     # because the github graphql endpoint is generic we need to make sure we create
@@ -538,9 +550,7 @@ async def test_success_beta_to_release(patch_date, aioresponses, github_installa
         "end_tag": "FIREFOX_RELEASE_{major_version}_END",
         "base_tag": "FIREFOX_RELEASE_{major_version}_BASE",
         "to_branch": "release",
-        "to_revision": "abcdef",
         "from_branch": "beta",
-        "from_revision": "ghijkl",
         "replacements": [[".arcconfig", "BETA", "RELEASE"]],
         "version_files": [
             {"filename": "browser/config/version_display.txt", "new_suffix": ""},
@@ -574,15 +584,19 @@ async def test_success_beta_to_release(patch_date, aioresponses, github_installa
         "lando_repo": "repo_name",
         "merge_info": merge_info,
     }
-    end_tag_target_ref = "abcdef"
-    base_tag_target_ref = "ghijkl"
+    end_tag_target_ref = "ghijkl654321"
+    base_tag_target_ref = "mnopqr987654"
 
     setup_github_graphql_responses(
         aioresponses,
-        # existing version at `to_revision`
+        # existing version in `to_branch`
         get_files_payload({merge_info["fetch_version_from"]: "135.0"}),
-        # existing version at `from_revision`
+        # branch ref for `end` tag
+        {"data": {"repository": {"object": {"oid": end_tag_target_ref}}}},
+        # existing version in `from_branch`
         get_files_payload({merge_info["fetch_version_from"]: "136.0"}),
+        # branch ref for `base` tag
+        {"data": {"repository": {"object": {"oid": base_tag_target_ref}}}},
         # fetch of original contents of files to bump, if we expect any replacements
         get_files_payload(initial_values),
         # fetch of original contents of `replacements` and `regex_replacements` files
@@ -620,7 +634,6 @@ async def test_success_release_to_esr(patch_date, aioresponses, github_installat
         # yep...we use `BASE` on the `end_tag` for release-to-esr merges
         "end_tag": "FIREFOX_ESR_{major_version}_BASE",
         "to_branch": "esr128",
-        "to_revision": "abcdef",
         "replacements": [[".arcconfig", "RELEASE", "ESRONETWOEIGHT"]],
         "version_files": [
             {"filename": "browser/config/version_display.txt", "new_suffix": "esr"},
@@ -648,12 +661,14 @@ async def test_success_release_to_esr(patch_date, aioresponses, github_installat
         "lando_repo": "repo_name",
         "merge_info": merge_info,
     }
-    end_tag_target_ref = "abcdef"
+    end_tag_target_ref = "ghijkl654321"
 
     setup_github_graphql_responses(
         aioresponses,
-        # existing version at `to_revision`
+        # existing version in `to_branch`
         get_files_payload({merge_info["fetch_version_from"]: "128.0"}),
+        # branch ref for `end` tag
+        {"data": {"repository": {"object": {"oid": end_tag_target_ref}}}},
         # fetch of original contents of files to bump, if we expect any replacements
         get_files_payload(initial_values if expected_bumps else {}),
         # fetch of original contents of `replacements` and `regex_replacements` files
