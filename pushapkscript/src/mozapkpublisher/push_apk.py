@@ -10,6 +10,8 @@ from mozapkpublisher.common.store import GooglePlayEdit
 from mozapkpublisher.common.utils import add_push_arguments, metadata_by_package_name, check_push_arguments
 from mozapkpublisher.common.exceptions import WrongArgumentGiven
 from mozapkpublisher.sgs_api import SamsungGalaxyStore
+from mozapkpublisher.huawei_api import HuaweiAppGallery
+from mozapkpublisher.huawei_api.auth import load_credentials
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +33,7 @@ async def push_apk(
     submit=False,
     sgs_service_account_id=None,
     sgs_access_token=None,
+    huawei_credentials=None,
 ):
     """
     Args:
@@ -87,6 +90,14 @@ async def push_apk(
         async with SamsungGalaxyStore(sgs_service_account_id, sgs_access_token, dry_run=dry_run) as sgs:
             for package_name, apks in apks_by_package_name.items():
                 await sgs.upload_apks(package_name, apks, rollout_percentage, submit=submit)
+    elif store == "huawei":
+        if not huawei_credentials:
+            raise RuntimeError("You must provide a credentials file for the huawei app gallery")
+
+        credentials = load_credentials(huawei_credentials)
+        async with HuaweiAppGallery(credentials, dry_run=dry_run) as huawei:
+            for package_name, apks in apks_by_package_name.items():
+                await huawei.upload_apks(package_name, apks, rollout_percentage, submit=submit)
     else:
         raise WrongArgumentGiven("Unkown target store: {}".format(store))
 
@@ -114,6 +125,7 @@ def main():
         submit=config.submit,
         sgs_service_account_id=config.sgs_service_account_id,
         sgs_access_token=config.sgs_access_token,
+        huawei_credentials=config.huawei_credentials,
     ))
 
 

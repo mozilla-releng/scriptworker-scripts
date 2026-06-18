@@ -143,7 +143,8 @@ def test_main_google(monkeypatch):
             False,
             submit=False,
             sgs_service_account_id=None,
-            sgs_access_token=None
+            sgs_access_token=None,
+            huawei_credentials=None
         )
 
 
@@ -179,7 +180,8 @@ def test_main_samsung(monkeypatch):
             False,
             submit=True,
             sgs_service_account_id='123',
-            sgs_access_token='456'
+            sgs_access_token='456',
+            huawei_credentials=None
         )
 
 

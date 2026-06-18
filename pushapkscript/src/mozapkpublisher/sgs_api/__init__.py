@@ -2,7 +2,7 @@ from typing import Dict, Any, List
 from .content_info import AppContentInfo
 from .utils import raise_for_status_with_message
 from .error import SgsUploadException, SgsContentInfoException, SgsUpdateException
-from urllib.parse import urljoin
+from mozapkpublisher.common.store_api import build_apk_file_name, request
 
 import aiohttp
 import logging
@@ -69,7 +69,7 @@ class SamsungGalaxyStore:
         for apk in apks:
             fd, metadata = apk
 
-            file_name = "{}-{}-{}.apk".format(metadata["package_name"], metadata["architecture"], metadata["version_name"])
+            file_name = build_apk_file_name(metadata)
             file_key = await self.upload_file(fd.name, file_name)
             result = await self.api.add_binary(
                 content_id, file_key, gms
@@ -147,15 +147,15 @@ class SamsungGalaxyApi:
         base_url: str = BASE_DEVAPI_URL,
         **kwargs: Any,
     ) -> Any:
-        headers = self._default_headers()
-        url = urljoin(base_url, route)
-
-        response = await self._client.request(method, url, headers=headers, **kwargs)
-
-        await raise_for_status_with_message(response)
-
-        body = await response.json()
-        return body
+        return await request(
+            self._client,
+            method,
+            route,
+            base_url=base_url,
+            headers=self._default_headers(),
+            raise_for_status=raise_for_status_with_message,
+            **kwargs,
+        )
 
     async def check_access_token(self) -> Dict[str, Any]:
         """
