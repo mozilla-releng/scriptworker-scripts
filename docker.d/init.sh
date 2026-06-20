@@ -36,12 +36,6 @@ esac
 # Validate content of certain variables
 #
 case $ENV in
-  # temporary environment to allow validation of new production environment
-  # when `aus4-admin.mozilla.org` is pointed at mozcloud prod this can go away
-  mozcloud-prod)
-    export TRUST_LEVEL=3
-    export WORKER_SUFFIX=-mozcloud
-    ;;
   prod)
     export TRUST_LEVEL=3
     export WORKER_SUFFIX=
