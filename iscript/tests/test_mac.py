@@ -10,6 +10,7 @@ from shutil import copy2
 import arrow
 import mock
 import pexpect
+import re
 import pytest
 from scriptworker_client.aio import retry_async
 from scriptworker_client.utils import makedirs
@@ -809,12 +810,20 @@ async def test_create_pkg_files(mocker, pkg_cert_id, should_raise, requirements_
                 assert "--product" not in cmd
                 assert requirements_path not in cmd
 
+    async def fake_run_command(*args, **kwargs):
+        cmd = args[0]
+        assert len(cmd) == 5
+        assert cmd[0:3] == ["sudo", "chown", "-R"]
+        assert re.compile(r"\w+:\w+").match(cmd[3])
+        assert cmd[-1].startswith("foo/") and cmd[-1].endswith(".app")
+
     sign_config = {"pkg_cert_id": pkg_cert_id, "signing_keychain": "signing.keychain"}
     config = {"concurrency_limit": 2}
     all_paths = []
     for i in range(3):
-        all_paths.append(mac.App(app_path="foo/{}/{}.app".format(i, i), parent_dir="foo/{}".format(i)))
+        all_paths.append(mac.App(app_path=f"foo/{i}/{i}.app", parent_dir=f"foo/{i}"))
     mocker.patch.object(mac, "retry_async", new=fake_retry_async)
+    mocker.patch.object(mac, "run_command", new=fake_run_command)
     mocker.patch.object(mac, "copy2", new=noop_sync)
     if should_raise:
         with pytest.raises(IScriptError):

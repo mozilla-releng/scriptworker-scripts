@@ -1030,6 +1030,7 @@ async def create_pkg_files(config, sign_config, all_paths, requirements_plist_pa
     cmd_opts = []
     if sign_config.get("pkg_cert_id"):
         cmd_opts = ["--keychain", sign_config["signing_keychain"], "--sign", sign_config["pkg_cert_id"]]
+    # Setup app metadata before we chown + pkgbuild
     for app in all_paths:
         # call set_app_path_and_name because we may not have called sign_app() earlier
         set_app_path_and_name(app)
@@ -1037,17 +1038,36 @@ async def create_pkg_files(config, sign_config, all_paths, requirements_plist_pa
         app.tmp_pkg_path2 = app.app_path.replace(".appex", ".tmp2.pkg").replace(".app", ".tmp2.pkg")
         app.pkg_path = app.app_path.replace(".appex", ".pkg").replace(".app", ".pkg")
         app.pkg_name = os.path.basename(app.pkg_path)
-        cmd = (
-            "pkgbuild",
-            "--install-location",
-            "/Applications",
-            *cmd_opts,
-            "--component",
-            app.app_path,
-            app.tmp_pkg_path1,
-        )
-        futures.append(_retry_run_cmd_semaphore(semaphore=semaphore, cmd=cmd, cwd=app.parent_dir))
-    await raise_future_exceptions(futures)
+    try:
+        for app in all_paths:
+            # Set app ownership
+            await run_command(
+                ["sudo", "chown", "-R", "root:admin", app.app_path],
+                cwd=app.parent_dir,
+                exception=IScriptError,
+            )
+
+            # Build pkg
+            cmd = (
+                "pkgbuild",
+                "--install-location",
+                "/Applications",
+                *cmd_opts,
+                "--ownership=preserve",
+                "--component",
+                app.app_path,
+                app.tmp_pkg_path1,
+            )
+            futures.append(_retry_run_cmd_semaphore(semaphore=semaphore, cmd=cmd, cwd=app.parent_dir))
+        await raise_future_exceptions(futures)
+    finally:
+        # Reset ownership so we can cleanup after
+        for app in all_paths:
+            await run_command(
+                ["sudo", "chown", "-R", f"{os.getuid()}:{os.getgid()}", app.app_path],
+                cwd=app.parent_dir,
+                exception=IScriptError,
+            )
     futures = []
     for app in all_paths:
         pb_opts = []
