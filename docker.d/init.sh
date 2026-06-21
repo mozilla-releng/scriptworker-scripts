@@ -17,7 +17,6 @@ export APP_DIR="${APP_DIR:-/app}"
 #
 test_var_set 'PROJECT_NAME'
 test_var_set 'ENV'
-test_var_set 'COT_PRODUCT'
 test_var_set 'TASKCLUSTER_ROOT_URL'
 test_var_set 'TASKCLUSTER_CLIENT_ID'
 test_var_set 'TASKCLUSTER_ACCESS_TOKEN'
@@ -25,7 +24,7 @@ if [ "$ENV" == "prod" ]; then
   test_var_set 'ED25519_PRIVKEY'
 fi
 case $COT_PRODUCT in
-  firefox|thunderbird)
+  firefox|thunderbird|'')
     ;;
   *)
     test_var_set 'GITHUB_OAUTH_TOKEN'
@@ -92,6 +91,8 @@ case $COT_PRODUCT in
   translations)
     export TRUST_DOMAIN=translations
     ;;
+  '')
+    ;;
   *)
     echo "Unknown COT_PRODUCT $COT_PRODUCT"
     exit 1
@@ -129,7 +130,15 @@ if [ "$ENV" == "prod" ]; then
   export VERIFY_COT_SIGNATURE=true
 fi
 export WORK_DIR=$APP_DIR/workdir
-export WORKER_TYPE="${TRUST_DOMAIN}-${TRUST_LEVEL}-${PROJECT_NAME}${WORKER_SUFFIX}"
+if [[ -z "${COT_PRODUCT}" ]]; then
+  if [[ "${TRUST_LEVEL}" == "3" ]]; then
+    echo "error: COT_PRODUCT must be set for trust level 3"
+    exit 1
+  fi
+  export WORKER_TYPE="${PROJECT_NAME}${WORKER_SUFFIX}"
+else
+  export WORKER_TYPE="${TRUST_DOMAIN}-${TRUST_LEVEL}-${PROJECT_NAME}${WORKER_SUFFIX}"
+fi
 export WORKER_GROUP=${WORKER_TYPE}
 export WORKER_ID_PREFIX="${WORKER_TYPE}-"
 
