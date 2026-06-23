@@ -21,6 +21,7 @@ log = logging.getLogger(__name__)
 ALLOWED_BUMP_FILES = (
     "browser/config/version.txt",
     "browser/config/version_display.txt",
+    "browser/extensions/ipp-activator/manifest.json",
     "browser/extensions/newtab/manifest.json",
     "browser/extensions/webcompat/manifest.json",
     "config/milestone.txt",
