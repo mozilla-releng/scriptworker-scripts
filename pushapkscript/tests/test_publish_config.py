@@ -1,3 +1,5 @@
+import pytest
+
 from pushapkscript.publish_config import _should_do_dry_run, get_publish_config
 
 AURORA_CONFIG = {
@@ -28,6 +30,7 @@ FENIX_CONFIG = {
             "certificate_alias": "fenix",
             "google": {"default_track": "internal", "credentials_file": "fenix.json"},
             "samsung": {"service_account_id": "123456", "access_token": "abcdef"},
+            "huawei": {"credentials_file": "huawei.json"},
         }
     }
 }
@@ -204,14 +207,79 @@ def test_target_samsung_submit():
     }
 
 
+def test_target_huawei():
+    payload = {"channel": "production", "target_store": "huawei"}
+
+    assert get_publish_config(FENIX_CONFIG, payload, "fenix") == {
+        "target_store": "huawei",
+        "dry_run": True,
+        "certificate_alias": "fenix",
+        "huawei_credentials": "huawei.json",
+        "package_names": ["org.mozilla.fenix"],
+        "rollout_percentage": None,
+        "submit": False,
+    }
+
+
+def test_target_huawei_with_commit():
+    payload = {"channel": "production", "target_store": "huawei", "commit": True}
+
+    assert get_publish_config(FENIX_CONFIG, payload, "fenix") == {
+        "target_store": "huawei",
+        "dry_run": False,
+        "certificate_alias": "fenix",
+        "huawei_credentials": "huawei.json",
+        "package_names": ["org.mozilla.fenix"],
+        "rollout_percentage": None,
+        "submit": False,
+    }
+
+
+def test_target_huawei_rollout():
+    payload = {"channel": "production", "target_store": "huawei", "rollout_percentage": 50}
+
+    assert get_publish_config(FENIX_CONFIG, payload, "fenix") == {
+        "target_store": "huawei",
+        "dry_run": True,
+        "certificate_alias": "fenix",
+        "huawei_credentials": "huawei.json",
+        "package_names": ["org.mozilla.fenix"],
+        "rollout_percentage": 50,
+        "submit": False,
+    }
+
+
+def test_target_huawei_submit():
+    payload = {"channel": "production", "target_store": "huawei", "submit": True}
+
+    assert get_publish_config(FENIX_CONFIG, payload, "fenix") == {
+        "target_store": "huawei",
+        "dry_run": True,
+        "certificate_alias": "fenix",
+        "huawei_credentials": "huawei.json",
+        "package_names": ["org.mozilla.fenix"],
+        "rollout_percentage": None,
+        "submit": True,
+    }
+
+
+def test_target_huawei_rejects_google_play_track():
+    payload = {"channel": "production", "target_store": "huawei", "google_play_track": "production"}
+
+    with pytest.raises(ValueError, match="`google_play_track` is not allowed"):
+        get_publish_config(FENIX_CONFIG, payload, "fenix")
+
+
 def test_certificate_alias_does_not_depend_on_the_target_store():
     # The alias identifies the certificate the incoming artifact was signed with, which is
     # decided by the upstream signing task, so it is the same whichever store it goes to.
     google = get_publish_config(FENIX_CONFIG, {"channel": "production", "target_store": "google"}, "fenix")
     samsung = get_publish_config(FENIX_CONFIG, {"channel": "production", "target_store": "samsung"}, "fenix")
+    huawei = get_publish_config(FENIX_CONFIG, {"channel": "production", "target_store": "huawei"}, "fenix")
 
     assert google["certificate_alias"] == "fenix"
     assert samsung["certificate_alias"] == "fenix"
+    assert huawei["certificate_alias"] == "fenix"
 
 
 def test_certificate_alias_is_none_when_nothing_configures_it():

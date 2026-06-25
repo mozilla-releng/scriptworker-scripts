@@ -67,6 +67,7 @@ def test_firefox_fake_prod():
         "GOOGLE_CREDENTIALS_FOCUS_DEP_PATH": "focus",
         "SGS_SERVICE_ACCOUNT_ID_DEP": "123456",
         "SGS_ACCESS_TOKEN_DEP": "abcdef",
+        "HUAWEI_CREDENTIALS_DEP_PATH": "huawei",
     }
     _validate_config(context)
 
@@ -81,5 +82,6 @@ def test_firefox_prod():
         "GOOGLE_CREDENTIALS_FOCUS_PATH": "focus",
         "SGS_SERVICE_ACCOUNT_ID": "123456",
         "SGS_ACCESS_TOKEN": "abcdef",
+        "HUAWEI_CREDENTIALS_PATH": "huawei",
     }
     _validate_config(context)
