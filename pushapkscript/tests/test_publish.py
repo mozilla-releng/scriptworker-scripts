@@ -43,6 +43,8 @@ class PublishTest:
             skip_checks_fennec=False,
             sgs_service_account_id=None,
             sgs_access_token=None,
+            huawei_credentials=None,
+            submit=False,
         )
 
     async def test_publish_aab_config(self, mock_push_aab, mock_push_apk):
