@@ -141,6 +141,18 @@
                                             "type": "string"
                                         }
                                     }
+                                },
+                                "huawei": {
+                                    "type": "object",
+                                    "required": [
+                                        "credentials_file"
+                                    ],
+                                    "additionalProperties": false,
+                                    "properties": {
+                                        "credentials_file": {
+                                            "type": "string"
+                                        }
+                                    }
                                 }
                             }
                         }
