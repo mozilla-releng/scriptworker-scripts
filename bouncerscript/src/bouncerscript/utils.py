@@ -44,6 +44,8 @@ async def _do_api_call(context, route, data, method="GET", session=None):
         async with session.request(method, api_url, auth=auth, **kwargs) as resp:
             result = await resp.text()
             log.info("Server response: {}".format(result))
+            if resp.status >= 500:
+                resp.raise_for_status()
             return result
     except aiohttp.ServerTimeoutError as e:
         log.warning("Timed out accessing %s: %s" % (api_url, e))

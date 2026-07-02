@@ -1,4 +1,5 @@
 import functools
+import http.client
 import json
 
 import aiohttp
@@ -27,6 +28,8 @@ class FakeResponse(aiohttp.client_reqrep.ClientResponse):
         self._connection = mock.MagicMock()
         self._payload = payload or {}
         self.status = status
+        # needed by raise_for_status(), which asserts reason is not None
+        self.reason = http.client.responses.get(status, "Unknown")
         self._headers = {"content-type": "application/json"}
         self._cache = {}
         self._loop = mock.MagicMock()
@@ -37,6 +40,10 @@ class FakeResponse(aiohttp.client_reqrep.ClientResponse):
         if YARL:
             # fix aiohttp 1.1.0
             self._url_obj = yarl.URL(args[1])
+        # needed by raise_for_status(), which reads request_info -> _request_info
+        self._request_info = aiohttp.RequestInfo(
+            url=self._url_obj if YARL else self._url, method=args[0], headers=self._headers, real_url=self._url_obj if YARL else self._url
+        )
 
     async def text(self, *args, **kwargs):
         return json.dumps(self._payload)
@@ -70,6 +77,39 @@ async def fake_session():
 async def fake_session_500():
     session = aiohttp.ClientSession()
     session._request = functools.partial(_fake_request, 500)
+    yield session
+    await session.close()
+
+
+async def _fake_sequenced_request(call_log, statuses, method, url, *args, **kwargs):
+    """Serve responses per ``statuses``, in order, repeating the last one once
+    exhausted. ``call_log`` records the status served on each call, so tests
+    can assert how many requests were actually made."""
+    status = statuses[len(call_log)] if len(call_log) < len(statuses) else statuses[-1]
+    call_log.append(status)
+    resp = FakeResponse(method, url, status=status)
+    resp._history = (FakeResponse(method, url, status=302),)
+    return resp
+
+
+@pytest_asyncio.fixture(scope="function")
+async def fake_flaky_session():
+    """A session that returns two 502s (transient bouncer errors) followed by
+    a 200, to exercise recovery via retry-on-5xx."""
+    session = aiohttp.ClientSession()
+    session.call_log = []
+    session._request = functools.partial(_fake_sequenced_request, session.call_log, [502, 502, 200])
+    yield session
+    await session.close()
+
+
+@pytest_asyncio.fixture(scope="function")
+async def fake_persistent_500_session():
+    """A session that always returns 500, to exercise giving up once retries
+    are exhausted."""
+    session = aiohttp.ClientSession()
+    session.call_log = []
+    session._request = functools.partial(_fake_sequenced_request, session.call_log, [500])
     yield session
     await session.close()
 

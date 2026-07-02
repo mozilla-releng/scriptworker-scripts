@@ -78,9 +78,8 @@ async def test_do_failed_api_call(submission_context, mocker, fake_session_500):
     context.action = get_task_action(context.task, context.config)
     context.session = fake_session_500
 
-    response = await _do_api_call(context, "dummy", {})
-
-    assert response == "{}"
+    with pytest.raises(aiohttp.ClientResponseError):
+        await _do_api_call(context, "dummy", {})
 
 
 # _do_api_call {{{1
@@ -105,6 +104,34 @@ async def test_do_failed_with_TimeoutError_api_call(submission_context, mocker, 
 
     with pytest.raises(aiohttp.ServerTimeoutError):
         await _do_api_call(context, "dummy", {})
+
+
+# api_call {{{1
+@pytest.mark.asyncio
+async def test_api_call_retries_and_recovers_from_5xx(submission_context, fake_flaky_session):
+    context = submission_context
+    context.server = get_task_server(context.task, context.config)
+    context.action = get_task_action(context.task, context.config)
+    context.session = fake_flaky_session
+
+    response = await api_call(context, "dummy", {}, retry_config={"sleeptime_kwargs": {"delay_factor": 0}})
+
+    assert response == "{}"
+    assert fake_flaky_session.call_log == [502, 502, 200]
+
+
+# api_call {{{1
+@pytest.mark.asyncio
+async def test_api_call_gives_up_after_persistent_5xx(submission_context, fake_persistent_500_session):
+    context = submission_context
+    context.server = get_task_server(context.task, context.config)
+    context.action = get_task_action(context.task, context.config)
+    context.session = fake_persistent_500_session
+
+    with pytest.raises(aiohttp.ClientResponseError):
+        await api_call(context, "dummy", {}, retry_config={"attempts": 2, "sleeptime_kwargs": {"delay_factor": 0}})
+
+    assert fake_persistent_500_session.call_log == [500, 500]
 
 
 # does_product_exist {{{1
