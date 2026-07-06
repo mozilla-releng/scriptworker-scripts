@@ -267,6 +267,48 @@ class SamsungGalaxyApi:
             "POST", "/seller/contentUpdate", json=new_content_info.as_new_data()
         )
 
+    async def add_binary(
+        self,
+        content_id: str,
+        file_key: str,
+        gms: str,
+        binary_seq_for_device_info: str = None,
+    ) -> Dict[str, Any]:
+        """
+        Register an uploaded file as a new binary for the given content. The app must
+        already be in the `REGISTERING`/`UPDATING` state.
+
+        The returned payload contains the new binary sequence at `data.binarySeq`.
+
+        https://developer.samsung.com/galaxy-store/galaxy-store-developer-api/content-publish-api/add-new-binary.html
+        """
+        data = {
+            "contentId": content_id,
+            "filekey": file_key,
+            "gms": gms,
+        }
+
+        if binary_seq_for_device_info is not None:
+            data["binarySeqForDeviceInfo"] = binary_seq_for_device_info
+
+        return await self._request("POST", "/seller/v2/content/binary", json=data)
+
+    async def delete_binary(
+        self, content_id: str, binary_seq: str
+    ) -> Dict[str, Any]:
+        """
+        Delete an existing binary from the given content. The app must already be in
+        the `REGISTERING`/`UPDATING` state.
+
+        https://developer.samsung.com/galaxy-store/galaxy-store-developer-api/content-publish-api/delete-binary.html
+        """
+        params = {
+            "contentId": content_id,
+            "binarySeq": binary_seq,
+        }
+
+        return await self._request("DELETE", "/seller/v2/content/binary", params=params)
+
     async def enable_staged_rollout(self, content_id, rollout_rate):
         """
         Create a staged rollout for the given content id at the given rollout rate. Note that this only works for an application currently getting updated.
