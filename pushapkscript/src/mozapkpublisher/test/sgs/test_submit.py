@@ -205,17 +205,19 @@ async def test_update_content_info(
         data = AppContentInfo(params)
         await sgs.update_content_info(data)
 
-        expected_extra_fields = {
-            "screenshots": None,
-            "addLanguage": None,
-            "sellCountryList": None,
-        }
-        expected_json = UPDATE_BASE_PARAMS | expected_extra_fields
         responses_mock.assert_called_with(
             url="https://devapi.samsungapps.com/seller/contentUpdate",
             method="POST",
             headers=basic_auth_headers(),
-            json=expected_json,
+            json={
+                "contentId": "foobar",
+                "defaultLanguageCode": "EN",
+                "paid": "N",
+                "publicationType": "03",
+                "screenshots": None,
+                "addLanguage": None,
+                "sellCountryList": None,
+            },
         )
 
 

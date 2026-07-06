@@ -121,3 +121,10 @@ def test_new_content_info_sets_publication_type_to_manual():
     new_content_info["publicationType"] = "00"
     content_info = AppContentInfo(new_content_info)
     assert content_info.as_new_data()["publicationType"] == "03"
+
+
+def test_new_content_info_drops_binary_list():
+    new_content_info = copy.copy(MINIMAL_VALID_CONTENT_INFO)
+    new_content_info["binaryList"] = [{"fileName": "foo", "binarySeq": "1"}]
+    content_info = AppContentInfo(new_content_info)
+    assert "binaryList" not in content_info.as_new_data()

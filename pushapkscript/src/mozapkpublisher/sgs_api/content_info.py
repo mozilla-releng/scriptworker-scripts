@@ -72,6 +72,7 @@ class AppContentInfo:
         Return this content info as a dictionary ready to be sent to the `updateContent` API.
         The following transformations are applied:
             - The `startPublicationDate` field is removed
+            - The `binaryList` field is removed as the `contentUpdate` API does not accept it when modified. Binaries are managed through their own API.
             - The `screenshots`, `addLanguage` and `sellCountryList` are nulled out as we don't support updating them and can't send them back verbatim.
             - The `publicationType` is set to "03" to set the publication time to "manual"
         """
@@ -82,6 +83,9 @@ class AppContentInfo:
         # Sometimes having this fails... Sometimes it doesn't... It makes no sense but removing it completely makes the content info upload not fail 🤷
         if "startPublicationDate" in content:
             del content["startPublicationDate"]
+
+        if "binaryList" in content:
+            del content["binaryList"]
 
         # All those need to be None so samsung knows we're not trying to update
         # them. Leaving them as is *should* be doing the same thing as we're
