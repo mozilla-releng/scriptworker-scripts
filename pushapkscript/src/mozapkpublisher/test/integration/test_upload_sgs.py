@@ -207,7 +207,6 @@ def setup_default_sgs_api(responses):
         ],
     )
 
-    # Only repeat the response once so we can fake an upload changing binaryList.
     responses.get(
         "https://devapi.samsungapps.com/seller/contentInfo?contentId=000002975732",
         repeat=1,
@@ -221,12 +220,6 @@ def setup_default_sgs_api(responses):
         payload=[FOCUS_CONTENT_INFO],
     )
 
-    responses.get(
-        "https://devapi.samsungapps.com/seller/contentInfo?contentId=000003397900",
-        status=200,
-        payload=[UPDATED_FOCUS_CONTENT_INFO, FOCUS_CONTENT_INFO],
-    )
-
     responses.post(
         "https://devapi.samsungapps.com/seller/createUploadSessionId",
         status=200,
@@ -238,6 +231,11 @@ def setup_default_sgs_api(responses):
         payload={"fileKey": "abc", "fileSize": 15},
     )
     responses.post("https://devapi.samsungapps.com/seller/contentUpdate", status=200)
+    responses.post(
+        "https://devapi.samsungapps.com/seller/v2/content/binary",
+        status=200,
+        payload={"resultCode": "0000", "resultMessage": "Ok", "data": {"binarySeq": "306"}},
+    )
     responses.put(
         "https://devapi.samsungapps.com/seller/v2/content/stagedRolloutBinary",
         status=200,
@@ -355,45 +353,6 @@ async def test_update_ok(responses, monkeypatch, rollout_rate, submit):
         "copyrightHolder": "",
         "supportEMail": "android-marketplace-notices@mozilla.com",
         "supportedSiteUrl": "",
-        "binaryList": [
-            {
-                "fileName": "App_20250326114753061.apk",
-                "binarySeq": "304",
-                "versionCode": "390842046",
-                "versionName": "137.0",
-                "packageName": "org.mozilla.focus",
-                "nativePlatforms": "32bit",
-                "apiminSdkVersion": "21",
-                "apimaxSdkVersion": None,
-                "iapSdk": "N",
-                "gms": "Y",
-                "filekey": None,
-            },
-            {
-                "fileName": "App_20250326114759363.apk",
-                "binarySeq": "305",
-                "versionCode": "390842048",
-                "versionName": "137.0",
-                "packageName": "org.mozilla.focus",
-                "nativePlatforms": "64bit",
-                "apiminSdkVersion": "21",
-                "apimaxSdkVersion": None,
-                "iapSdk": "N",
-                "gms": "Y",
-                "filekey": None,
-            },
-            {
-                "fileName": "blob",
-                "versionCode": "390842050",
-                "binarySeq": 306,
-                "packageName": "org.mozilla.focus",
-                "apiminSdkVersion": 21,
-                "apimaxSdkversion": None,
-                "iapSdk": "N",
-                "gms": "Y",
-                "filekey": "abc",
-            },
-        ],
         "standardPrice": "0",
         "paid": "N",
         "publicationType": "03",
@@ -453,6 +412,16 @@ async def test_update_ok(responses, monkeypatch, rollout_rate, submit):
         method="POST",
         headers=basic_auth_headers(),
         json=expected_content_update,
+    )
+    responses.assert_called_with(
+        url="https://devapi.samsungapps.com/seller/v2/content/binary",
+        method="POST",
+        headers=basic_auth_headers(),
+        json={
+            "contentId": "000003397900",
+            "filekey": "abc",
+            "gms": "Y",
+        },
     )
 
     if rollout_rate is not None:

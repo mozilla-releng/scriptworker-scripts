@@ -87,23 +87,6 @@ MINIMAL_VALID_CONTENT_INFO = {
 }
 
 
-def test_adding_more_than_twenty_binaries():
-    new_content_info = copy.copy(MINIMAL_VALID_CONTENT_INFO)
-    new_content_info["binaryList"] = [{"fileName": str(i)} for i in range(21)]
-
-    with pytest.raises(SgsContentInfoException, match="more than 20 binaries"):
-        content_info = AppContentInfo(new_content_info)
-
-    new_content_info["binaryList"] = [{"fileName": str(i)} for i in range(20)]
-    content_info = AppContentInfo(new_content_info)
-
-    assert len(content_info.binary_list) == 20
-    content_info.add_binary({"fileName": "foo"})
-    assert len(content_info.binary_list) == 20
-    assert content_info.binary_list[0]["fileName"] == "1"
-    assert content_info.binary_list[-1]["fileName"] == "foo"
-
-
 @pytest.mark.parametrize("key", (None, *MINIMAL_VALID_CONTENT_INFO.keys()))
 def test_creating_content_info_with_missing_key(key):
     new_content_info = copy.copy(MINIMAL_VALID_CONTENT_INFO)

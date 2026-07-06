@@ -27,25 +27,6 @@ class AppContentInfo:
                     "The app content info is missing a mandatory key: {}".format(key)
                 )
 
-        if len(self._inner.get("binaryList", [])) > 20:
-            raise SgsContentInfoException(
-                "You cannot have more than 20 binaries declared for a single content ID"
-            )
-
-    def add_binary(self, new_binary):
-        """
-        Add a binary to the binary list for this content info. If the list would exceed 20 items, the first item is popped from the list.
-        This is because the samsung API doesn't want an app to have more than 20 binaries registered at the same time.
-        """
-        binaryList = self._inner.setdefault("binaryList", [])
-
-        # Samsung only allows 20 binaries to be uploaded for a certain content ID
-        # Remove older binaries so that we get space to add our own
-        while len(binaryList) >= 20:
-            binaryList.pop(0)
-
-        binaryList.append(new_binary)
-
     @property
     def binary_list(self):
         """

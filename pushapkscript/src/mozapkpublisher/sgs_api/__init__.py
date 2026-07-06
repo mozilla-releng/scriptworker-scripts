@@ -51,46 +51,33 @@ class SamsungGalaxyStore:
         current_info = content_info[0]
 
         # Because infer_content_id_from_package_name relies on a binary with the package name existing, we know that binary_list here is not empty
-        last_binary = max((binary for binary in current_info.binary_list), key=lambda binary: int(binary["binarySeq"]))
-        last_binary_id = int(last_binary["binarySeq"])
+        existing_binaries = current_info.binary_list
+        last_binary = max(existing_binaries, key=lambda binary: int(binary["binarySeq"]))
 
+        gms = last_binary["gms"]
+
+        # Transition the app to `REGISTERING`
+        await self.api.update_content_info(current_info)
+
+        binaries_oldest_first = sorted(existing_binaries, key=lambda binary: int(binary["binarySeq"]))
+
+        binaries_to_delete = max(0, len(existing_binaries) + len(apks) - 20)
+        for binary in binaries_oldest_first[:binaries_to_delete]:
+            await self.api.delete_binary(content_id, binary["binarySeq"])
+
+        new_binary_seqs = []
         for apk in apks:
             fd, metadata = apk
 
             file_name = "{}-{}-{}.apk".format(metadata["package_name"], metadata["architecture"], metadata["version_name"])
             file_key = await self.upload_file(fd.name, file_name)
-            new_binary = {
-                "fileName": os.path.basename(fd.name),
-                "versionCode": metadata["version_code"],
-                "binarySeq": last_binary_id + 1,
-                "packageName": metadata["package_name"],
-                "apiminSdkVersion": metadata["api_level"],
-                "apimaxSdkversion": None,
-                "iapSdk": last_binary["iapSdk"],
-                "gms": last_binary["gms"],
-                "filekey": file_key,
-            }
-
-            current_info.add_binary(new_binary)
-            last_binary_id += 1
-
-        await self.api.update_content_info(current_info)
+            result = await self.api.add_binary(
+                content_id, file_key, gms
+            )
+            new_binary_seqs.append(result["data"]["binarySeq"])
 
         if rollout_rate is not None:
-            # Grab the actual content as samsung requires us to
-            try:
-                new_content_info = next(ci for ci in await self.api.get_content_info(content_id) if ci.status == "UPDATING")
-            except StopIteration:
-                raise SgsUpdateException(
-                    "The API didn't return a content info with the UPDATING status. Unable to create a rollout"
-                )
-
-            new_binaries = [
-                binary["binarySeq"]
-                for binary in new_content_info.binary_list
-                if binary["versionCode"] in (apk["version_code"] for (_, apk) in apks)
-            ]
-            for new_bin in new_binaries:
+            for new_bin in new_binary_seqs:
                 await self.api.add_binary_to_staged_rollout(content_id, new_bin)
 
             await self.api.enable_staged_rollout(content_id, rollout_rate)
@@ -272,7 +259,6 @@ class SamsungGalaxyApi:
         content_id: str,
         file_key: str,
         gms: str,
-        binary_seq_for_device_info: str = None,
     ) -> Dict[str, Any]:
         """
         Register an uploaded file as a new binary for the given content. The app must
@@ -287,9 +273,6 @@ class SamsungGalaxyApi:
             "filekey": file_key,
             "gms": gms,
         }
-
-        if binary_seq_for_device_info is not None:
-            data["binarySeqForDeviceInfo"] = binary_seq_for_device_info
 
         return await self._request("POST", "/seller/v2/content/binary", json=data)
 
