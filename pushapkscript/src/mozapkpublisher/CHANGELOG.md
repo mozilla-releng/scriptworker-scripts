@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [11.0.2] - 2026-07-16
+
+### Fixed
+
+* Publishing to the Samsung Galaxy Store now uses the non deprecated binary upload/deletion APIs
+
 ## [11.0.1] - 2026-03-25
 
 ### Changed
