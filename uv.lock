@@ -1280,11 +1280,11 @@ wheels = [
 
 [[package]]
 name = "dictdiffer"
-version = "0.9.0"
+version = "0.10.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/61/7b/35cbccb7effc5d7e40f4c55e2b79399e1853041997fcda15c9ff160abba0/dictdiffer-0.9.0.tar.gz", hash = "sha256:17bacf5fbfe613ccf1b6d512bd766e6b21fb798822a133aa86098b8ac9997578", size = 31513, upload-time = "2021-07-22T13:24:29.276Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/0c/31/84b2b2113c2c972431582bffd74f0d04b5efd9126538127b766275580950/dictdiffer-0.10.0.tar.gz", hash = "sha256:0b912acf663949d73b820d3ed59362140a188ab742c94efe13c762dbd24cbbd3", size = 12451, upload-time = "2026-07-16T12:39:07.886Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/47/ef/4cb333825d10317a36a1154341ba37e6e9c087bac99c1990ef07ffdb376f/dictdiffer-0.9.0-py2.py3-none-any.whl", hash = "sha256:442bfc693cfcadaf46674575d2eba1c53b42f5e404218ca2c2ff549f2df56595", size = 16754, upload-time = "2021-07-22T13:24:26.783Z" },
+    { url = "https://files.pythonhosted.org/packages/9c/2f/7ff60ad2cafd7c970bea75da5f4a9b84b784f7340abcb5fc634d4cf5cd37/dictdiffer-0.10.0-py3-none-any.whl", hash = "sha256:6ca50f38f7c5ee27d52789eee095ae473d9e02e1aa7612cb3aaf25fcf081dbf6", size = 16060, upload-time = "2026-07-16T12:39:06.842Z" },
 ]
 
 [[package]]
@@ -1316,11 +1316,11 @@ wheels = [
 
 [[package]]
 name = "filelock"
-version = "3.29.7"
+version = "3.30.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/35/94/00f2059e4835eace3ae8fde680b932c496f8ec7bdc99168dfa53fb2e6b79/filelock-3.29.7.tar.gz", hash = "sha256:5b481979797ae69e72f0b389d89a80bdd585c260c5b3f1fb9c0a5ba9bb3f195d", size = 71521, upload-time = "2026-07-08T05:46:58.716Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/83/2b/8b6480a70a647035334a604d0931926de4b5cd1f57835d45ad5eed2b1a1e/filelock-3.30.0.tar.gz", hash = "sha256:1774e682dbe443bd60f9609162fc596e2c80dc84ffc2957068953406d0520090", size = 174927, upload-time = "2026-07-16T03:53:58.152Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/60/02/be4a57b60c7149b55b9e3b3c13f609cd8eb5307c751f22bd8fb8d262e75b/filelock-3.29.7-py3-none-any.whl", hash = "sha256:987db6f789a3a2a59f55081801b2b3697cb97e2a736b5f1a9e99b559285fbc51", size = 46036, upload-time = "2026-07-08T05:46:57.53Z" },
+    { url = "https://files.pythonhosted.org/packages/52/af/9b01bcf5c91e81899bb890b87bd9077732a9b3365c098e67fe77958c39ed/filelock-3.30.0-py3-none-any.whl", hash = "sha256:40632998f0772e64183bb819f086a1b9def6be1090cf1dcb9d45f46806ef279b", size = 93131, upload-time = "2026-07-16T03:53:56.727Z" },
 ]
 
 [[package]]
@@ -4256,7 +4256,7 @@ wheels = [
 
 [[package]]
 name = "taskcluster-taskgraph"
-version = "24.1.1"
+version = "24.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "appdirs" },
@@ -4272,9 +4272,9 @@ dependencies = [
     { name = "taskcluster-urls" },
     { name = "voluptuous" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/44/74/f89b93a0517cffc205316f5d7920683105401d0c435308e6bc7e649a2836/taskcluster_taskgraph-24.1.1.tar.gz", hash = "sha256:49df0d02004811c1651631cecc705f7fd24f0c793ed44534c7298dff9a96c32d", size = 613647, upload-time = "2026-06-11T15:57:07.168Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/a7/07/777fd3073e694a518e4095b45cbedd79c2860e8fb3eacbd1f939b9f1eb1d/taskcluster_taskgraph-24.2.0.tar.gz", hash = "sha256:c43ced0c53b6da3b44ee1414f06e7f63cd688aeb64bf1b9c5e35b268487b8078", size = 614244, upload-time = "2026-07-15T19:52:08.525Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ed/fb/9804c7f96455404661705d1f53de35859fcc0f6967364c5ca1ec6307a9ff/taskcluster_taskgraph-24.1.1-py3-none-any.whl", hash = "sha256:07118c4e8ab02350adf7a2b230feca72eb558949f2a18da81217bfcbbedd41fa", size = 211050, upload-time = "2026-06-11T15:57:05.678Z" },
+    { url = "https://files.pythonhosted.org/packages/df/86/59846e3a42db20db944492bb1b6f5d1750b3c558e90a83406c9ca4844d31/taskcluster_taskgraph-24.2.0-py3-none-any.whl", hash = "sha256:d14ad04d5f76f5d1fd2b6fa3bcd5abf6e93c492bf9033bd4d44bc33ce02764c8", size = 211781, upload-time = "2026-07-15T19:52:07.08Z" },
 ]
 
 [[package]]
