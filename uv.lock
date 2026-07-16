@@ -2526,7 +2526,7 @@ wheels = [
 
 [[package]]
 name = "mozapkpublisher"
-version = "11.0.1"
+version = "11.0.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
@@ -2537,9 +2537,9 @@ dependencies = [
     { name = "pyjwt" },
     { name = "requests" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/6a/d1/ddb5b15ce8a37b765415c26dbdf7874d45186aad1ead1838a25ccaa19ae3/mozapkpublisher-11.0.1.tar.gz", hash = "sha256:4cdded13af7ebda9dc0c5789d952f72dcdc156f0d6b815eef536da02c0f2125e", size = 152748, upload-time = "2026-03-25T12:49:28.81Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/f7/d1/01e47ead7dc9ddc8f0f827fd0f4f6b97502b27e3595780bec995321bae42/mozapkpublisher-11.0.2.tar.gz", hash = "sha256:9de539b6d348ace432a4f20bb9db06daf4820ff812700fdda14ce6e6088edcd6", size = 151855, upload-time = "2026-07-16T14:45:01.459Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/75/74/81fa25a94923fba258056412e77139b63f4d92e7c75047c23f6afa30d0e5/mozapkpublisher-11.0.1-py3-none-any.whl", hash = "sha256:d668013dcbbab84d8bb62695a53e773d39f81bb7e6b2fc89190f194162ce561c", size = 63731, upload-time = "2026-03-25T12:49:27.247Z" },
+    { url = "https://files.pythonhosted.org/packages/53/82/0b1e9c14de8dfeb3d68819496598d1bbfcfc32c075ab841eda2c61f1911d/mozapkpublisher-11.0.2-py3-none-any.whl", hash = "sha256:5f0b69af145ea21baabf07b588735568586bbe3e71d91d531a66522a26594409", size = 64369, upload-time = "2026-07-16T14:44:59.887Z" },
 ]
 
 [[package]]
