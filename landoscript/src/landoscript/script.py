@@ -88,9 +88,11 @@ async def process_actions(session, context, owner, repo, public_artifact_dir, br
                 if version_bump_actions:
                     lando_actions.extend(version_bump_actions)
             elif action == "tag":
-                if "hg_repo_url" not in payload["tag_info"]:
-                    raise TaskVerificationError("must provide hg_repo_url!")
-                tag_actions = await tag.run(session, tag.HgTagInfo(**payload["tag_info"]))
+                if "hg_repo_url" in payload["tag_info"]:
+                    tag_info = tag.HgTagInfo(**payload["tag_info"])
+                else:
+                    tag_info = tag.GitTagInfo(**payload["tag_info"])
+                tag_actions = await tag.run(session, tag_info)
                 lando_actions.extend(tag_actions)
             elif action == "merge_day":
                 merge_day_actions = await merge_day.run(
