@@ -62,6 +62,9 @@ tasks:
     bouncerscript:
         resources:
             - bouncerscript
+    builddecisionscript:
+        resources:
+            - builddecisionscript
     configloader:
         resources:
             - configloader
@@ -75,6 +78,7 @@ tasks:
             - addonscript/docker.d
             - balrogscript/docker.d
             - beetmoverscript/docker.d
+            - builddecisionscript/docker.d
             - bitrisescript/docker.d
             - bouncerscript/docker.d
             - githubscript/docker.d
