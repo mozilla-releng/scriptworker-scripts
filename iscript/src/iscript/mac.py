@@ -1,19 +1,14 @@
 #!/usr/bin/env python
-"""iscript mac signing/notarization functions."""
+"""iscript mac signing functions."""
 
 import asyncio
-import json
 import logging
 import os
 import plistlib
-import re
-import shlex
 from copy import deepcopy
 from glob import glob
-from itertools import filterfalse
 from shutil import copy2
 
-import arrow
 import attr
 import pexpect
 from scriptworker_client.aio import download_file, raise_future_exceptions, retry_async, semaphore_wrapper
@@ -21,7 +16,7 @@ from scriptworker_client.exceptions import DownloadError
 from scriptworker_client.utils import get_artifact_path, makedirs, rm, run_command
 
 from iscript.autograph import sign_langpacks, sign_omnija_with_autograph, sign_widevine_dir
-from iscript.exceptions import InvalidNotarization, IScriptError, ThrottledNotarization, TimeoutError, UnknownAppDir, UnknownNotarizationError
+from iscript.exceptions import IScriptError, TimeoutError, UnknownAppDir
 from iscript.util import expand_globs, get_sign_config
 
 log = logging.getLogger(__name__)
@@ -40,18 +35,13 @@ class App(object):
         parent_dir (str): the directory that contains the .app.
         app_path (str): the path to the .app directory.
         app_name (str): the basename of the .app directory.
-        zip_path (str): the zipfile path for notarization, if we use the
-            ``multi_account`` workflow.
         pkg_path (str): the unsigned .pkg path.
         pkg_name (str): the basename of the .pkg path.
         single_file_globs (list): the globs to sign in the mac_single_file behavior.
-        notarization_log_path (str): the path to the logfile for notarization,
-            if we use the ``multi_account`` workflow. This is currently
-            overwritten each time we poll.
         target_bundle_path (str): the path inside of ``artifact_dir`` for the signed
-            and notarized tarball or zip.
+            tarball or zip.
         target_pkg_path (str): the path inside of ``artifact_dir`` for the signed
-            and notarized .pkg.
+            .pkg.
         formats (list): the list of formats to sign with.
 
     """
@@ -60,11 +50,9 @@ class App(object):
     parent_dir = attr.ib(default="")
     app_path = attr.ib(default="")
     app_name = attr.ib(default="")
-    zip_path = attr.ib(default="")
     pkg_path = attr.ib(default="")
     pkg_name = attr.ib(default="")
     single_file_globs = attr.ib(default="")
-    notarization_log_path = attr.ib(default="")
     target_bundle_path = attr.ib(default="")
     target_pkg_path = attr.ib(default="")
     formats = attr.ib(default="")
@@ -556,67 +544,6 @@ async def extract_all_apps(config, all_paths):
             rm(os.path.join(app.parent_dir, " "))
 
 
-# create_all_notarization_zipfiles {{{1
-async def create_all_notarization_zipfiles(all_paths, path_attrs):
-    """Create notarization zipfiles for all the apps.
-
-    Args:
-        all_paths (list): list of ``App`` objects
-        path_attrs (list): list of path attributes to zip
-
-    Raises:
-        IScriptError: on failure
-
-    """
-    futures = []
-    required_attrs = ["parent_dir"] + path_attrs
-    # zip up apps
-    for app in all_paths:
-        app.check_required_attrs(required_attrs)
-        parent_base_name = os.path.basename(app.parent_dir)
-        app.zip_path = f"{app.parent_dir}-upload{parent_base_name}.zip"
-        paths = [os.path.relpath(getattr(app, this_attr), app.parent_dir) for this_attr in path_attrs]
-        futures.append(asyncio.ensure_future(run_command(["zip", "-r", app.zip_path] + paths, cwd=app.parent_dir, exception=IScriptError)))
-    await raise_future_exceptions(futures)
-
-
-# create_one_notarization_zipfile {{{1
-async def create_one_notarization_zipfile(work_dir, all_paths, sign_config, path_attrs=("app_path", "pkg_path")):
-    """Create a single notarization zipfile for all the apps.
-
-    Args:
-        work_dir (str): the script work directory
-        all_paths (list): list of ``App`` objects
-        path_attrs (tuple, optional): the attributes for the paths we'll be zipping
-            up. Defaults to ``("app_path", "pkg_path")``
-
-    Raises:
-        IScriptError: on failure
-
-    Returns:
-        str: the zip path
-
-    """
-    required_attrs = path_attrs
-    app_paths = []
-    zip_path = os.path.join(work_dir, "notarization.zip")
-    for app in all_paths:
-        app.check_required_attrs(required_attrs)
-        for path_attr in path_attrs:
-            app_paths.append(os.path.relpath(getattr(app, path_attr), work_dir))
-    if sign_config["zipfile_cmd"] == "zip":
-        await run_command(["zip", "-r", zip_path, *app_paths], cwd=work_dir, exception=IScriptError)
-    elif sign_config["zipfile_cmd"] == "ditto":
-        await run_command(
-            ["ditto", "-c", "-k", "--sequesterRsrc", "--keepParent", "0", zip_path],
-            cwd=work_dir,
-            exception=IScriptError,
-        )
-    else:
-        raise IScriptError(f"Unknown zipfile_cmd {sign_config['zipfile_cmd']}!")
-    return zip_path
-
-
 # sign_all_apps {{{1
 async def sign_all_apps(config, sign_config, entitlements_path, all_paths, provisioning_profile_path):
     """Sign all the apps.
@@ -661,310 +588,6 @@ async def sign_all_apps(config, sign_config, entitlements_path, all_paths, provi
     futures = []
     for app in all_paths:
         futures.append(asyncio.ensure_future(verify_app_signature(sign_config, app)))
-    await raise_future_exceptions(futures)
-
-
-# get_bundle_id {{{1
-def get_bundle_id(base_bundle_id, counter=None):
-    """Get a bundle id for notarization.
-
-    Args:
-        base_bundle_id (str): the base string to use for the bundle id
-
-    Returns:
-        str: the bundle id
-
-    """
-    now = arrow.utcnow()
-    bundle_id = "{}.{}.{}".format(base_bundle_id, now.int_timestamp, now.microsecond)
-    if counter:
-        bundle_id = "{}.{}".format(bundle_id, str(counter))
-    return bundle_id
-
-
-# get_uuid_from_log {{{1
-def get_uuid_from_log(log_path):
-    """Get the UUID from the notarization log.
-
-    Args:
-        log_path (str): the path to the log
-
-    Raises:
-        IScriptError: if we can't find the UUID
-        ThrottledNotarization: if there's an ``ERROR ITMS-10004`` in the response
-        UnknownNotarizationError: if there's an unknown ``ERROR`` in the response
-
-    Returns:
-        str: the uuid
-
-    """
-    regex = re.compile(r"RequestUUID = (?P<uuid>[a-zA-Z0-9-]+)")
-    try:
-        with open(log_path, "r") as fh:
-            contents = fh.read()
-        log.info(f"{log_path} notarization response:\n{contents}")
-        exception = None
-        if "ERROR ITMS-10004" in contents:
-            exception = ThrottledNotarization
-        elif "ERROR " in contents:
-            exception = UnknownNotarizationError
-        if exception is not None:
-            raise exception(f"Error response from Apple!\n{contents}")
-        for line in contents.splitlines():
-            m = regex.search(line)
-            if m:
-                return m["uuid"]
-    except OSError as err:
-        raise IScriptError("Can't find UUID in {}: {}".format(log_path, err)) from err
-    raise IScriptError("Can't find UUID in {}!".format(log_path))
-
-
-# get_notarization_status_from_log {{{1
-def get_notarization_status_from_log(log_path):
-    """Get the status from the notarization log.
-
-    Args:
-        log_path (str): the path to the log file to parse
-
-    Returns:
-        str: either ``success`` or ``invalid``, depending on status
-        None: if we have neither success nor invalid status
-
-    """
-    regex = re.compile(r"Status: (?P<status>success|invalid)")
-    try:
-        with open(log_path, "r") as fh:
-            contents = fh.read()
-        m = regex.search(contents)
-        if m is not None:
-            return m["status"]
-    except OSError:
-        pass
-
-
-# wrap_notarization_with_sudo {{{1
-async def wrap_notarization_with_sudo(config, sign_config, all_paths, path_attr="zip_path"):
-    """Wrap the notarization requests with sudo.
-
-    Apple creates a lockfile per user for notarization. To notarize concurrently,
-    we use sudo against a set of accounts (``config['local_notarization_accounts']``).
-
-    Args:
-        config (dict): the running config
-        sign_config (dict): the config for this signing key
-        all_paths (list): the list of ``App`` objects
-        path_attr (str, optional): the attribute that the zip path is under.
-            Defaults to ``zip_path``
-
-    Raises:
-        IScriptError: on failure
-
-    Returns:
-        dict: uuid to log path
-
-    """
-    futures = []
-    accounts = config["local_notarization_accounts"]
-    counter = 0
-    uuids = {}
-
-    for app in all_paths:
-        app.check_required_attrs([path_attr, "parent_dir"])
-
-    while counter < len(all_paths):
-        futures = []
-        for account in accounts:
-            app = all_paths[counter]
-            app.notarization_log_path = f"{app.parent_dir}-notarization.log"
-            bundle_id = get_bundle_id(sign_config["base_bundle_id"], counter=str(counter))
-            zip_path = getattr(app, path_attr)
-            # XXX potentially run the notarization + get_uuid_from_log in a
-            #     helper function per app, so we can retry them individually on
-            #     error. That would also let us record the path per UUID,
-            #     should we need that complexity later.
-            #     Not doing that now, so notarization errors are more visible.
-            base_cmdln = " ".join(
-                [
-                    "xcrun",
-                    "altool",
-                    "--notarize-app",
-                    "-f",
-                    zip_path,
-                    "--primary-bundle-id",
-                    '"{}"'.format(bundle_id),
-                    "-u",
-                    sign_config["apple_notarization_account"],
-                    "--asc-provider",
-                    sign_config["apple_asc_provider"],
-                    "--password",
-                ]
-            )
-            cmd = [
-                "sudo",
-                "su",
-                account,
-                "-c",
-                base_cmdln + " {}".format(shlex.quote(sign_config["apple_notarization_password"])),
-            ]
-            log_cmd = ["sudo", "su", account, "-c", base_cmdln + " ********"]
-            futures.append(
-                asyncio.ensure_future(
-                    retry_async(
-                        run_command,
-                        args=[cmd],
-                        kwargs={"log_path": app.notarization_log_path, "log_cmd": log_cmd, "exception": IScriptError},
-                        retry_exceptions=(IScriptError,),
-                        attempts=10,
-                    )
-                )
-            )
-            counter += 1
-            if counter >= len(all_paths):
-                break
-        await raise_future_exceptions(futures)
-    for app in all_paths:
-        uuids[get_uuid_from_log(app.notarization_log_path)] = app.notarization_log_path
-    return uuids
-
-
-# notarize_no_sudo {{{1
-async def notarize_no_sudo(work_dir, sign_config, zip_path):
-    """Create a notarization request, without sudo, for a single zip.
-
-    Raises:
-        IScriptError: on failure
-
-    Returns:
-        dict: uuid to log path
-
-    """
-    notarization_log_path = os.path.join(work_dir, "notarization.log")
-    bundle_id = get_bundle_id(sign_config["base_bundle_id"])
-    base_cmd = [
-        "xcrun",
-        "altool",
-        "--notarize-app",
-        "-f",
-        zip_path,
-        "--primary-bundle-id",
-        bundle_id,
-        "-u",
-        sign_config["apple_notarization_account"],
-        "--asc-provider",
-        sign_config["apple_asc_provider"],
-        "--password",
-    ]
-    log_cmd = base_cmd + ["********"]
-    await retry_async(
-        run_command,
-        args=[base_cmd + [sign_config["apple_notarization_password"]]],
-        kwargs={"log_path": notarization_log_path, "log_cmd": log_cmd, "exception": IScriptError},
-    )
-    uuids = {get_uuid_from_log(notarization_log_path): notarization_log_path}
-    return uuids
-
-
-# poll_notarization_uuid {{{1
-async def poll_notarization_uuid(uuid, username, password, timeout, log_path, sleep_time=15):
-    """Poll to see if the notarization for ``uuid`` is complete.
-
-    Args:
-        uuid (str): the uuid to poll for
-        username (str): the apple user to poll with
-        password (str): the apple password to poll with
-        timeout (int): the maximum wait time
-        sleep_time (int): the time to sleep between polling
-
-    Raises:
-        TimeoutError: on timeout
-        InvalidNotarization: if the notarization fails with ``invalid``
-        IScriptError: on unexpected failure
-
-    """
-    start = arrow.utcnow().int_timestamp
-    timeout_time = start + timeout
-    base_cmd = ["xcrun", "altool", "--notarization-info", uuid, "-u", username, "--password"]
-    log_cmd = base_cmd + ["********"]
-    while 1:
-        await retry_async(
-            run_command,
-            args=[base_cmd + [password]],
-            kwargs={"log_path": log_path, "log_cmd": log_cmd, "exception": IScriptError},
-            retry_exceptions=(IScriptError,),
-            attempts=10,
-        )
-        status = get_notarization_status_from_log(log_path)
-        if status == "success":
-            break
-        if status == "invalid":
-            raise InvalidNotarization("Invalid notarization for uuid {}!".format(uuid))
-        await asyncio.sleep(sleep_time)
-        if arrow.utcnow().int_timestamp > timeout_time:
-            raise TimeoutError("Timed out polling for uuid {}!".format(uuid))
-
-
-# poll_all_notarization_status {{{1
-async def poll_all_notarization_status(sign_config, poll_uuids):
-    """Poll all ``poll_uuids`` for status.
-
-    Args:
-        sign_config (dict): the running config for this key
-        poll_uuids (dict): uuid to ``log_path``
-
-    Raises:
-        IScriptError: on failure
-
-    """
-    log.info("Polling for notarization status")
-    futures = []
-    # We're going to overwrite the original notification log here.
-    # If we want to preserve the logs, we should change this path
-    for uuid, log_path in poll_uuids.items():
-        futures.append(
-            asyncio.ensure_future(
-                poll_notarization_uuid(
-                    uuid,
-                    sign_config["apple_notarization_account"],
-                    sign_config["apple_notarization_password"],
-                    sign_config["notarization_poll_timeout"],
-                    log_path,
-                    sleep_time=15,
-                )
-            )
-        )
-    await raise_future_exceptions(futures)
-
-
-# staple_notarization {{{1
-async def staple_notarization(all_paths, path_attr="app_path"):
-    """Staple the notarization results to each app.
-
-    Args:
-        all_paths (list): the list of App objects
-        path_attr (str, optional): the path attribute to staple. Defaults to
-            ``app_path``
-
-    Raises:
-        IScriptError: on failure
-
-    """
-    log.info("Stapling apps")
-    futures = []
-    for app in all_paths:
-        app.check_required_attrs([path_attr])
-        cwd = os.path.dirname(getattr(app, path_attr))
-        path = os.path.basename(getattr(app, path_attr))
-        futures.append(
-            asyncio.ensure_future(
-                retry_async(
-                    run_command,
-                    args=[["xcrun", "stapler", "staple", path]],
-                    kwargs={"cwd": cwd, "exception": IScriptError, "log_level": logging.DEBUG},
-                    retry_exceptions=(IScriptError,),
-                    attempts=10,
-                )
-            )
-        )
     await raise_future_exceptions(futures)
 
 
@@ -1095,27 +718,6 @@ async def copy_pkgs_to_artifact_dir(config, all_paths):
         copy2(app.pkg_path, app.target_pkg_path)
 
 
-# copy_xpis_to_artifact_dir {{{1
-async def copy_xpis_to_artifact_dir(config, all_paths):
-    """Copy the xpi files to the artifact directory.
-
-    This is specifically for ``notarize_3_behavior``, since ``sign_langpacks``
-    already puts the signed xpis into the ``artifact_dir``.
-
-    Args:
-        config (dict): the running config
-        all_paths (list): the list of App objects to sign pkg for
-
-    """
-    log.info("Copying xpis to the artifact dir")
-    for app in all_paths:
-        app.check_required_attrs(["orig_path", "artifact_prefix"])
-        target_xpi_path = "{}/{}{}".format(config["artifact_dir"], app.artifact_prefix, app.orig_path.split(app.artifact_prefix)[1])
-        makedirs(os.path.dirname(target_xpi_path))
-        log.debug("Copying %s to %s", app.orig_path, target_xpi_path)
-        copy2(app.orig_path, target_xpi_path)
-
-
 # download_entitlements_file {{{1
 async def download_entitlements_file(config, sign_config, task):
     """Download the entitlements file into the work dir.
@@ -1177,175 +779,6 @@ async def download_requirements_plist_file(config, task):
     to = os.path.join(config["work_dir"], "requirements.plist")
     await retry_async(download_file, retry_exceptions=(DownloadError, TimeoutError), args=(url, to))
     return to
-
-
-# notarize_behavior {{{1
-async def notarize_behavior(config, task):
-    """Sign and notarize all mac apps for this task.
-
-    Args:
-        config (dict): the running configuration
-        task (dict): the running task
-
-    Raises:
-        IScriptError: on fatal error.
-
-    """
-    work_dir = config["work_dir"]
-
-    sign_config = get_sign_config(config, task, base_key="mac_config")
-    entitlements_path = await download_entitlements_file(config, sign_config, task)
-    provisioning_profile_path = await download_provisioning_profile(config, task)
-    requirements_plist_path = await download_requirements_plist_file(config, task)
-
-    path_attrs = ["app_path"]
-
-    non_langpack_apps = []
-    for app in get_app_paths(config, task):
-        if fmt := get_langpack_format(app):
-            await sign_langpacks(config, sign_config, [app], fmt)
-        else:
-            non_langpack_apps.append(app)
-
-    # app
-    await extract_all_apps(config, non_langpack_apps)
-    await unlock_keychain(sign_config["signing_keychain"], sign_config["keychain_password"])
-    await update_keychain_search_path(config, sign_config["signing_keychain"])
-    await sign_all_apps(config, sign_config, entitlements_path, non_langpack_apps, provisioning_profile_path)
-
-    # pkg
-    if sign_config["create_pkg"]:
-        path_attrs.append("pkg_path")
-        # Unlock keychain again in case it's locked since previous unlock
-        await unlock_keychain(sign_config["signing_keychain"], sign_config["keychain_password"])
-        await update_keychain_search_path(config, sign_config["signing_keychain"])
-        await create_pkg_files(config, sign_config, non_langpack_apps, requirements_plist_path=requirements_plist_path)
-
-    log.info("Notarizing")
-    if sign_config["notarize_type"] == "multi_account":
-        await create_all_notarization_zipfiles(non_langpack_apps, path_attrs=path_attrs)
-        poll_uuids = await wrap_notarization_with_sudo(config, sign_config, non_langpack_apps, path_attr="zip_path")
-    else:
-        zip_path = await create_one_notarization_zipfile(work_dir, non_langpack_apps, sign_config, path_attrs=path_attrs)
-        poll_uuids = await notarize_no_sudo(work_dir, sign_config, zip_path)
-
-    await poll_all_notarization_status(sign_config, poll_uuids)
-
-    # app
-    await staple_notarization(non_langpack_apps, path_attr="app_path")
-    await tar_apps(config, non_langpack_apps)
-
-    # pkg
-    if sign_config["create_pkg"]:
-        await staple_notarization(non_langpack_apps, path_attr="pkg_path")
-        await copy_pkgs_to_artifact_dir(config, non_langpack_apps)
-
-    log.info("Done signing and notarizing apps.")
-
-
-# notarize_1_behavior {{{1
-async def notarize_1_behavior(config, task):
-    """Sign and submit all mac apps for notarization.
-
-    This task will not wait for the notarization to finish. Instead, it
-    will upload all signed apps and a uuid manifest.
-
-    Args:
-        config (dict): the running configuration
-        task (dict): the running task
-
-    Raises:
-        IScriptError: on fatal error.
-
-    """
-    work_dir = config["work_dir"]
-
-    sign_config = get_sign_config(config, task, base_key="mac_config")
-    entitlements_path = await download_entitlements_file(config, sign_config, task)
-    provisioning_profile_path = await download_provisioning_profile(config, task)
-    requirements_plist_path = await download_requirements_plist_file(config, task)
-    path_attrs = ["app_path"]
-
-    non_langpack_apps = []
-    for app in get_app_paths(config, task):
-        if fmt := get_langpack_format(app):
-            await sign_langpacks(config, sign_config, [app], fmt)
-        else:
-            non_langpack_apps.append(app)
-
-    # app
-    await extract_all_apps(config, non_langpack_apps)
-    await unlock_keychain(sign_config["signing_keychain"], sign_config["keychain_password"])
-    await update_keychain_search_path(config, sign_config["signing_keychain"])
-    await sign_all_apps(config, sign_config, entitlements_path, non_langpack_apps, provisioning_profile_path)
-
-    # pkg
-    if sign_config["create_pkg"]:
-        path_attrs.append("pkg_path")
-        # Unlock keychain again in case it's locked since previous unlock
-        await unlock_keychain(sign_config["signing_keychain"], sign_config["keychain_password"])
-        await update_keychain_search_path(config, sign_config["signing_keychain"])
-        await create_pkg_files(config, sign_config, non_langpack_apps, requirements_plist_path=requirements_plist_path)
-
-    log.info("Submitting for notarization.")
-    if sign_config["notarize_type"] == "multi_account":
-        await create_all_notarization_zipfiles(non_langpack_apps, path_attrs=path_attrs)
-        poll_uuids = await wrap_notarization_with_sudo(config, sign_config, non_langpack_apps, path_attr="zip_path")
-    else:
-        zip_path = await create_one_notarization_zipfile(work_dir, non_langpack_apps, sign_config, path_attrs)
-        poll_uuids = await notarize_no_sudo(work_dir, sign_config, zip_path)
-
-    # create uuid_manifest.json
-    uuids_path = "{}/public/uuid_manifest.json".format(config["artifact_dir"])
-    makedirs(os.path.dirname(uuids_path))
-    with open(uuids_path, "w") as fh:
-        json.dump(sorted(poll_uuids.keys()), fh)
-
-    await tar_apps(config, non_langpack_apps)
-    await copy_pkgs_to_artifact_dir(config, non_langpack_apps)
-
-    log.info("Done signing apps and submitting them for notarization.")
-
-
-# notarize_3_behavior {{{1
-async def notarize_3_behavior(config, task):
-    """Staple notarization to all mac apps for this task.
-
-    Args:
-        config (dict): the running configuration
-        task (dict): the running task
-
-    Raises:
-        IScriptError: on fatal error.
-
-    """
-    sign_config = get_sign_config(config, task, base_key="mac_config")
-
-    # In notarize_3_behavior, `all_paths` will have separate "apps" for each
-    # artifact (one for a pkg, one for an app, one for a langpack xpi)
-    all_paths = get_app_paths(config, task)
-    all_xpi_paths = list(filter(lambda app: app.orig_path.endswith(".xpi"), all_paths))
-    all_pkg_paths = list(filter(lambda app: app.orig_path.endswith(".pkg"), all_paths))
-    all_app_paths = list(filterfalse(lambda app: app.orig_path.endswith((".pkg", ".xpi")), all_paths))
-
-    await extract_all_apps(config, all_app_paths)
-    for app in all_app_paths:
-        set_app_path_and_name(app)
-
-    for app in all_pkg_paths:
-        app.pkg_path = app.orig_path
-        app.pkg_name = os.path.basename(app.pkg_path)
-
-    await staple_notarization(all_app_paths, path_attr="app_path")
-    await tar_apps(config, all_app_paths)
-
-    if sign_config["create_pkg"]:
-        await staple_notarization(all_pkg_paths, path_attr="pkg_path")
-        await copy_pkgs_to_artifact_dir(config, all_pkg_paths)
-
-    await copy_xpis_to_artifact_dir(config, all_xpi_paths)
-
-    log.info("Done stapling notarization.")
 
 
 # sign_behavior {{{1
@@ -1417,7 +850,7 @@ async def sign_and_pkg_behavior(config, task):
 
 
 # single_file_behavior {{{1
-async def single_file_behavior(config, task, notarize=True):
+async def single_file_behavior(config, task):
     """Create and sign the single file for this task.
 
     Args:
@@ -1440,35 +873,5 @@ async def single_file_behavior(config, task, notarize=True):
     await unlock_keychain(sign_config["signing_keychain"], sign_config["keychain_password"])
     await update_keychain_search_path(config, sign_config["signing_keychain"])
     await sign_single_files(config, sign_config, non_langpack_apps)
-
-    if notarize:
-        for app in non_langpack_apps:
-            if app.target_bundle_path.endswith(".zip"):
-                zip_path = app.target_bundle_path
-                log.info("Notarizing...")
-                poll_uuids = await notarize_no_sudo(config["work_dir"], sign_config, zip_path)
-                await poll_all_notarization_status(sign_config, poll_uuids)
-                log.info(f"{zip_path} notarized")
-                # Stapling would normally happen next, but stapling of zip files
-                # is not possible; the standard advice is to staple the contents
-                # of the zip file. However, it is also not possible to staple
-                # .dylib files, which is what we normally expect here.
-            elif app.target_bundle_path.endswith(".tar.gz"):
-                # add the single file to a zip file and notarize the zip
-                log.info("Notarizing...")
-                single_paths = expand_globs(app.single_file_globs, parent_dir=app.parent_dir)
-                if not single_paths:
-                    raise IScriptError(f"Unable to find anything to notarize for {app.orig_path}!")
-                if len(single_paths) != 1:
-                    raise IScriptError("Unexpected number of files found for notarization")
-                app.single_path = os.path.join(app.parent_dir, single_paths[0])
-                path_attrs = ["single_path"]
-                zip_path = await create_one_notarization_zipfile(config["work_dir"], non_langpack_apps, sign_config, path_attrs)
-                poll_uuids = await notarize_no_sudo(config["work_dir"], sign_config, zip_path)
-                await poll_all_notarization_status(sign_config, poll_uuids)
-                log.info(f"{zip_path} notarized")
-                # no stapling: unable to staple executables like geckodriver
-            else:
-                log.info("Unable to notarize: unexpected format")
 
     log.info("Done signing single files.")

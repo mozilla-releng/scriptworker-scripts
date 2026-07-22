@@ -23,12 +23,6 @@ async def fail_async(*args, **kwargs):
 
 
 @pytest.mark.asyncio
-async def test_create_notarization_zipfile(mocker):
-    mocker.patch.object(macvpn, "run_command", new=noop_async)
-    await macvpn._create_notarization_zipfile("workdir", "source", "dest")
-
-
-@pytest.mark.asyncio
 async def test_codesign(mocker):
     mocker.patch.object(macvpn, "run_command", new=noop_async)
     sign_config = {"identity": "1", "signing_keychain": "1"}

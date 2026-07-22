@@ -13,19 +13,13 @@ from iscript.exceptions import IScriptError
 @pytest.mark.parametrize(
     "behavior, supported_behaviors, expected_behavior, raises",
     (
-        ("mac_notarize_single_file", ["mac_notarize_single_file", "mac_single_file"], "mac_notarize_single_file", False),
-        ("mac_notarize_single_file", ["mac_single_file"], "mac_single_file", False),
         ("mac_single_file", ["mac_sign", "mac_single_file"], "mac_single_file", False),
-        ("mac_notarize", ["mac_sign", "mac_notarize"], "mac_notarize", False),
-        ("mac_notarize", ["mac_sign", "mac_notarize", "mac_sign_and_pkg"], "mac_notarize", False),
-        ("mac_notarize", ["mac_sign", "mac_sign_and_pkg"], "mac_sign_and_pkg", False),
+        ("mac_geckodriver", ["mac_geckodriver", "mac_single_file"], "mac_geckodriver", False),
         ("mac_sign", ["mac_sign"], "mac_sign", False),
         ("mac_sign_and_pkg", ["mac_single_file", "mac_sign_and_pkg"], "mac_sign_and_pkg", False),
         (None, ["mac_sign"], "mac_sign", False),
         ("invalid_behavior", ["mac_sign", "invalid_behavior"], None, True),
         ("mac_notarize", ["mac_sign", "mac_single_file"], None, True),
-        ("mac_notarize_part_1", ["mac_notarize_part_1", "mac_single_file"], "mac_notarize_part_1", False),
-        ("mac_notarize_part_3", ["mac_notarize_part_3", "mac_single_file"], "mac_notarize_part_3", False),
     ),
 )
 @pytest.mark.asyncio
@@ -38,14 +32,6 @@ async def test_async_main(mocker, behavior, supported_behaviors, expected_behavi
     if behavior:
         task["payload"]["behavior"] = behavior
     expected = [[(config, task), {}]]
-
-    # Accounts for notarizing True/False
-    if behavior == "mac_notarize_vpn":
-        expected = [[(config, task), {"notarize": "mac_notarize_vpn" in supported_behaviors}]]
-    elif behavior == "mac_notarize_single_file":
-        expected = [[(config, task), {"notarize": "mac_notarize_single_file" in supported_behaviors}]]
-    elif behavior == "mac_single_file":
-        expected = [[(config, task), {"notarize": False}]]
 
     sign_config = {"supported_behaviors": supported_behaviors}
 

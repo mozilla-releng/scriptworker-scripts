@@ -7,15 +7,13 @@ import plistlib
 from functools import partial
 from shutil import copy2
 
-import arrow
-import mock
 import pexpect
 import pytest
 from scriptworker_client.aio import retry_async
 from scriptworker_client.utils import makedirs
 
 import iscript.mac as mac
-from iscript.exceptions import InvalidNotarization, IScriptError, ThrottledNotarization, TimeoutError, UnknownAppDir, UnknownNotarizationError
+from iscript.exceptions import IScriptError, TimeoutError, UnknownAppDir
 
 TEST_DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 
@@ -351,63 +349,6 @@ async def test_extract_all_apps(mocker, tmpdir, suffix, command, raises):
             assert os.path.isdir(os.path.join(work_dir, i))
 
 
-# create_all_notarization_zipfiles {{{1
-@pytest.mark.parametrize("raises", (True, False))
-@pytest.mark.asyncio
-async def test_create_all_notarization_zipfiles(mocker, tmpdir, raises):
-    """``create_all_notarization_zipfiles`` calls ``zip -r``, and raises on failure."""
-
-    async def fake_run_command(*args, **kwargs):
-        assert args[0][0:2] == ["zip", "-r"]
-        if raises:
-            raise IScriptError("foo")
-
-    mocker.patch.object(mac, "run_command", new=fake_run_command)
-    all_paths = []
-    work_dir = str(tmpdir)
-    for i in range(3):
-        parent_dir = os.path.join(work_dir, str(i))
-        app_name = "fx {}.app".format(str(i))
-        app_path = os.path.join(parent_dir, app_name)
-        all_paths.append(mac.App(parent_dir=parent_dir, app_name=app_name, app_path=app_path))
-
-    if raises:
-        with pytest.raises(IScriptError):
-            await mac.create_all_notarization_zipfiles(all_paths, ["app_path"])
-    else:
-        await mac.create_all_notarization_zipfiles(all_paths, ["app_path"])
-
-
-# create_one_notarization_zipfile {{{1
-@pytest.mark.parametrize("raises, zipfile_cmd", ((True, "zip"), (False, "zip"), (False, "ditto"), (True, "unknown_zipfile_cmd")))
-@pytest.mark.asyncio
-async def test_create_one_notarization_zipfile(mocker, tmpdir, raises, zipfile_cmd):
-    """``create_one_notarization_zipfile`` calls the expected cmdline, and raises on
-    failure.
-
-    """
-    work_dir = str(tmpdir)
-    sign_config = {"zipfile_cmd": zipfile_cmd}
-
-    async def fake_run_command(*args, **kwargs):
-        if zipfile_cmd == "zip":
-            assert args[0] == ["zip", "-r", os.path.join(work_dir, "notarization.zip"), "0/0.app", "0/0.pkg", "1/1.app", "1/1.pkg", "2/2.app", "2/2.pkg"]
-        elif zipfile_cmd == "ditto":
-            assert args[0] == ["ditto", "-c", "-k", "--sequesterRsrc", "--keepParent", "0", os.path.join(work_dir, "notarization.zip")]
-        if raises:
-            raise IScriptError("foo")
-
-    mocker.patch.object(mac, "run_command", new=fake_run_command)
-    all_paths = []
-    for i in range(3):
-        all_paths.append(mac.App(app_path=os.path.join(work_dir, str(i), "{}.app".format(i)), pkg_path=os.path.join(work_dir, str(i), "{}.pkg".format(i))))
-    if raises:
-        with pytest.raises(IScriptError):
-            await mac.create_one_notarization_zipfile(work_dir, all_paths, sign_config)
-    else:
-        await mac.create_one_notarization_zipfile(work_dir, all_paths, sign_config)
-
-
 # sign_all_apps {{{1
 @pytest.mark.parametrize("raises", (True, False))
 @pytest.mark.asyncio
@@ -443,287 +384,6 @@ async def test_sign_all_apps(mocker, tmpdir, raises):
             await mac.sign_all_apps(config, sign_config, entitlements_path, all_paths, fake_provisioning_profile_path)
     else:
         await mac.sign_all_apps(config, sign_config, entitlements_path, all_paths, fake_provisioning_profile_path)
-
-
-# get_bundle_id {{{1
-@pytest.mark.parametrize("counter", (None, 3))
-def test_get_bundle_id(mocker, counter):
-    """``get_bundle_id`` returns a unique bundle id"""
-    now = mock.MagicMock()
-    now.int_timestamp = 51
-    now.microsecond = 50
-    mocker.patch.object(arrow, "utcnow", return_value=now)
-    base = "org.foo.base"
-    expected = base
-    expected = "{}.{}.{}".format(expected, now.int_timestamp, now.microsecond)
-    if counter:
-        expected = "{}.{}".format(expected, counter)
-    assert mac.get_bundle_id(base, counter=counter) == expected
-
-
-# get_uuid_from_log {{{1
-@pytest.mark.parametrize(
-    "uuid, raises, extra",
-    (
-        ("07307e2c-db26-494c-8630-cfa239d4b86b", False, ""),
-        ("d4d31c49-c075-4ea1-bb7f-150c74f608e1", False, "Blah blah blah\nFoo bar baz"),
-        ("d4d31c49-c075-4ea1-bb7f-150c74f608e1", "missing file", ""),
-        ("%%%%\\\\=", "missing uuid", ""),
-        (
-            "07307e2c-db26-494c-8630-cfa239d4b86b",
-            ThrottledNotarization,
-            'altool[15766:50391190] *** Error: ERROR ITMS-10004: "You have reached your upload limit of 20 software packages per minute. Pause your uploads, then reduce the number of software packages you upload per minute.',
-        ),
-        ("d4d31c49-c075-4ea1-bb7f-150c74f608e1", UnknownNotarizationError, "What the! It looks like you've hit an ERROR of some sort"),
-    ),
-)
-def test_get_uuid_from_log(tmpdir, uuid, raises, extra):
-    """``get_uuid_from_log`` returns the correct uuid from the logfile if present.
-    It raises if it has problems finding the uuid in the log.
-
-    """
-    log_path = os.path.join(str(tmpdir), "log")
-    if raises != "missing file":
-        with open(log_path, "w") as fh:
-            fh.write(f"foo\nbar\nbaz\n RequestUUID = {uuid} \n{extra}\nblah\n")
-    if raises:
-        exception = raises
-        if not isinstance(raises, IScriptError):
-            exception = IScriptError
-        with pytest.raises(exception):
-            mac.get_uuid_from_log(log_path)
-    else:
-        assert mac.get_uuid_from_log(log_path) == uuid
-
-
-# get_notarization_status_from_log {{{1
-@pytest.mark.parametrize(
-    "has_log, status, expected", ((True, "invalid", "invalid"), (True, "success", "success"), (True, "unknown", None), (False, None, None))
-)
-def test_get_notarization_status_from_log(tmpdir, has_log, status, expected):
-    """``get_notarization_status_from_log`` finds a valid status in the log
-    and returns it. If there is a problem or missing/unknown status, it
-    returns ``None``.
-
-    """
-    log_path = os.path.join(str(tmpdir), "log")
-    if has_log:
-        with open(log_path, "w") as fh:
-            fh.write("foo\nbar\nbaz\n Status: {} \nblah\n".format(status))
-    assert mac.get_notarization_status_from_log(log_path) == expected
-
-
-# wrap_notarization_with_sudo {{{1
-@pytest.mark.parametrize("raises", (True, False))
-@pytest.mark.asyncio
-async def test_wrap_notarization_with_sudo(mocker, tmpdir, raises):
-    """``wrap_notarization_with_sudo`` chunks its requests into one concurrent
-    request per each of the ``local_notarization_accounts``. It doesn't log
-    the password.
-
-    """
-    futures_len = [3, 3, 2]
-    pw = "test_apple_password"
-
-    async def fake_retry_async(_, args, kwargs, **kw):
-        cmd = args[0]
-        end = len(cmd) - 1
-        assert cmd[0] == "sudo"
-        log_cmd = kwargs["log_cmd"]
-        assert cmd[0:end] == log_cmd[0:end]
-        assert cmd[end] != log_cmd[end]
-        assert cmd[end] == pw
-        assert log_cmd[end].replace("*", "") == ""
-
-    async def fake_raise_future_exceptions(futures, **kwargs):
-        """``raise_future_exceptions`` mocker."""
-
-        await asyncio.wait(futures)
-        assert len(futures) == futures_len.pop(0)
-        if raises:
-            raise IScriptError("foo")
-
-    def fake_get_uuid_from_log(path):
-        return path
-
-    work_dir = str(tmpdir)
-    config = {"local_notarization_accounts": ["acct0", "acct1", "acct2"]}
-    sign_config = {
-        "base_bundle_id": "org.iscript.test",
-        "apple_notarization_account": "test_apple_account",
-        "apple_notarization_password": pw,
-        "apple_asc_provider": "apple_asc_provider",
-    }
-    all_paths = []
-    expected = {}
-    # Let's create 8 apps, with 3 sudo accounts, so we expect batches of 3, 3, 2
-    for i in range(8):
-        parent_dir = os.path.join(work_dir, str(i))
-        notarization_log_path = f"{parent_dir}-notarization.log"
-        all_paths.append(mac.App(parent_dir=parent_dir, zip_path=os.path.join(parent_dir, "{}.zip".format(i))))
-        expected[notarization_log_path] = notarization_log_path
-
-    mocker.patch.object(mac, "retry_async", new=fake_retry_async)
-    mocker.patch.object(mac, "raise_future_exceptions", new=fake_raise_future_exceptions)
-    mocker.patch.object(mac, "get_uuid_from_log", new=fake_get_uuid_from_log)
-    if raises:
-        with pytest.raises(IScriptError):
-            await mac.wrap_notarization_with_sudo(config, sign_config, all_paths)
-    else:
-        assert await mac.wrap_notarization_with_sudo(config, sign_config, all_paths) == expected
-
-
-# notarize_no_sudo {{{1
-@pytest.mark.parametrize("raises", (True, False))
-@pytest.mark.asyncio
-async def test_notarize_no_sudo(mocker, tmpdir, raises):
-    """``notarize_no_sudo`` creates a single request to notarize that doesn't
-    log the password.
-
-    """
-    pw = "test_apple_password"
-
-    async def fake_retry_async(_, args, kwargs, **kw):
-        cmd = args[0]
-        end = len(cmd) - 1
-        assert cmd[0] == "xcrun"
-        log_cmd = kwargs["log_cmd"]
-        assert cmd[0:end] == log_cmd[0:end]
-        assert cmd[end] != log_cmd[end]
-        assert cmd[end] == pw
-        assert log_cmd[end].replace("*", "") == ""
-        if raises:
-            raise IScriptError("foo")
-
-    def fake_get_uuid_from_log(path):
-        return path
-
-    work_dir = str(tmpdir)
-    zip_path = os.path.join(work_dir, "zip_path")
-    log_path = os.path.join(work_dir, "notarization.log")
-    sign_config = {
-        "base_bundle_id": "org.iscript.test",
-        "apple_notarization_account": "test_apple_account",
-        "apple_notarization_password": pw,
-        "apple_asc_provider": "apple_asc_provider",
-    }
-    expected = {log_path: log_path}
-
-    mocker.patch.object(mac, "retry_async", new=fake_retry_async)
-    mocker.patch.object(mac, "get_uuid_from_log", new=fake_get_uuid_from_log)
-    if raises:
-        with pytest.raises(IScriptError):
-            await mac.notarize_no_sudo(work_dir, sign_config, zip_path)
-    else:
-        assert await mac.notarize_no_sudo(work_dir, sign_config, zip_path) == expected
-
-
-# poll_notarization_uuid {{{1
-@pytest.mark.parametrize(
-    "statuses, exception",
-    (
-        (["success"], None),
-        ([None, "success"], None),
-        ([None], IScriptError),
-        (["invalid"], InvalidNotarization),
-        ([None, None, None, None, None, None, None, None, None, None, None], TimeoutError),
-    ),
-)
-@pytest.mark.asyncio
-async def test_poll_notarization_uuid(mocker, tmpdir, statuses, exception):
-    """``poll_notarization_uuid``: returns ``None`` on success; raises a
-    ``TimeoutError`` on timeout; raises ``IScriptError`` on failure; and raises
-    ``InvalidNotarization`` on ``invalid`` status from Apple. Also, it doesn't
-    log passwords.
-
-    """
-    pw = "test_apple_password"
-
-    async def fake_retry_async(_, args, kwargs, **kw):
-        cmd = args[0]
-        end = len(cmd) - 1
-        assert cmd[0] == "xcrun"
-        log_cmd = kwargs["log_cmd"]
-        assert cmd[0:end] == log_cmd[0:end]
-        assert cmd[end] != log_cmd[end]
-        assert cmd[end] == pw
-        assert log_cmd[end].replace("*", "") == ""
-        if exception is IScriptError:
-            raise IScriptError("foo")
-
-    def fake_get_notarization_status_from_log(path):
-        status = statuses.pop(0)
-        return status
-
-    mocker.patch.object(mac, "retry_async", new=fake_retry_async)
-    mocker.patch.object(mac, "get_notarization_status_from_log", new=fake_get_notarization_status_from_log)
-    if exception:
-        with pytest.raises(exception):
-            await mac.poll_notarization_uuid("uuid", "user", pw, 0.5, "/dev/null", sleep_time=0.1)
-    else:
-        assert await mac.poll_notarization_uuid("uuid", "user", pw, 1, "/dev/null", sleep_time=0.1) is None
-
-
-# poll_all_notarization_status {{{1
-@pytest.mark.parametrize(
-    "poll_uuids, raises", (({"uuid": "log_path"}, True), ({"uuid": "log_path"}, False), ({"uuid1": "log_path1", "uuid2": "log_path2"}, False))
-)
-@pytest.mark.asyncio
-async def test_poll_all_notarization_status(mocker, tmpdir, poll_uuids, raises):
-    """```poll_all_notarization_status`` concurrently runs a number of
-    ``poll_notarization_uuid`` calls, and raises if any of those calls raise.
-
-    """
-
-    async def fake_raise_future_exceptions(futures):
-        await asyncio.wait(futures)
-        assert len(futures) == len(poll_uuids)
-        if raises:
-            raise IScriptError("foo")
-
-    sign_config = {
-        "apple_notarization_account": "test_apple_account",
-        "apple_notarization_password": "test_apple_password",
-        "apple_asc_provider": "apple_asc_provider",
-        "notarization_poll_timeout": 1,
-    }
-
-    mocker.patch.object(mac, "raise_future_exceptions", new=fake_raise_future_exceptions)
-    mocker.patch.object(mac, "poll_notarization_uuid", new=noop_async)
-    if raises:
-        with pytest.raises(IScriptError):
-            await mac.poll_all_notarization_status(sign_config, poll_uuids)
-
-    else:
-        assert await mac.poll_all_notarization_status(sign_config, poll_uuids) is None
-
-
-# staple_notarization {{{1
-@pytest.mark.parametrize("raises", (True, False))
-@pytest.mark.asyncio
-async def test_staple_notarization(mocker, raises):
-    """``staple_notarization`` runs stapling concurrently for each ``App``, and raises
-    any exceptions hit along the way.
-
-    """
-
-    async def fake_retry_async(*args, **kwargs):
-        assert kwargs["args"][0][0] == "xcrun"
-        if raises:
-            raise IScriptError("foo")
-
-    all_paths = []
-    for i in range(3):
-        parent_dir = str(i)
-        app_name = f"{i}.app"
-        app_path = os.path.join(parent_dir, app_name)
-        all_paths.append(mac.App(parent_dir=parent_dir, app_name=app_name, app_path=app_path))
-    mocker.patch.object(mac, "retry_async", new=fake_retry_async)
-    if raises:
-        with pytest.raises(IScriptError):
-            await mac.staple_notarization(all_paths)
-    else:
-        assert await mac.staple_notarization(all_paths) is None
 
 
 # tar_apps {{{1
@@ -859,37 +519,6 @@ async def test_copy_pkgs_to_artifact_dir(tmpdir, artifact_prefix):
             assert fh.read() == expected_path
 
 
-# copy_xpis_to_artifact_dir {{{1
-@pytest.mark.parametrize("artifact_prefix", ("public/", "releng/partner/"))
-@pytest.mark.asyncio
-async def test_copy_xpis_to_artifact_dir(tmpdir, artifact_prefix):
-    """``copy_xpis_to_artifact_dir`` creates all needed parent directories and
-    copies xpi artifacts successfully.
-
-    """
-    num_xpis = 3
-    work_dir = os.path.join(str(tmpdir), "work")
-    artifact_dir = os.path.join(str(tmpdir), "artifact")
-    config = {"artifact_dir": artifact_dir, "work_dir": work_dir}
-    all_paths = []
-    expected_paths = []
-    for i in range(num_xpis):
-        app = mac.App(artifact_prefix=artifact_prefix, orig_path=os.path.join(work_dir, f"cot/taskId/{artifact_prefix}build/{i}/target-{i}.xpi"))
-        expected_path = os.path.join(artifact_dir, f"{artifact_prefix}build/{i}/target-{i}.xpi")
-        expected_paths.append(expected_path)
-        makedirs(os.path.dirname(app.orig_path))
-        with open(app.orig_path, "w") as fh:
-            fh.write(expected_path)
-        all_paths.append(app)
-
-    await mac.copy_xpis_to_artifact_dir(config, all_paths)
-    for i in range(num_xpis):
-        expected_path = expected_paths[i]
-        assert os.path.exists(expected_path)
-        with open(expected_path) as fh:
-            assert fh.read() == expected_path
-
-
 # download_entitlements_file {{{1
 @pytest.mark.parametrize(
     "url, use_entitlements, raises, expected",
@@ -966,21 +595,14 @@ async def test_sign_behavior(mocker, tmpdir, use_langpack):
     config = {
         "artifact_dir": artifact_dir,
         "work_dir": work_dir,
-        "local_notarization_accounts": ["acct0", "acct1", "acct2"],
         "mac_config": {
             "dep": {
                 "designated_requirements": "",  # put this here bc it's easier
-                "notarize_type": "",
                 "signing_keychain": "keychain_path",
                 "sign_with_entitlements": False,
-                "base_bundle_id": "org.test",
                 "identity": "id",
                 "keychain_password": "keychain_password",
                 "pkg_cert_id": "cert_id",
-                "apple_notarization_account": "apple_account",
-                "apple_notarization_password": "apple_password",
-                "apple_asc_provider": "apple_asc_provider",
-                "notarization_poll_timeout": 2,
             }
         },
     }
@@ -1018,22 +640,14 @@ async def test_sign_and_pkg_behavior(mocker, tmpdir, use_langpack):
     config = {
         "artifact_dir": artifact_dir,
         "work_dir": work_dir,
-        "local_notarization_accounts": ["acct0", "acct1", "acct2"],
         "mac_config": {
             "dep": {
                 "designated_requirements": "",  # put this here bc it's easier
-                "notarize_type": "",
                 "signing_keychain": "keychain_path",
                 "sign_with_entitlements": False,
-                "base_bundle_id": "org.test",
                 "identity": "id",
                 "keychain_password": "keychain_password",
                 "pkg_cert_id": "cert_id",
-                "apple_notarization_account": "apple_account",
-                "apple_notarization_password": "apple_password",
-                "apple_asc_provider": "apple_asc_provider",
-                "notarization_poll_timeout": 2,
-                "create_pkg": True,
             }
         },
     }
@@ -1066,182 +680,13 @@ async def test_sign_and_pkg_behavior(mocker, tmpdir, use_langpack):
     await mac.sign_and_pkg_behavior(config, task)
 
 
-# notarize_behavior {{{1
-@pytest.mark.parametrize("notarize_type,use_langpack,create_pkg", zip(("multi_account", "single_account", "single_zip"), (False, True), (False, True)))
-@pytest.mark.asyncio
-async def test_notarize_behavior(mocker, tmpdir, notarize_type, use_langpack, create_pkg):
-    """Mock ``notarize_behavior`` for full line coverage."""
-
-    artifact_dir = os.path.join(str(tmpdir), "artifact")
-    work_dir = os.path.join(str(tmpdir), "work")
-    config = {
-        "artifact_dir": artifact_dir,
-        "work_dir": work_dir,
-        "local_notarization_accounts": ["acct0", "acct1", "acct2"],
-        "mac_config": {
-            "dep": {
-                "designated_requirements": "",  # put this here bc it's easier
-                "zipfile_cmd": "zip",  # put this here bc it's easier
-                "notarize_type": notarize_type,
-                "signing_keychain": "keychain_path",
-                "sign_with_entitlements": False,
-                "base_bundle_id": "org.test",
-                "identity": "id",
-                "keychain_password": "keychain_password",
-                "pkg_cert_id": "cert_id",
-                "apple_notarization_account": "apple_account",
-                "apple_notarization_password": "apple_password",
-                "apple_asc_provider": "apple_asc_provider",
-                "notarization_poll_timeout": 2,
-                "create_pkg": create_pkg,
-            }
-        },
-    }
-
-    task = {
-        "payload": {
-            "upstreamArtifacts": [
-                {"taskId": "task1", "formats": ["macapp", "widevine"], "paths": ["public/build/1/target.tar.gz", "public/build/2/target.tar.gz"]},
-                {"taskId": "task2", "paths": ["public/build/3/target.tar.gz"], "formats": ["macapp", "widevine"]},
-            ]
-        }
-    }
-    if use_langpack:
-        mocker.patch.object(mac, "sign_langpacks", new=noop_async)
-        task["payload"]["upstreamArtifacts"].append({"taskId": "task3", "formats": ["autograph_langpack"], "paths": ["public/build3/target.langpack.xpi"]})
-
-    mocker.patch.object(os, "listdir", return_value=[])
-    mocker.patch.object(mac, "run_command", new=noop_async)
-    mocker.patch.object(mac, "unlock_keychain", new=noop_async)
-    mocker.patch.object(mac, "get_bundle_executable", return_value="bundle_executable")
-    mocker.patch.object(mac, "poll_notarization_uuid", new=noop_async)
-    mocker.patch.object(mac, "get_app_dir", return_value=os.path.join(work_dir, "foo/bar.app"))
-    mocker.patch.object(mac, "get_notarization_status_from_log", return_value=None)
-    mocker.patch.object(mac, "get_uuid_from_log", return_value="uuid")
-    mocker.patch.object(mac, "copy_pkgs_to_artifact_dir", new=noop_async)
-    mocker.patch.object(mac, "get_sign_config", return_value=config["mac_config"]["dep"])
-    mocker.patch.object(mac, "sign_widevine_dir", new=noop_async)
-    await mac.notarize_behavior(config, task)
-
-
-# notarize_1_behavior {{{1
-@pytest.mark.parametrize(
-    "notarize_type,use_langpack,create_pkg", zip(("multi_account", "single_account", "single_zip"), (False, True, False), (True, False, True))
-)
-@pytest.mark.asyncio
-async def test_notarize_1_behavior(mocker, tmpdir, notarize_type, use_langpack, create_pkg):
-    """Mock ``notarize_behavior`` for full line coverage."""
-
-    artifact_dir = os.path.join(str(tmpdir), "artifact")
-    work_dir = os.path.join(str(tmpdir), "work")
-    config = {
-        "artifact_dir": artifact_dir,
-        "work_dir": work_dir,
-        "local_notarization_accounts": ["acct0", "acct1", "acct2"],
-        "mac_config": {
-            "dep": {
-                "designated_requirements": "",  # put this here bc it's easier
-                "zipfile_cmd": "zip",  # put this here bc it's easier
-                "notarize_type": notarize_type,
-                "signing_keychain": "keychain_path",
-                "sign_with_entitlements": False,
-                "base_bundle_id": "org.test",
-                "identity": "id",
-                "keychain_password": "keychain_password",
-                "pkg_cert_id": "cert_id",
-                "apple_notarization_account": "apple_account",
-                "apple_notarization_password": "apple_password",
-                "apple_asc_provider": "apple_asc_provider",
-                "notarization_poll_timeout": 2,
-                "create_pkg": create_pkg,
-            }
-        },
-    }
-
-    task = {
-        "payload": {
-            "upstreamArtifacts": [
-                {"taskId": "task1", "formats": ["macapp", "widevine"], "paths": ["public/build/1/target.tar.gz", "public/build/2/target.tar.gz"]},
-                {"taskId": "task2", "paths": ["public/build/3/target.tar.gz"], "formats": ["macapp", "widevine"]},
-            ]
-        }
-    }
-    if use_langpack:
-        mocker.patch.object(mac, "sign_langpacks", new=noop_async)
-        task["payload"]["upstreamArtifacts"].append({"taskId": "task3", "formats": ["autograph_langpack"], "paths": ["public/build3/target.langpack.xpi"]})
-
-    mocker.patch.object(os, "listdir", return_value=[])
-    mocker.patch.object(mac, "run_command", new=noop_async)
-    mocker.patch.object(mac, "unlock_keychain", new=noop_async)
-    mocker.patch.object(mac, "get_bundle_executable", return_value="bundle_executable")
-    mocker.patch.object(mac, "get_app_dir", return_value=os.path.join(work_dir, "foo/bar.app"))
-    mocker.patch.object(mac, "get_uuid_from_log", return_value="uuid")
-    mocker.patch.object(mac, "copy_pkgs_to_artifact_dir", new=noop_async)
-    mocker.patch.object(mac, "get_sign_config", return_value=config["mac_config"]["dep"])
-    mocker.patch.object(mac, "sign_widevine_dir", new=noop_async)
-    await mac.notarize_1_behavior(config, task)
-
-
-# notarize_3_behavior {{{1
-@pytest.mark.asyncio
-@pytest.mark.parametrize("create_pkg", (True, False))
-async def test_notarize_3_behavior(mocker, tmpdir, create_pkg):
-    """Mock ``notarize_behavior`` for full line coverage."""
-
-    artifact_dir = os.path.join(str(tmpdir), "artifact")
-    work_dir = os.path.join(str(tmpdir), "work")
-    config = {
-        "artifact_dir": artifact_dir,
-        "work_dir": work_dir,
-        "taskcluster_scope_prefix": "project:releng:signing:",
-        "mac_config": {
-            "dep": {
-                "designated_requirements": "",  # put this here bc it's easier
-                "signing_keychain": "keychain_path",
-                "sign_with_entitlements": False,
-                "base_bundle_id": "org.test",
-                "identity": "id",
-                "keychain_password": "keychain_password",
-                "pkg_cert_id": "cert_id",
-                "apple_notarization_account": "apple_account",
-                "apple_notarization_password": "apple_password",
-                "apple_asc_provider": "apple_asc_provider",
-                "notarization_poll_timeout": 2,
-                "create_pkg": create_pkg,
-            }
-        },
-    }
-
-    task = {
-        "scopes": [
-            "project:releng:signing:cert:dep-signing",
-        ],
-        "payload": {
-            "upstreamArtifacts": [
-                {
-                    "taskId": "task1",
-                    "formats": ["macapp"],
-                    "paths": ["public/build/1/target.tar.gz", "public/build/2/target.tar.gz", "public/build/1/target.pkg", "public/build/2/target.pkg"],
-                },
-                {"taskId": "task2", "paths": ["public/build/3/target.tar.gz", "public/build/3/target.tar.gz"], "formats": []},
-            ]
-        },
-    }
-
-    mocker.patch.object(mac, "run_command", new=noop_async)
-    mocker.patch.object(mac, "tar_apps", new=noop_async)
-    mocker.patch.object(mac, "get_app_dir", return_value=os.path.join(work_dir, "foo/bar.app"))
-    mocker.patch.object(mac, "copy_pkgs_to_artifact_dir", new=noop_async)
-    await mac.notarize_3_behavior(config, task)
-
-
 # single_file_behavior {{{1
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "use_langpack,filename,format,notarize",
-    ((False, "geckodriver", "mac_geckodriver", True), (True, "foo", "mac_single_file", False), (False, "geckodriver", "mac_single_file", True)),
+    "use_langpack,filename,format",
+    ((False, "geckodriver", "mac_geckodriver"), (True, "foo", "mac_single_file"), (False, "geckodriver", "mac_single_file")),
 )
-async def test_single_file_behavior(mocker, tmpdir, use_langpack, filename, format, notarize):
+async def test_single_file_behavior(mocker, tmpdir, use_langpack, filename, format):
     """Mock ``single_file_behavior`` for full line coverage."""
 
     artifact_dir = os.path.join(str(tmpdir), "artifact")
@@ -1249,23 +694,14 @@ async def test_single_file_behavior(mocker, tmpdir, use_langpack, filename, form
     config = {
         "artifact_dir": artifact_dir,
         "work_dir": work_dir,
-        "local_notarization_accounts": ["acct0", "acct1", "acct2"],
         "mac_config": {
             "dep": {
                 "designated_requirements": "",  # put this here bc it's easier
-                "zipfile_cmd": "zip",
-                "notarize_type": "single_zip",
                 "signing_keychain": "keychain_path",
                 "sign_with_entitlements": False,
-                "base_bundle_id": "org.test",
                 "identity": "id",
                 "keychain_password": "keychain_password",
                 "pkg_cert_id": "cert_id",
-                "apple_notarization_account": "apple_account",
-                "apple_notarization_password": "apple_password",
-                "apple_asc_provider": "apple_asc_provider",
-                "notarization_poll_timeout": 2,
-                "create_pkg": True,
             }
         },
     }
@@ -1282,13 +718,9 @@ async def test_single_file_behavior(mocker, tmpdir, use_langpack, filename, form
             assert "autograph_langpack" not in app.formats
             app.parent_dir = f"{work_dir}/0"
             touch(f"{app.parent_dir}/{filename}")
-            print(f"touch {app.parent_dir}/{filename}")
-            print(os.path.exists(os.path.join(app.parent_dir, filename)))
 
-    mocker.patch.object(mac, "poll_notarization_uuid", new=noop_async)
-    mocker.patch.object(mac, "get_uuid_from_log", return_value="uuid")
     mocker.patch.object(mac, "extract_all_apps", new=fake_extract)
     mocker.patch.object(mac, "run_command", new=noop_async)
     mocker.patch.object(mac, "unlock_keychain", new=noop_async)
     mocker.patch.object(mac, "get_sign_config", return_value=config["mac_config"]["dep"])
-    await mac.single_file_behavior(config, task, notarize)
+    await mac.single_file_behavior(config, task)

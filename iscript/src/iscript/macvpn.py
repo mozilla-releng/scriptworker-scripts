@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Mac VPN notarization behavior."""
+"""Mac VPN signing behavior."""
 
 import logging
 import os
@@ -27,37 +27,13 @@ from iscript.util import get_sign_config
 log = logging.getLogger(__name__)
 
 
-async def _create_notarization_zipfile(work_dir, source, dest):
-    """Create a zipfile for notarization.
-
-    Keeps parent directory in zip
-
-    Args:
-        work_dir (str): base directory from the zip command perspective
-        source (str): the source directory/file
-        dest (str): destination package
-
-    Raises:
-        IScriptError: on failure
-
-    Returns:
-        str: the zip path
-
-    """
-    await run_command(
-        ["ditto", "-c", "-k", "--sequesterRsrc", "--keepParent", source, dest],
-        cwd=work_dir,
-        exception=IScriptError,
-    )
-
-
 async def _sign_app(config, sign_config, app, entitlements_url, provisionprofile_filename):
     """Sign an app.
 
     Args:
         config (dict): script config
         sign_config (dict): the config for this signing key
-        app (App): the App the notarize
+        app (App): the App to sign
         entitlements_url (str): URL for entitlements file
         provisionprofile_filename (str): .provisionprofile filename in <config.provisionprofile_dir>
 
@@ -298,14 +274,13 @@ async def vpn_legacy_behavior(config, task):
 
 
 async def vpn_behavior(config, task):
-    """Notarize vpn app.
+    """Sign the vpn app and build its pkg.
 
     Workflow:
     . Sign all inner apps
     . Sign main app
     . Create pkg
-    . Zip pkg
-    . Move zipped app to artifacts
+    . Move pkg to artifacts
 
     Args:
         config (dict): the running configuration
