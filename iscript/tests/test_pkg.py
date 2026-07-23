@@ -33,23 +33,14 @@ async def test_sign_pkg_behavior(mocker, tmpdir):
     config = {
         "artifact_dir": artifact_dir,
         "work_dir": work_dir,
-        "local_notarization_accounts": ["acct0", "acct1", "acct2"],
         "mac_config": {
             "dep": {
                 "designated_requirements": "",  # put this here bc it's easier
-                "zipfile_cmd": "zip",
-                "notarize_type": "single_zip",
                 "signing_keychain": "keychain_path",
                 "sign_with_entitlements": False,
-                "base_bundle_id": "org.test",
                 "identity": "id",
                 "keychain_password": "keychain_password",
                 "pkg_cert_id": "cert_id",
-                "apple_notarization_account": "apple_account",
-                "apple_notarization_password": "apple_password",
-                "apple_asc_provider": "apple_asc_provider",
-                "notarization_poll_timeout": 2,
-                "create_pkg": True,
             }
         },
     }
@@ -100,15 +91,10 @@ async def test_sign_pkg_behavior_no_pkg_cert_id(mocker, tmpdir):
         "mac_config": {
             "dep": {
                 "designated_requirements": "",
-                "zipfile_cmd": "zip",
-                "notarize_type": "single_zip",
                 "signing_keychain": "keychain_path",
                 "sign_with_entitlements": False,
-                "base_bundle_id": "org.test",
                 "identity": "id",
                 "keychain_password": "keychain_password",
-                "apple_asc_provider": "apple_asc_provider",
-                "create_pkg": True,
             }
         },
     }

@@ -2,7 +2,6 @@ work_dir: /tmp/work
 artifact_dir: /tmp/artifacts
 taskcluster_scope_prefix: "project:releng:signing:"
 verbose: true
-local_notarization_accounts: ["account1"]
 concurrency_limit: 2
 default_keychains:
     - "/Users/cltbld/Library/Keychains/login.keychain-db"
@@ -10,25 +9,18 @@ default_keychains:
 dmg_prefix: dep1
 mac_config:
     dep:
-        notarize_type: multi_account
         signing_keychain: /path/to/dep.keychain
         supported_behaviors:
             - mac_geckodriver
             - mac_sign
             - mac_sign_and_pkg
-            - mac_notarize
             - mac_single_file
         sign_with_entitlements: true
         verify_mac_signature: true
-        base_bundle_id: org.mozilla.firefox_dep
         identity: ...
         keychain_password: ...
         pkg_cert_id: ...
-        apple_notarization_account: ...
-        apple_notarization_password: ...
-        apple_asc_provider: ...
         concurrency_limit: 10
-        notarization_poll_timeout: 900
         widevine_url: ...
         widevine_user: ...
         widevine_pass: ...
