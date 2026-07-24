@@ -59,30 +59,47 @@ async def test_success(aioresponses, github_installation_responses, context, tag
 
 
 @pytest.mark.asyncio
-async def test_no_tags(aioresponses, github_installation_responses, context):
+@pytest.mark.parametrize(
+    "tag_info,dry_run",
+    (
+        pytest.param(
+            {
+                "revision": "ghijkl654321",
+                "tags": ["BUILD1"],
+            },
+            True,
+            id="dry_run",
+        ),
+        pytest.param(
+            {
+                "revision": "ghijkl654321",
+                "tags": ["BUILD1"],
+            },
+            False,
+            id="one_tag",
+        ),
+        pytest.param(
+            {
+                "revision": "ghijkl654321",
+                "tags": ["BUILD1", "RELEASE"],
+            },
+            False,
+            id="multiple_tags",
+        ),
+    ),
+)
+async def test_success_git(aioresponses, github_installation_responses, context, tag_info, dry_run):
     payload = {
         "actions": ["tag"],
         "lando_repo": "repo_name",
-        "tag_info": {
-            "revision": "abcdef123456",
-            "hg_repo_url": "https://hg.testing/repo",
-            "tags": [],
-        },
+        "tag_info": tag_info,
+        "dry_run": dry_run,
     }
-    await run_test(aioresponses, github_installation_responses, context, payload, ["tag"], err=TaskVerificationError, errmsg="must provide at least one tag!")
 
+    def assert_func(req):
+        assert_tag_response(req, tag_info, tag_info["revision"])
 
-@pytest.mark.asyncio
-async def test_hg_repo_url(aioresponses, github_installation_responses, context):
-    payload = {
-        "actions": ["tag"],
-        "lando_repo": "repo_name",
-        "tag_info": {
-            "revision": "abcdef123456",
-            "tags": ["FOO"],
-        },
-    }
-    await run_test(aioresponses, github_installation_responses, context, payload, ["tag"], err=TaskVerificationError, errmsg="must provide hg_repo_url!")
+    await run_test(aioresponses, github_installation_responses, context, payload, ["tag"], not dry_run, assert_func)
 
 
 @pytest.mark.parametrize(
