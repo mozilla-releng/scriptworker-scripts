@@ -9,11 +9,9 @@ from landoscript.lando import LandoAction
 
 
 # We have two tag info classes to make it easy to signify whether the provided
-# revision is an hg one or a git one. At the time of writing, we use the former
-# for direct tagging tasks (such as `release-early-tagging`), and the latter
-# for merge day operations, where the task payload does not contain a revision.
-# When we switch all consumers (namely, Gecko) to firing their decision tasks
-# off of Github events, we can drop `HgTagInfo`.
+# revision is an hg one or a git one. When we switch all consumers
+# (namely, Gecko) to firing their decision tasks off of Github events, we can
+# drop `HgTagInfo`.
 @dataclass(frozen=True)
 class HgTagInfo:
     revision: str
@@ -41,8 +39,6 @@ async def run(session: ClientSession, tag_info: HgTagInfo | GitTagInfo) -> list[
             kwargs={"raise_for_status": True},
         )
         hg_revision_info = await resp.json()
-        # TODO: figure out how to make this work on Try. At the moment, this
-        # must be commented out because Try revisions don't have this metadata.
         if hg_revision_info.get("git_commit") is None:
             raise LandoscriptError("Couldn't look up target revision for tag(s) in hg, can't proceed!")
         git_commit = hg_revision_info["git_commit"]
