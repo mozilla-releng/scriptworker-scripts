@@ -1900,17 +1900,14 @@ name = "iscript"
 version = "1.0.1"
 source = { editable = "iscript" }
 dependencies = [
-    { name = "aiohttp" },
-    { name = "arrow" },
     { name = "attrs" },
-    { name = "macholib" },
     { name = "mozbuild" },
     { name = "packaging" },
     { name = "pexpect" },
+    { name = "requests" },
     { name = "requests-hawk" },
     { name = "scriptworker-client" },
     { name = "six" },
-    { name = "taskcluster" },
 ]
 
 [package.optional-dependencies]
@@ -1934,18 +1931,15 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "aiohttp" },
-    { name = "arrow", specifier = ">=1.0" },
     { name = "attrs" },
-    { name = "macholib" },
     { name = "mozbuild", directory = "vendored/mozbuild" },
     { name = "packaging" },
     { name = "pexpect" },
+    { name = "requests" },
     { name = "requests-hawk" },
     { name = "scriptworker", marker = "extra == 'scriptworker'" },
     { name = "scriptworker-client", editable = "scriptworker_client" },
     { name = "six" },
-    { name = "taskcluster" },
 ]
 provides-extras = ["scriptworker"]
 

@@ -13,16 +13,16 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
 ]
 dependencies = [
-    "aiohttp",
-    "arrow>=1.0",
     "attrs",
-    "macholib",
     "mozbuild",
     "pexpect",
+    "requests",
     "requests-hawk",
     "scriptworker-client",
-    "taskcluster",
-    # for mozbuild - remove after the following bug is fixed: https://bugzilla.mozilla.org/show_bug.cgi?id=1831648
+    # mozbuild imports these but doesn't declare them; upstream removed its
+    # setup.py entirely (https://bugzilla.mozilla.org/show_bug.cgi?id=1831648)
+    # rather than fix the metadata, so these must stay declared here for as
+    # long as we vendor mozbuild.
     "packaging",
     "six",
 ]
