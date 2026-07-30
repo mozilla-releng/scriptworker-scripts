@@ -19,7 +19,7 @@ task-defaults:
         code-review: true
     worker-type: b-linux
     worker:
-        docker-image: {in-tree: 'python314'}
+        docker-image: {in-tree: 'python311'}
         max-run-time: 1800
 
 tasks:
