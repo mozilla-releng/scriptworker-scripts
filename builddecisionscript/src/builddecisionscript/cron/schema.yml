@@ -1,0 +1,123 @@
+---
+schema: "http://json-schema.org/draft-07/schema#"
+type: object
+required: ["jobs"]
+additionalProperties: false
+properties:
+    jobs:
+        type: array
+        additionalItems: false
+        items:
+            type: object
+            required: ["name", "job"]
+            additionalProperties: false
+            properties:
+                name:
+                    type: string
+                    description: Name of the crontask (must be unique)
+                job:
+                    type: object
+                    description: Description of the job to run, keyed by 'type'
+                    anyOf:
+                        - {$ref: "#/definitions/job-types/decision-task"}
+                        - {$ref: "#/definitions/job-types/trigger-action"}
+                run-on-projects:
+                    type: array
+                    title: The run-on-projects schema
+                    description: An explanation about the purpose of this instance.
+                    additionalItems: false
+                    items: {type: string}
+                when:
+                    anyOf:
+                        - type: object
+                          required: ['by-project']
+                          additionalProperties: false
+                          properties:
+                              by-project:
+                                  additionalProperties: {$ref: "#/definitions/when"}
+                        - $ref: "#/definitions/when"
+definitions:
+    when:
+        type: array
+        items:
+            type: object
+            additionalProperties: false
+            properties:
+                weekday:
+                    type: string
+                    enum:
+                        - "Monday"
+                        - "Tuesday"
+                        - "Wednesday"
+                        - "Thursday"
+                        - "Friday"
+                        - "Saturday"
+                        - "Sunday"
+                day:
+                    type: integer
+                    description: Day of the month, as used by datetime.
+                    miniumum: 1
+                    maximum: 31
+                hour:
+                    type: integer
+                    miniumum: 0
+                    exclusiveMaximum: 24
+                minute:
+                    type: integer
+                    miniumum: 0
+                    multipleOf: 15
+                    exclusiveMaximum: 60
+    job-types:
+        decision-task:
+            required: ["type", "treeherder-symbol", "target-tasks-method"]
+            additionalProperties: false
+            properties:
+                type: {const: 'decision-task'}
+                treeherder-symbol:
+                    type: string
+                    description: Treeherder symbol for the cron task
+                target-tasks-method:
+                    type: string
+                    description: "--target-tasks-method 'taskgraph decision' argument"
+                optimize-target-tasks:
+                    type: boolean
+                    description: >-
+                        If specified, this indicates whether the target
+                        tasks are eligible for optimization. Otherwise,
+                        the default for the project is used.
+                include-push-tasks:
+                    type: boolean
+                    description: >-
+                        Whether tasks from the on-push graph should be re-used
+                        in the cron graph.
+                rebuild-kinds:
+                    type: array
+                    items: {type: string}
+                    description: Kinds that should not be re-used from the on-push graph.
+                include-cron-input:
+                    type: boolean
+                    description: >-
+                        Whether the input to the cron hook should be added to the context
+                        used to render .taskcluster.yml.
+        trigger-action:
+            required: ["type", "action-name"]
+            additionalProperties: false
+            properties:
+                type: {const: 'trigger-action'}
+                action-name:
+                    type: string
+                    description: >-
+                        The name of the action to trigger. This will find a
+                        push action on the corresponding commit to trigger.
+                include-cron-input:
+                    type: boolean
+                    description: >-
+                        Whether the input to the cron hook should be used as
+                        input to the action.
+                extra-input:
+                    type: object
+                    description: >-
+                        Addtional input that should be passed to the action.
+                        If both `include-cron-input` and `extra-input` are
+                        specified, the values from `extra-input` will override
+                        those from the cron-task input.

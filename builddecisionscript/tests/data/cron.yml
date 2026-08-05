@@ -1,0 +1,32 @@
+# Definitions for jobs that run periodically.  For details on the format, see
+# `taskcluster/taskgraph/cron/schema.py`.  For documentation, see
+# `taskcluster/docs/cron.rst`.
+---
+
+jobs:
+    - name: nightly
+      job:
+          type: decision-task
+          treeherder-symbol: Nd
+          target-tasks-method: nightly
+      when:
+          - {hour: 5, minute: 0}
+          - {hour: 17, minute: 0}
+    - name: fennec-production
+      job:
+          type: decision-task
+          treeherder-symbol: fennec-production
+          target-tasks-method: fennec-production
+      when: []  # Force hook only
+    - name: bump-android-components
+      job:
+          type: decision-task
+          treeherder-symbol: bump-ac
+          target-tasks-method: bump_android_components
+      when: [{hour: 15, minute: 30}]
+    - name: screenshots
+      job:
+          type: decision-task
+          treeherder-symbol: screenshots-D
+          target-tasks-method: screenshots
+      when: [{weekday: 'Monday', hour: 10, minute: 0}]

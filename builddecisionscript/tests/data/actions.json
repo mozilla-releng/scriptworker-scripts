@@ -1,0 +1,593 @@
+{
+  "actions": [
+    {
+      "context": [
+        {
+          "kind": "decision-task"
+        },
+        {
+          "kind": "action-callback"
+        },
+        {
+          "kind": "cron-task"
+        }
+      ],
+      "description": "Create a clone of the task (retriggering decision, action, and cron tasks requires\nspecial scopes).",
+      "extra": {
+        "actionPerm": "generic"
+      },
+      "hookGroupId": "project-mobile",
+      "hookId": "in-tree-action-3-generic/93267a5f84",
+      "hookPayload": {
+        "decision": {
+          "action": {
+            "cb_name": "retrigger-decision",
+            "description": "Create a clone of the task (retriggering decision, action, and cron tasks requires\nspecial scopes).",
+            "name": "retrigger",
+            "symbol": "rt",
+            "taskGroupId": "YW15iAPlTvCrk4PEVzKiJw",
+            "title": "Retrigger"
+          },
+          "push": {
+            "branch": "refs/heads/main",
+            "owner": "mozilla-taskcluster-maintenance@mozilla.com",
+            "pushlog_id": "0",
+            "revision": "b6bcbfe346fd9fdddebc587f8ede47307bde76e9"
+          },
+          "repository": {
+            "level": "3",
+            "project": "fenix",
+            "url": "https://github.com/mozilla-mobile/fenix"
+          }
+        },
+        "user": {
+          "input": {
+            "$eval": "input"
+          },
+          "taskGroupId": {
+            "$eval": "taskGroupId"
+          },
+          "taskId": {
+            "$eval": "taskId"
+          }
+        }
+      },
+      "kind": "hook",
+      "name": "retrigger",
+      "title": "Retrigger"
+    },
+    {
+      "context": [
+        {
+          "retrigger": "true"
+        }
+      ],
+      "description": "Create a clone of the task.",
+      "extra": {
+        "actionPerm": "generic"
+      },
+      "hookGroupId": "project-mobile",
+      "hookId": "in-tree-action-3-generic/93267a5f84",
+      "hookPayload": {
+        "decision": {
+          "action": {
+            "cb_name": "retrigger",
+            "description": "Create a clone of the task.",
+            "name": "retrigger",
+            "symbol": "rt",
+            "taskGroupId": "YW15iAPlTvCrk4PEVzKiJw",
+            "title": "Retrigger"
+          },
+          "push": {
+            "branch": "refs/heads/main",
+            "owner": "mozilla-taskcluster-maintenance@mozilla.com",
+            "pushlog_id": "0",
+            "revision": "b6bcbfe346fd9fdddebc587f8ede47307bde76e9"
+          },
+          "repository": {
+            "level": "3",
+            "project": "fenix",
+            "url": "https://github.com/mozilla-mobile/fenix"
+          }
+        },
+        "user": {
+          "input": {
+            "$eval": "input"
+          },
+          "taskGroupId": {
+            "$eval": "taskGroupId"
+          },
+          "taskId": {
+            "$eval": "taskId"
+          }
+        }
+      },
+      "kind": "hook",
+      "name": "retrigger",
+      "schema": {
+        "properties": {
+          "downstream": {
+            "default": false,
+            "description": "If true, downstream tasks from this one will be cloned as well. The dependencies will be updated to work with the new task at the root.",
+            "type": "boolean"
+          },
+          "times": {
+            "default": 1,
+            "description": "How many times to run each task.",
+            "maximum": 100,
+            "minimum": 1,
+            "title": "Times",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "title": "Retrigger"
+    },
+    {
+      "context": [
+        {}
+      ],
+      "description": "Create a clone of the task.\n\nThis type of task should typically be re-run instead of re-triggered.",
+      "extra": {
+        "actionPerm": "generic"
+      },
+      "hookGroupId": "project-mobile",
+      "hookId": "in-tree-action-3-generic/93267a5f84",
+      "hookPayload": {
+        "decision": {
+          "action": {
+            "cb_name": "retrigger-disabled",
+            "description": "Create a clone of the task.\n\nThis type of task should typically be re-run instead of re-triggered.",
+            "name": "retrigger",
+            "symbol": "rt",
+            "taskGroupId": "YW15iAPlTvCrk4PEVzKiJw",
+            "title": "Retrigger (disabled)"
+          },
+          "push": {
+            "branch": "refs/heads/main",
+            "owner": "mozilla-taskcluster-maintenance@mozilla.com",
+            "pushlog_id": "0",
+            "revision": "b6bcbfe346fd9fdddebc587f8ede47307bde76e9"
+          },
+          "repository": {
+            "level": "3",
+            "project": "fenix",
+            "url": "https://github.com/mozilla-mobile/fenix"
+          }
+        },
+        "user": {
+          "input": {
+            "$eval": "input"
+          },
+          "taskGroupId": {
+            "$eval": "taskGroupId"
+          },
+          "taskId": {
+            "$eval": "taskId"
+          }
+        }
+      },
+      "kind": "hook",
+      "name": "retrigger",
+      "schema": {
+        "properties": {
+          "downstream": {
+            "default": false,
+            "description": "If true, downstream tasks from this one will be cloned as well. The dependencies will be updated to work with the new task at the root.",
+            "type": "boolean"
+          },
+          "force": {
+            "default": false,
+            "description": "This task should not be re-triggered. This can be overridden by passing `true` here.",
+            "type": "boolean"
+          },
+          "times": {
+            "default": 1,
+            "description": "How many times to run each task.",
+            "maximum": 100,
+            "minimum": 1,
+            "title": "Times",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "title": "Retrigger (disabled)"
+    },
+    {
+      "context": [],
+      "description": "Add new jobs using task labels.",
+      "extra": {
+        "actionPerm": "generic"
+      },
+      "hookGroupId": "project-mobile",
+      "hookId": "in-tree-action-3-generic/93267a5f84",
+      "hookPayload": {
+        "decision": {
+          "action": {
+            "cb_name": "add-new-jobs",
+            "description": "Add new jobs using task labels.",
+            "name": "add-new-jobs",
+            "symbol": "add-new",
+            "taskGroupId": "YW15iAPlTvCrk4PEVzKiJw",
+            "title": "Add new jobs"
+          },
+          "push": {
+            "branch": "refs/heads/main",
+            "owner": "mozilla-taskcluster-maintenance@mozilla.com",
+            "pushlog_id": "0",
+            "revision": "b6bcbfe346fd9fdddebc587f8ede47307bde76e9"
+          },
+          "repository": {
+            "level": "3",
+            "project": "fenix",
+            "url": "https://github.com/mozilla-mobile/fenix"
+          }
+        },
+        "user": {
+          "input": {
+            "$eval": "input"
+          },
+          "taskGroupId": {
+            "$eval": "taskGroupId"
+          },
+          "taskId": {
+            "$eval": "taskId"
+          }
+        }
+      },
+      "kind": "hook",
+      "name": "add-new-jobs",
+      "schema": {
+        "properties": {
+          "tasks": {
+            "description": "An array of task labels",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "times": {
+            "default": 1,
+            "description": "How many times to run each task.",
+            "maximum": 100,
+            "minimum": 1,
+            "title": "Times",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "title": "Add new jobs"
+    },
+    {
+      "context": [
+        {}
+      ],
+      "description": "Rerun a task.\n\nThis only works on failed or exception tasks in the original taskgraph, and is CoT friendly.",
+      "extra": {
+        "actionPerm": "generic"
+      },
+      "hookGroupId": "project-mobile",
+      "hookId": "in-tree-action-3-generic/93267a5f84",
+      "hookPayload": {
+        "decision": {
+          "action": {
+            "cb_name": "rerun",
+            "description": "Rerun a task.\n\nThis only works on failed or exception tasks in the original taskgraph, and is CoT friendly.",
+            "name": "rerun",
+            "symbol": "rr",
+            "taskGroupId": "YW15iAPlTvCrk4PEVzKiJw",
+            "title": "Rerun"
+          },
+          "push": {
+            "branch": "refs/heads/main",
+            "owner": "mozilla-taskcluster-maintenance@mozilla.com",
+            "pushlog_id": "0",
+            "revision": "b6bcbfe346fd9fdddebc587f8ede47307bde76e9"
+          },
+          "repository": {
+            "level": "3",
+            "project": "fenix",
+            "url": "https://github.com/mozilla-mobile/fenix"
+          }
+        },
+        "user": {
+          "input": {
+            "$eval": "input"
+          },
+          "taskGroupId": {
+            "$eval": "taskGroupId"
+          },
+          "taskId": {
+            "$eval": "taskId"
+          }
+        }
+      },
+      "kind": "hook",
+      "name": "rerun",
+      "schema": {
+        "properties": {},
+        "type": "object"
+      },
+      "title": "Rerun"
+    },
+    {
+      "context": [
+        {}
+      ],
+      "description": "Cancel the given task",
+      "extra": {
+        "actionPerm": "generic"
+      },
+      "hookGroupId": "project-mobile",
+      "hookId": "in-tree-action-3-generic/93267a5f84",
+      "hookPayload": {
+        "decision": {
+          "action": {
+            "cb_name": "cancel",
+            "description": "Cancel the given task",
+            "name": "cancel",
+            "symbol": "cx",
+            "taskGroupId": "YW15iAPlTvCrk4PEVzKiJw",
+            "title": "Cancel Task"
+          },
+          "push": {
+            "branch": "refs/heads/main",
+            "owner": "mozilla-taskcluster-maintenance@mozilla.com",
+            "pushlog_id": "0",
+            "revision": "b6bcbfe346fd9fdddebc587f8ede47307bde76e9"
+          },
+          "repository": {
+            "level": "3",
+            "project": "fenix",
+            "url": "https://github.com/mozilla-mobile/fenix"
+          }
+        },
+        "user": {
+          "input": {
+            "$eval": "input"
+          },
+          "taskGroupId": {
+            "$eval": "taskGroupId"
+          },
+          "taskId": {
+            "$eval": "taskId"
+          }
+        }
+      },
+      "kind": "hook",
+      "name": "cancel",
+      "title": "Cancel Task"
+    },
+    {
+      "context": [],
+      "description": "Cancel all running and pending tasks created by the decision task this action task is associated with.",
+      "extra": {
+        "actionPerm": "generic"
+      },
+      "hookGroupId": "project-mobile",
+      "hookId": "in-tree-action-3-generic/93267a5f84",
+      "hookPayload": {
+        "decision": {
+          "action": {
+            "cb_name": "cancel-all",
+            "description": "Cancel all running and pending tasks created by the decision task this action task is associated with.",
+            "name": "cancel-all",
+            "symbol": "cAll",
+            "taskGroupId": "YW15iAPlTvCrk4PEVzKiJw",
+            "title": "Cancel All"
+          },
+          "push": {
+            "branch": "refs/heads/main",
+            "owner": "mozilla-taskcluster-maintenance@mozilla.com",
+            "pushlog_id": "0",
+            "revision": "b6bcbfe346fd9fdddebc587f8ede47307bde76e9"
+          },
+          "repository": {
+            "level": "3",
+            "project": "fenix",
+            "url": "https://github.com/mozilla-mobile/fenix"
+          }
+        },
+        "user": {
+          "input": {
+            "$eval": "input"
+          },
+          "taskGroupId": {
+            "$eval": "taskGroupId"
+          },
+          "taskId": {
+            "$eval": "taskId"
+          }
+        }
+      },
+      "kind": "hook",
+      "name": "cancel-all",
+      "title": "Cancel All"
+    },
+    {
+      "context": [],
+      "description": "Ship Fenix",
+      "extra": {
+        "actionPerm": "release-promotion"
+      },
+      "hookGroupId": "project-mobile",
+      "hookId": "in-tree-action-3-release-promotion/93267a5f84",
+      "hookPayload": {
+        "decision": {
+          "action": {
+            "cb_name": "release-promotion",
+            "description": "Ship Fenix",
+            "name": "release-promotion",
+            "symbol": "${input.release_promotion_flavor}",
+            "taskGroupId": "YW15iAPlTvCrk4PEVzKiJw",
+            "title": "Ship Fenix"
+          },
+          "push": {
+            "branch": "refs/heads/main",
+            "owner": "mozilla-taskcluster-maintenance@mozilla.com",
+            "pushlog_id": "0",
+            "revision": "b6bcbfe346fd9fdddebc587f8ede47307bde76e9"
+          },
+          "repository": {
+            "level": "3",
+            "project": "fenix",
+            "url": "https://github.com/mozilla-mobile/fenix"
+          }
+        },
+        "user": {
+          "input": {
+            "$eval": "input"
+          },
+          "taskGroupId": {
+            "$eval": "taskGroupId"
+          },
+          "taskId": {
+            "$eval": "taskId"
+          }
+        }
+      },
+      "kind": "hook",
+      "name": "release-promotion",
+      "schema": {
+        "properties": {
+          "build_number": {
+            "default": 1,
+            "description": "The release build number. Starts at 1 per release version, and increments on rebuild.",
+            "minimum": 1,
+            "title": "The release build number",
+            "type": "integer"
+          },
+          "do_not_optimize": {
+            "description": "Optional: a list of labels to avoid optimizing out of the graph (to force a rerun of, say, funsize docker-image tasks).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "next_version": {
+            "default": "",
+            "description": "Next version.",
+            "type": "string"
+          },
+          "previous_graph_ids": {
+            "description": "Optional: an array of taskIds of decision or action tasks from the previous graph(s) to use to populate our `previous_graph_kinds`.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "rebuild_kinds": {
+            "description": "Optional: an array of kinds to ignore from the previous graph(s).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "release_promotion_flavor": {
+            "default": "build",
+            "description": "The flavor of release promotion to perform.",
+            "enum": [
+              "ship"
+            ],
+            "type": "string"
+          },
+          "revision": {
+            "description": "Optional: the revision to ship.",
+            "title": "Optional: revision to ship",
+            "type": "string"
+          },
+          "version": {
+            "default": "",
+            "description": "Optional: override the version for release promotion. Occasionally we'll land a taskgraph fix in a later commit, but want to act on a build from a previous commit. If a version bump has landed in the meantime, relying on the in-tree version will break things.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "release_promotion_flavor",
+          "version",
+          "build_number",
+          "next_version"
+        ],
+        "type": "object"
+      },
+      "title": "Ship Fenix"
+    },
+    {
+      "context": [],
+      "description": "Create a clone of the task.",
+      "extra": {
+        "actionPerm": "generic"
+      },
+      "hookGroupId": "project-mobile",
+      "hookId": "in-tree-action-3-generic/93267a5f84",
+      "hookPayload": {
+        "decision": {
+          "action": {
+            "cb_name": "retrigger-multiple",
+            "description": "Create a clone of the task.",
+            "name": "retrigger-multiple",
+            "symbol": "rt",
+            "taskGroupId": "YW15iAPlTvCrk4PEVzKiJw",
+            "title": "Retrigger"
+          },
+          "push": {
+            "branch": "refs/heads/main",
+            "owner": "mozilla-taskcluster-maintenance@mozilla.com",
+            "pushlog_id": "0",
+            "revision": "b6bcbfe346fd9fdddebc587f8ede47307bde76e9"
+          },
+          "repository": {
+            "level": "3",
+            "project": "fenix",
+            "url": "https://github.com/mozilla-mobile/fenix"
+          }
+        },
+        "user": {
+          "input": {
+            "$eval": "input"
+          },
+          "taskGroupId": {
+            "$eval": "taskGroupId"
+          },
+          "taskId": {
+            "$eval": "taskId"
+          }
+        }
+      },
+      "kind": "hook",
+      "name": "retrigger-multiple",
+      "schema": {
+        "properties": {
+          "additionalProperties": false,
+          "requests": {
+            "items": {
+              "additionalProperties": false,
+              "tasks": {
+                "description": "An array of task labels",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "times": {
+                "description": "How many times to run each task.",
+                "maximum": 100,
+                "minimum": 1,
+                "title": "Times",
+                "type": "integer"
+              }
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "title": "Retrigger"
+    }
+  ],
+  "variables": {},
+  "version": 1
+}
