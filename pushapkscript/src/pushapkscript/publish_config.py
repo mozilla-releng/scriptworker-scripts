@@ -2,6 +2,18 @@ import logging
 
 log = logging.getLogger(__name__)
 
+# Non-Google stores produce the same publish-config shape and differ only in which
+# credential keys they expose. Maps target_store -> {output_key: store_config_key}.
+_NON_GOOGLE_STORE_CREDENTIALS = {
+    "samsung": {
+        "sgs_service_account_id": "service_account_id",
+        "sgs_access_token": "access_token",
+    },
+    "huawei": {
+        "huawei_credentials": "credentials_file",
+    },
+}
+
 
 def _should_do_dry_run(task):
     # Don't commit anything by default. Committed APKs can't be unpublished,
@@ -70,18 +82,18 @@ def _get_channel_publish_config(product_config, task):
     store_config = publish_config[target_store]
     rollout_percentage = task.get("rollout_percentage")
 
-    if target_store == "samsung":
+    if target_store in _NON_GOOGLE_STORE_CREDENTIALS:
         if task.get("google_play_track"):
-            raise ValueError("`google_play_track` is not allowed on the task if the target store is samsung")
+            raise ValueError(f"`google_play_track` is not allowed on the task if the target store is {target_store}")
 
+        credentials = {output_key: store_config[config_key] for output_key, config_key in _NON_GOOGLE_STORE_CREDENTIALS[target_store].items()}
         return {
             "target_store": target_store,
             "dry_run": _should_do_dry_run(task),
             "package_names": publish_config["package_names"],
             "rollout_percentage": rollout_percentage,
-            "sgs_service_account_id": store_config["service_account_id"],
-            "sgs_access_token": store_config["access_token"],
             "submit": task.get("submit", False),
+            **credentials,
         }
 
     google_track = task.get("google_play_track", store_config["default_track"])

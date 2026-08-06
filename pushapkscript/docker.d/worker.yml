@@ -42,6 +42,8 @@ products:
               samsung:
                 service_account_id: { "$eval": "SGS_SERVICE_ACCOUNT_ID" }
                 access_token: { "$eval": "SGS_ACCESS_TOKEN" }
+              huawei:
+                credentials_file: { "$eval": "HUAWEI_CREDENTIALS_PATH" }
         - product_names: ["focus-android" ]
           digest_algorithm: 'SHA-256'
           skip_check_ordered_version_codes: true
@@ -104,6 +106,8 @@ products:
               samsung:
                 service_account_id: { "$eval": "SGS_SERVICE_ACCOUNT_ID_DEP" }
                 access_token: { "$eval": "SGS_ACCESS_TOKEN_DEP" }
+              huawei:
+                credentials_file: { "$eval": "HUAWEI_CREDENTIALS_DEP_PATH" }
         - product_names: ["focus-android" ]
           digest_algorithm: "SHA-256"
           skip_check_ordered_version_codes: true
