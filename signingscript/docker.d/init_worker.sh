@@ -43,7 +43,7 @@ if [ "$ENV" == "prod" ]; then
   export AUTHENTICODE_CA_PATH=$APP_DIR/signingscript/src/signingscript/data/authenticode_prod_ca.crt
   export AUTHENTICODE_CA_PATH_EV=$APP_DIR/signingscript/src/signingscript/data/authenticode_prod_ca_ev.crt
   export AUTHENTICODE_CA_TIMESTAMP_PATH=/usr/lib/ssl/certs/ca-certificates.crt
-  export GPG_PUBKEY_PATH=$APP_DIR/signingscript/src/signingscript/data/gpg_pubkey_20250313.asc
+  export GPG_PUBKEY_PATH=$APP_DIR/signingscript/src/signingscript/data/gpg_pubkey_prod.asc
 fi
 
 case $COT_PRODUCT in
