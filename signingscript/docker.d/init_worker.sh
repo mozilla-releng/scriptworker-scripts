@@ -172,6 +172,8 @@ case $ENV in
         test_var_set 'AUTOGRAPH_MAR_USERNAME'
         test_var_set 'AUTOGRAPH_GPG_PASSWORD'
         test_var_set 'AUTOGRAPH_GPG_USERNAME'
+        test_var_set 'AUTOGRAPH_RPMSIGN_USERNAME'
+        test_var_set 'AUTOGRAPH_RPMSIGN_PASSWORD'
         test_var_set 'AUTOGRAPH_XPI_PASSWORD'
         test_var_set 'AUTOGRAPH_XPI_USERNAME'
         test_var_set 'AUTOGRAPH_FENIX_PASSWORD'
@@ -270,6 +272,8 @@ case $ENV in
         test_var_set 'AUTOGRAPH_MAR_RELEASE_USERNAME'
         test_var_set 'AUTOGRAPH_FENNEC_RELEASE_PASSWORD'
         test_var_set 'AUTOGRAPH_FENNEC_RELEASE_USERNAME'
+        test_var_set 'AUTOGRAPH_RPMSIGN_USERNAME'
+        test_var_set 'AUTOGRAPH_RPMSIGN_PASSWORD'
         ;;
     esac
     ;;
