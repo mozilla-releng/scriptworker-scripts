@@ -43,7 +43,7 @@ task-defaults:
         - tox.ini
         - uv.lock
     matrix:
-        python: ["311", "314"]
+        python: ["314"]
 
 tasks:
     addonscript:
@@ -65,6 +65,8 @@ tasks:
     configloader:
         resources:
             - configloader
+        matrix:
+            python: ["311"]
     githubscript:
         resources:
             - githubscript
@@ -90,6 +92,8 @@ tasks:
             - iscript
             - scriptworker_client
             - vendored/mozbuild
+        matrix:
+            python: ["311"]
     landoscript:
         resources:
             - landoscript
@@ -110,6 +114,8 @@ tasks:
     scriptworker_client:
         resources:
             - scriptworker_client
+        matrix:
+            python: ["311"]
     shipitscript:
         resources:
             - shipitscript
