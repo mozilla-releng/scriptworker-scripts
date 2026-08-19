@@ -5,6 +5,7 @@ import asyncio
 import json
 import logging
 import os
+import tempfile
 from dataclasses import asdict
 
 import aiohttp
@@ -15,6 +16,9 @@ from signingscript.task import apple_notarize_stacked, build_filelist_dict, sign
 from signingscript.utils import copy_to_dir, load_apple_notarization_configs, load_autograph_configs, load_json
 
 log = logging.getLogger(__name__)
+
+GPG_FORMATS = {"autograph_gpg", "gcp_prod_autograph_gpg", "stage_autograph_gpg"}
+RPM_FORMATS = {"autograph_rpmsign", "gcp_prod_autograph_rpmsign", "stage_autograph_rpmsign"}
 
 
 # async_main {{{1
@@ -28,13 +32,16 @@ async def async_main(context):
     work_dir = context.config["work_dir"]
     async with aiohttp.ClientSession() as session:
         all_signing_formats = task_signing_formats(context)
-        if {"autograph_gpg", "gcp_prod_autograph_gpg", "stage_autograph_gpg"}.intersection(all_signing_formats):
-            if not context.config.get("gpg_pubkey"):
-                raise Exception("GPG format is enabled but gpg_pubkey is not defined")
-            if not os.path.exists(context.config["gpg_pubkey"]):
-                raise Exception("gpg_pubkey ({}) doesn't exist!".format(context.config["gpg_pubkey"]))
+        if GPG_FORMATS.intersection(all_signing_formats):
+            check_gpg_pubkey(context, "GPG")
             await set_up_gpg_keyring(context)
             copy_to_dir(context.config["gpg_pubkey"], context.config["artifact_dir"], target="public/build/KEY")
+
+        if RPM_FORMATS.intersection(all_signing_formats):
+            check_gpg_pubkey(context, "RPM")
+            rpm_pubkey = os.path.join(work_dir, "RPM-KEY")
+            await export_pubkey_without_revoked_subkeys(context, rpm_pubkey)
+            copy_to_dir(rpm_pubkey, context.config["artifact_dir"], target="public/build/RPM-KEY")
 
         if {"autograph_widevine", "gcp_prod_autograph_widevine", "stage_autograph_widevine"}.intersection(all_signing_formats):
             if not context.config.get("widevine_cert"):
@@ -81,6 +88,51 @@ async def async_main(context):
                 copy_to_dir(os.path.join(work_dir, source), context.config["artifact_dir"], target=source)
 
     log.info("Done!")
+
+
+def check_gpg_pubkey(context, format_name):
+    """Make sure the configured gpg pubkey exists.
+
+    Args:
+        context (Context): the signing context.
+        format_name (str): the name of the signing format needing the pubkey,
+            used in the error messages.
+
+    """
+    if not context.config.get("gpg_pubkey"):
+        raise Exception("{} format is enabled but gpg_pubkey is not defined".format(format_name))
+    if not os.path.exists(context.config["gpg_pubkey"]):
+        raise Exception("gpg_pubkey ({}) doesn't exist!".format(context.config["gpg_pubkey"]))
+
+
+async def _run_gpg(gnupghome, args, stdout=None):
+    """Run gpg in `gnupghome`, raising SigningScriptError on failure."""
+    command = ["gpg", "--homedir", gnupghome, "--batch", "--no-tty", "--no-autostart", "--quiet"] + args
+    p = await asyncio.create_subprocess_exec(*command, stdout=stdout)
+    try:
+        ret = await asyncio.wait_for(p.wait(), timeout=30)
+    except TimeoutError:
+        p.kill()
+        ret = await p.wait()
+    if ret != 0:
+        raise SigningScriptError("gpg failed ({}): {}".format(ret, " ".join(command)))
+
+
+async def export_pubkey_without_revoked_subkeys(context, dest):
+    """Write an armored copy of the gpg pubkey with revoked subkeys stripped out.
+
+    rpm chokes on keys containing revoked subkeys, so the key we publish
+    alongside signed rpms must not have any.
+
+    Args:
+        context (Context): the signing context.
+        dest (str): the path to write the filtered pubkey to.
+
+    """
+    with tempfile.TemporaryDirectory(dir=context.config["work_dir"]) as gnupghome:
+        await _run_gpg(gnupghome, ["--import", context.config["gpg_pubkey"]])
+        with open(dest, "wb") as pubkey:
+            await _run_gpg(gnupghome, ["--armor", "--export-filter", "drop-subkey=revoked -t", "--export"], stdout=pubkey)
 
 
 async def set_up_gpg_keyring(context):
