@@ -1,5 +1,6 @@
 import builtins
 import os
+import subprocess
 from unittest.mock import MagicMock, mock_open
 
 import mock
@@ -83,6 +84,79 @@ async def test_async_main_gpg_pubkey_doesnt_exist(tmpdir, mocker):
         await async_main_helper(tmpdir, mocker, formats, {"gpg_pubkey": "faaaaaaake"})
     except Exception as e:
         assert e.args[0] == "gpg_pubkey (faaaaaaake) doesn't exist!"
+
+
+@pytest.mark.asyncio
+async def test_async_main_rpm(tmpdir, tmpfile, mocker):
+    formats = ["autograph_rpmsign"]
+    mocked_copy_to_dir = mocker.Mock()
+    mocker.patch.object(script, "copy_to_dir", new=mocked_copy_to_dir)
+    mocker.patch.object(script, "export_pubkey_without_revoked_subkeys")
+
+    await async_main_helper(tmpdir, mocker, formats, {"gpg_pubkey": tmpfile})
+    for call in mocked_copy_to_dir.call_args_list:
+        if call[1].get("target") == "public/build/RPM-KEY":
+            break
+    else:
+        assert False, "couldn't find copy_to_dir call that created RPM-KEY"
+
+    script.export_pubkey_without_revoked_subkeys.assert_called_once_with(mock.ANY, os.path.join(tmpdir, "RPM-KEY"))
+
+
+@pytest.mark.asyncio
+async def test_async_main_rpm_no_pubkey_defined(tmpdir, mocker):
+    formats = ["autograph_rpmsign"]
+
+    with pytest.raises(Exception) as exc:
+        await async_main_helper(tmpdir, mocker, formats)
+    assert exc.value.args[0] == "RPM format is enabled but gpg_pubkey is not defined"
+
+
+@pytest.mark.asyncio
+async def test_async_main_rpm_pubkey_doesnt_exist(tmpdir, mocker):
+    formats = ["autograph_rpmsign"]
+
+    with pytest.raises(Exception) as exc:
+        await async_main_helper(tmpdir, mocker, formats, {"gpg_pubkey": "faaaaaaake"})
+    assert exc.value.args[0] == "gpg_pubkey (faaaaaaake) doesn't exist!"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("pubkey", ("gpg_pubkey_dep.asc", "gpg_pubkey_prod.asc"))
+async def test_export_pubkey_without_revoked_subkeys(tmpdir, mocker, pubkey):
+    context = mock.MagicMock()
+    context.config = {"work_dir": str(tmpdir), "gpg_pubkey": os.path.join(BASE_DIR, "src/signingscript/data", pubkey)}
+    dest = os.path.join(str(tmpdir), "RPM-KEY")
+
+    await script.export_pubkey_without_revoked_subkeys(context, dest)
+
+    exported = _key_validities(dest, str(tmpdir))
+    original = _key_validities(context.config["gpg_pubkey"], str(tmpdir))
+    assert exported == [validity for validity in original if validity != ("sub", "r")]
+    # the primary key and at least one usable subkey survived the filtering
+    assert ("pub", "-") in exported
+    assert ("sub", "-") in exported
+
+
+def _key_validities(path, homedir):
+    """List the (record type, validity) of each key/subkey in an exported pubkey."""
+    output = subprocess.run(
+        ["gpg", "--homedir", homedir, "--batch", "--no-tty", "--no-autostart", "--with-colons", "--show-keys", path],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout
+    records = (line.split(":") for line in output.splitlines())
+    return [(record[0], record[1]) for record in records if record[0] in ("pub", "sub")]
+
+
+@pytest.mark.asyncio
+async def test_export_pubkey_without_revoked_subkeys_failure(tmpdir, mocker):
+    context = mock.MagicMock()
+    context.config = {"work_dir": str(tmpdir), "gpg_pubkey": os.path.join(BASE_DIR, "tests", "data", "SHA256SUMS")}
+
+    with pytest.raises(SigningScriptError):
+        await script.export_pubkey_without_revoked_subkeys(context, os.path.join(str(tmpdir), "RPM-KEY"))
 
 
 @pytest.mark.asyncio
