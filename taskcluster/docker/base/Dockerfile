@@ -10,7 +10,7 @@ FROM python:$PYTHON_VERSION
 
 COPY --from=uv /uv /bin
 
-RUN apt-get update && apt-get install -y --no-install-recommends media-types && apt-get clean
+RUN apt-get update && apt-get install -y --no-install-recommends git media-types && apt-get clean
 
 RUN ln -s /app/docker.d/healthcheck /bin/healthcheck \
  && groupadd --gid 10001 app \
