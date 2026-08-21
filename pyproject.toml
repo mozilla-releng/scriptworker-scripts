@@ -29,6 +29,7 @@ configloader = { workspace = true }
 pytest-scriptworker-client = { workspace = true }
 scriptworker_client = { workspace = true }
 mozbuild = { path = "vendored/mozbuild" }
+scriptworker = { git = "https://github.com/mozilla-releng/scriptworker.git", rev = "refs/pull/823/head" }
 
 [dependency-groups]
 dev = [
