@@ -718,6 +718,270 @@ async def test_bad_extract_zipfile(context, mocker):
         await sign._extract_zipfile(context, "foo.zip")
 
 
+# archive member name validation {{{1
+def make_zipfile(path, names, contents=b"hello"):
+    """Write a zipfile at `path` containing a member for each name in `names`."""
+    with zipfile.ZipFile(path, mode="w") as z:
+        for name in names:
+            z.writestr(name, b"" if name.endswith("/") else contents)
+    return path
+
+
+def make_tarfile(path, names, contents=b"hello"):
+    """Write a gzipped tarball at `path` containing a member for each name in `names`."""
+    with tarfile.open(path, mode="w:gz") as t:
+        for name in names:
+            info = tarfile.TarInfo(name=name)
+            if name.endswith("/"):
+                info.type = tarfile.DIRTYPE
+                t.addfile(info)
+            else:
+                info.size = len(contents)
+                t.addfile(info, BytesIO(contents))
+    return path
+
+
+@pytest.mark.parametrize(
+    "names,raises",
+    (
+        # well formed archives
+        (["a", "b", "c/", "c/d", "c/e/", "c/e/f"], False),
+        ([".", "./a", "./c/", "./c/d"], False),
+        (["c/e/f"], False),
+        # absolute member names
+        (["/etc/passwd"], True),
+        (["a", "/tmp/evil"], True),
+        (["/"], True),
+        # parent directory traversal
+        (["../evil"], True),
+        (["a/../../evil"], True),
+        (["a/.."], True),
+        # empty components
+        ([""], True),
+        (["a//b"], True),
+    ),
+)
+def test_validate_archive_member_names(names, raises):
+    if raises:
+        with pytest.raises(SigningScriptError):
+            sign._validate_archive_member_names(names)
+    else:
+        sign._validate_archive_member_names(names)
+
+
+@pytest.mark.parametrize(
+    "path,top_dir,expected",
+    (
+        ("/a/b/c", "/a", "b/c"),
+        ("/a/b/", "/a", "b"),
+        ("/a/./b", "/a", "b"),
+        ("/a", "/a", "."),
+        ("/etc/passwd", "/a", None),
+        ("/a/../b", "/a", None),
+        ("b/c", "/a", None),
+    ),
+)
+def test_relpath_in_dir(path, top_dir, expected):
+    if expected is None:
+        with pytest.raises(SigningScriptError):
+            sign._relpath_in_dir(path, top_dir)
+    else:
+        assert sign._relpath_in_dir(path, top_dir) == expected
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("name", ("/etc/passwd", "../evil", "a/../../evil", "a//b"))
+async def test_get_zipfile_files_illegal_member(context, name):
+    """A bad archive is refused when we first read it, before anything is extracted."""
+    from_ = os.path.join(context.config["work_dir"], "evil.zip")
+    make_zipfile(from_, ["ok", name])
+    with pytest.raises(SigningScriptError):
+        await sign._get_zipfile_files(from_)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("name", ("/etc/passwd", "../evil", "a/../../evil", "a//b"))
+async def test_get_tarfile_files_illegal_member(context, name):
+    """A bad archive is refused when we first read it, before anything is extracted."""
+    from_ = os.path.join(context.config["work_dir"], "evil.tar.gz")
+    make_tarfile(from_, ["ok", name])
+    with pytest.raises(SigningScriptError):
+        await sign._get_tarfile_files(from_, "gz")
+
+
+@pytest.mark.asyncio
+async def test_get_tarfile_files_validates_non_file_members(context):
+    """Members we don't return still have to be sane: a bad name anywhere fails the archive."""
+    from_ = os.path.join(context.config["work_dir"], "evil.tar.gz")
+    with tarfile.open(from_, mode="w:gz") as t:
+        info = tarfile.TarInfo(name="ok")
+        info.size = 0
+        t.addfile(info, BytesIO(b""))
+        # A directory member, so it is filtered out of the return value.
+        t.addfile(tarfile.TarInfo(name="../evil"))
+    with pytest.raises(SigningScriptError):
+        await sign._get_tarfile_files(from_, "gz")
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("name", ("/etc/passwd", "../evil", "a/../../evil", "a//b"))
+async def test_extract_zipfile_illegal_member(context, name):
+    from_ = os.path.join(context.config["work_dir"], "evil.zip")
+    tmp_dir = os.path.join(context.config["work_dir"], "unzipped")
+    make_zipfile(from_, [name])
+    with pytest.raises(SigningScriptError):
+        await sign._extract_zipfile(context, from_, tmp_dir=tmp_dir)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("name", ("/etc/passwd", "../evil", "a/../../evil", "a//b"))
+async def test_extract_tarfile_illegal_member(context, name):
+    from_ = os.path.join(context.config["work_dir"], "evil.tar.gz")
+    tmp_dir = os.path.join(context.config["work_dir"], "untarred")
+    make_tarfile(from_, [name])
+    with pytest.raises(SigningScriptError):
+        await sign._extract_tarfile(context, from_, "gz", tmp_dir=tmp_dir)
+
+
+@pytest.mark.asyncio
+async def test_extract_zipfile_records_extracted_paths(context):
+    """An absolute member name must never be recorded as a path outside of tmp_dir."""
+    outside = os.path.join(context.config["work_dir"], "outside.txt")
+    with open(outside, "w") as fh:
+        fh.write("do not repack me")
+    from_ = os.path.join(context.config["work_dir"], "evil.zip")
+    tmp_dir = os.path.join(context.config["work_dir"], "unzipped")
+    make_zipfile(from_, ["ok", outside])
+
+    with pytest.raises(SigningScriptError):
+        await sign._extract_zipfile(context, from_, tmp_dir=tmp_dir)
+
+    # The file outside of tmp_dir is untouched, and nothing was recorded for it.
+    with open(outside) as fh:
+        assert fh.read() == "do not repack me"
+
+
+@pytest.mark.asyncio
+async def test_create_zipfile_refuses_path_outside_tmp_dir(context):
+    """Even if a path outside of tmp_dir is handed to us, don't read it into the archive."""
+    outside = os.path.join(context.config["work_dir"], "outside.txt")
+    with open(outside, "w") as fh:
+        fh.write("do not repack me")
+    tmp_dir = os.path.join(context.config["work_dir"], "unzipped")
+    makedirs(tmp_dir)
+    inside = os.path.join(tmp_dir, "a")
+    with open(inside, "w") as fh:
+        fh.write("fine")
+    to = os.path.join(context.config["work_dir"], "repacked.zip")
+
+    with pytest.raises(SigningScriptError):
+        await sign._create_zipfile(context, to, [inside, outside], tmp_dir=tmp_dir)
+
+    assert "do not repack me" not in open(to, "rb").read().decode("latin-1")
+
+
+@pytest.mark.asyncio
+async def test_create_tarfile_refuses_path_outside_tmp_dir(context):
+    outside = os.path.join(context.config["work_dir"], "outside.txt")
+    with open(outside, "w") as fh:
+        fh.write("do not repack me")
+    tmp_dir = os.path.join(context.config["work_dir"], "untarred")
+    makedirs(tmp_dir)
+    to = os.path.join(context.config["work_dir"], "repacked.tar.gz")
+
+    with pytest.raises(SigningScriptError):
+        await sign._create_tarfile(context, to, [outside], "gz", tmp_dir=tmp_dir)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "names,expected_files",
+    (
+        # explicit directory entries and nested dirs
+        (["top/", "top/sub/", "top/sub/f", "top/g"], ["top", "top/sub", "top/sub/f", "top/g"]),
+        # no directory entries at all
+        (["a", "b/c/d"], ["a", "b/c/d"]),
+    ),
+)
+async def test_extract_and_create_zipfile_roundtrip(context, names, expected_files):
+    from_ = os.path.join(context.config["work_dir"], "good.zip")
+    tmp_dir = os.path.join(context.config["work_dir"], "unzipped")
+    make_zipfile(from_, names)
+
+    extracted = await sign._extract_zipfile(context, from_, tmp_dir=tmp_dir)
+    assert extracted == [os.path.normpath(os.path.join(tmp_dir, f)) for f in expected_files]
+    for path in extracted:
+        assert os.path.exists(path)
+
+    to = os.path.join(context.config["work_dir"], "repacked.zip")
+    await sign._create_zipfile(context, to, extracted, tmp_dir=tmp_dir, mode="w")
+    assert sorted(await sign._get_zipfile_files(to)) == sorted(names)
+
+
+@pytest.mark.asyncio
+async def test_extract_and_create_tarfile_roundtrip(context):
+    names = ["./", "./top/", "./top/sub/", "./top/sub/f", "./top/g"]
+    from_ = os.path.join(context.config["work_dir"], "good.tar.gz")
+    tmp_dir = os.path.join(context.config["work_dir"], "untarred")
+    make_tarfile(from_, names)
+
+    extracted = await sign._extract_tarfile(context, from_, "gz", tmp_dir=tmp_dir)
+    # only regular files are returned
+    assert extracted == [os.path.join(tmp_dir, f) for f in ("./top/sub/f", "./top/g")]
+
+    to = os.path.join(context.config["work_dir"], "repacked.tar.gz")
+    await sign._create_tarfile(context, to, extracted, "gz", tmp_dir=tmp_dir)
+    assert sorted(await sign._get_tarfile_files(to, "gz")) == ["top/g", "top/sub/f"]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "signing_func, fmt, archive_name, names",
+    (
+        (sign.sign_authenticode, "autograph_authenticode_sha2", "evil.zip", ("setup.exe", "{host_dir}/host.dll")),
+        (sign.sign_widevine, "autograph_widevine", "evil.zip", ("precomplete", "plugin-container", "{host_dir}/plugin-container")),
+        (sign.sign_widevine, "autograph_widevine", "evil.tar.gz", ("precomplete", "plugin-container", "{host_dir}/plugin-container")),
+        (sign.sign_omnija, "autograph_omnija", "evil.zip", ("omni.ja", "{host_dir}/omni.ja")),
+        (sign.sign_omnija, "autograph_omnija", "evil.tar.gz", ("omni.ja", "{host_dir}/omni.ja")),
+    ),
+)
+async def test_signing_refuses_absolute_member_names(context, mocker, tmp_path, signing_func, fmt, archive_name, names):
+    """An absolute member name must not make a signing flow touch the host file it names."""
+    host_dir = tmp_path / "host"
+    host_dir.mkdir()
+    names = [name.format(host_dir=host_dir) for name in names]
+    host_file = names[-1]
+    with open(host_file, "wb") as fh:
+        fh.write(b"host file")
+
+    archive = os.path.join(context.config["work_dir"], archive_name)
+    if archive_name.endswith(".zip"):
+        make_zipfile(archive, names)
+    else:
+        make_tarfile(archive, names)
+    with open(archive, "rb") as fh:
+        archive_contents = fh.read()
+
+    signed = []
+
+    async def fake_signer(context, from_, *args, **kwargs):
+        signed.append(from_)
+
+    mocker.patch.object(sign, "sign_authenticode_file", fake_signer)
+    mocker.patch.object(sign, "sign_widevine_with_autograph", fake_signer)
+    mocker.patch.object(sign, "sign_omnija_with_autograph", fake_signer)
+
+    with pytest.raises(SigningScriptError):
+        await signing_func(context, archive, fmt)
+
+    assert signed == []
+    with open(host_file, "rb") as fh:
+        assert fh.read() == b"host file"
+    assert sorted(os.listdir(host_dir)) == [os.path.basename(host_file)]
+    with open(archive, "rb") as fh:
+        assert fh.read() == archive_contents
+
+
 @pytest.mark.asyncio
 async def test_zipfile_append_write(context):
     top_dir = os.path.dirname(os.path.dirname(__file__))

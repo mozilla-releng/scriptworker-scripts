@@ -305,10 +305,10 @@ async def sign_widevine_zip(context, orig_path, fmt):
         # Extract all files so we can create `precomplete` with the full
         # file list
         all_files = await _extract_zipfile(context, orig_path, tmp_dir=tmp_dir)
+        files_to_sign = _get_widevine_signing_files(all_files)
         tasks = []
         # Sign the appropriate inner files
         for from_, blessed in files_to_sign.items():
-            from_ = os.path.join(tmp_dir, from_)
             to = f"{from_}.sig"
             tasks.append(asyncio.ensure_future(sign_widevine_with_autograph(context, from_, blessed, fmt, to=to)))
             all_files.append(to)
@@ -356,10 +356,10 @@ async def sign_widevine_tar(context, orig_path, fmt):
         # Extract all files so we can create `precomplete` with the full
         # file list
         all_files = await _extract_tarfile(context, orig_path, compression, tmp_dir=tmp_dir)
+        files_to_sign = _get_widevine_signing_files(all_files)
         tasks = []
         # Sign the appropriate inner files
         for from_, blessed in files_to_sign.items():
-            from_ = os.path.join(tmp_dir, from_)
             # Don't try to sign directories
             if not os.path.isfile(from_):
                 continue
@@ -439,10 +439,10 @@ async def sign_omnija_zip(context, orig_path, fmt):
     log.debug("Omnija files to sign: %s", files_to_sign)
     if files_to_sign:
         all_files = await _extract_zipfile(context, orig_path, tmp_dir=tmp_dir)
+        files_to_sign = _get_omnija_signing_files(all_files)
         tasks = []
         # Sign the appropriate inner files
         for from_, _ in files_to_sign.items():
-            from_ = os.path.join(tmp_dir, from_)
             tasks.append(asyncio.ensure_future(sign_omnija_with_autograph(context, from_, fmt)))
         await raise_future_exceptions(tasks)
         await _create_zipfile(context, orig_path, all_files, mode="w", tmp_dir=tmp_dir)
@@ -480,10 +480,10 @@ async def sign_omnija_tar(context, orig_path, fmt):
         # Extract all files so we can create `precomplete` with the full
         # file list
         all_files = await _extract_tarfile(context, orig_path, compression, tmp_dir=tmp_dir)
+        files_to_sign = _get_omnija_signing_files(all_files)
         tasks = []
         # Sign the appropriate inner files
         for from_, _ in files_to_sign.items():
-            from_ = os.path.join(tmp_dir, from_)
             # Don't try to sign directories
             if not os.path.isfile(from_):
                 continue
@@ -700,11 +700,67 @@ async def _convert_dmg_to_tar_gz(context, from_):
     return to
 
 
+# _validate_archive_member_names {{{1
+def _validate_archive_member_names(names):
+    """Ensure every archive member name is a plain relative path.
+
+    Member names are used for bookkeeping as well as for extraction, so refuse
+    anything that could resolve outside of the extraction directory rather than
+    relying on the extractor to silently normalize it (bug 2065193).
+
+    A leading `./` (and a `.` component in general) is allowed: tarballs created
+    with `tar cf <archive> .` -- including the ones this module creates in
+    `_convert_dmg_to_tar_gz` -- name their members that way.
+
+    Args:
+        names (iterable): the archive member names to validate
+
+    Raises:
+        SigningScriptError: if any member name isn't a plain relative path.
+
+    """
+    for name in names:
+        # Directory members are stored with a trailing separator ("foo/"), which
+        # would otherwise split into a trailing empty component. Strip a single
+        # trailing separator so directory members validate like file members.
+        candidate = name[:-1] if name[-1:] in ("/", os.sep) else name
+        components = candidate.replace(os.sep, "/").split("/")
+        if os.path.isabs(candidate) or candidate.startswith("/"):
+            raise SigningScriptError("Illegal absolute archive member name: {}".format(name))
+        if any(component in ("", os.path.pardir) for component in components):
+            raise SigningScriptError("Illegal archive member name: {}".format(name))
+
+
+# _relpath_in_dir {{{1
+def _relpath_in_dir(path, top_dir):
+    """Return `path` relative to `top_dir`, refusing paths outside of it.
+
+    Args:
+        path (str): the path to make relative
+        top_dir (str): the directory `path` is expected to live in
+
+    Raises:
+        SigningScriptError: if `path` is outside of `top_dir`.
+
+    Returns:
+        str: `path`, relative to `top_dir`
+
+    """
+    relpath = os.path.relpath(path, top_dir)
+    if os.path.isabs(relpath) or relpath == os.path.pardir or relpath.startswith(os.path.pardir + os.sep):
+        raise SigningScriptError("{} is outside of {}!".format(path, top_dir))
+    return relpath
+
+
 # _get_zipfile_files {{{1
 @time_async_function
 async def _get_zipfile_files(from_):
     with zipfile.ZipFile(from_, mode="r") as z:
         files = z.namelist()
+        # Validate here as well as in `_extract_zipfile`, so that callers which
+        # select over these names before extracting are working from names that
+        # are already known to be plain relative paths (bug 2065193).
+        _validate_archive_member_names(files)
         return files
 
 
@@ -719,14 +775,14 @@ async def _extract_zipfile(context, from_, files=None, tmp_dir=None):
         rm(tmp_dir)
         utils.mkdir(tmp_dir)
         with zipfile.ZipFile(from_, mode="r") as z:
-            if files is not None:
-                for name in files:
-                    z.extract(name, path=tmp_dir)
-                    extracted_files.append(os.path.join(tmp_dir, name))
-            else:
-                for name in z.namelist():
-                    extracted_files.append(os.path.join(tmp_dir, name))
-                z.extractall(path=tmp_dir)
+            members = z.namelist() if files is None else list(files)
+            # Validate the whole member list before writing anything, so a bad
+            # archive is refused rather than half extracted.
+            _validate_archive_member_names(members)
+            for name in members:
+                # `extract()` returns the path it actually wrote to; record that
+                # instead of re-deriving it from the member name (bug 2065193).
+                extracted_files.append(z.extract(name, path=tmp_dir))
         return extracted_files
     except Exception as e:
         raise SigningScriptError(e)
@@ -741,7 +797,7 @@ async def _create_zipfile(context, to, files, tmp_dir=None, mode="w"):
         log.info("Creating zipfile {}...".format(to))
         with zipfile.ZipFile(to, mode=mode, compression=zipfile.ZIP_DEFLATED) as z:
             for f in files:
-                relpath = os.path.relpath(f, tmp_dir)
+                relpath = _relpath_in_dir(f, tmp_dir)
                 z.write(f, arcname=relpath)
         return to
     except Exception as e:
@@ -763,6 +819,10 @@ async def _get_tarfile_files(from_, compression):
     compression = _get_tarfile_compression(compression)
     with tarfile.open(from_, mode="r:{}".format(compression)) as t:
         files = t.getmembers()
+        # Validate every member, not just the regular files we return: a bad
+        # name anywhere in the archive means we refuse the archive, and callers
+        # select over these names before extracting (bug 2065193).
+        _validate_archive_member_names([f.name for f in files])
         return [f.name for f in files if f.isfile()]
 
 
@@ -777,9 +837,16 @@ async def _extract_tarfile(context, from_, compression, tmp_dir=None):
         rm(tmp_dir)
         utils.mkdir(tmp_dir)
         with tarfile.open(from_, mode="r:{}".format(compression)) as t:
+            names = t.getnames()
+            # Validate the whole member list before writing anything, so a bad
+            # archive is refused rather than half extracted.
+            _validate_archive_member_names(names)
             safe_extract(t, path=tmp_dir)
-            for name in t.getnames():
+            for name in names:
+                # Names are validated above, but check containment of the
+                # recorded path as well (bug 2065193).
                 path = os.path.join(tmp_dir, name)
+                _relpath_in_dir(path, tmp_dir)
                 os.path.isfile(path) and files.append(path)
         return files
     except Exception as e:
@@ -803,7 +870,7 @@ def _create_xz_tarfile(to, files, rel_dir):
     ]
     with lzma.open(to, "wb", filters=filters) as dest, tarfile.open(mode="w|", fileobj=dest) as tf:
         for f in files:
-            relpath = os.path.relpath(f, rel_dir)
+            relpath = _relpath_in_dir(f, rel_dir)
             tf.add(f, arcname=relpath, filter=_owner_filter)
     return to
 
@@ -821,7 +888,7 @@ async def _create_tarfile(context, to, files, compression, tmp_dir=None):
 
         with tarfile.open(to, mode="w:{}".format(compression)) as t:
             for f in files:
-                relpath = os.path.relpath(f, tmp_dir)
+                relpath = _relpath_in_dir(f, tmp_dir)
                 t.add(f, arcname=relpath, filter=_owner_filter)
         return to
     except Exception as e:
