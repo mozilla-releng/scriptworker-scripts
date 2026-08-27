@@ -565,10 +565,9 @@ async def test_sign_widevine(context, mocker, filename, fmt, raises, should_sign
     mocker.patch.object(sign, "sign_file", new=noop_async)
     mocker.patch.object(sign, "sign_widevine_with_autograph", new=noop_async)
     mocker.patch.object(sign, "makedirs", new=noop_sync)
-    mocker.patch.object(sign, "generate_precomplete", new=noop_sync)
+    mocker.patch.object(sign, "_update_precomplete", new=noop_sync)
     mocker.patch.object(sign, "_create_tarfile", new=noop_async)
     mocker.patch.object(sign, "_create_zipfile", new=noop_async)
-    mocker.patch.object(sign, "_run_generate_precomplete", new=noop_sync)
     mocker.patch.object(os.path, "isfile", new=fake_isfile)
 
     if raises:
@@ -587,21 +586,56 @@ def test_should_sign_windows(filenames, expected):
         assert sign._should_sign_windows(f) == expected
 
 
-# _run_generate_precomplete {{{1
+# _update_precomplete {{{1
 @pytest.mark.parametrize("num_precomplete,raises", ((1, False), (0, True), (2, True)))
-def test_run_generate_precomplete(context, num_precomplete, raises, mocker):
-    mocker.patch.object(sign, "generate_precomplete", new=noop_sync)
+def test_update_precomplete(context, num_precomplete, raises, mocker):
     work_dir = context.config["work_dir"]
     for i in range(0, num_precomplete):
         path = os.path.join(work_dir, "foo", str(i))
         makedirs(path)
         with open(os.path.join(path, "precomplete"), "w") as fh:
-            fh.write("blah")
+            fh.write('remove "blah"\n')
     if raises:
         with pytest.raises(SigningScriptError):
-            sign._run_generate_precomplete(context, work_dir)
+            sign._update_precomplete(context, work_dir)
     else:
-        sign._run_generate_precomplete(context, work_dir)
+        sign._update_precomplete(context, work_dir)
+
+
+def test_update_precomplete_adds_sig_instructions(context):
+    work_dir = context.config["work_dir"]
+    path = os.path.join(work_dir, "foo")
+    makedirs(path)
+    precomplete = os.path.join(path, "precomplete")
+    with open(precomplete, "w") as fh:
+        fh.write('remove "a/libclearkey.dylib"\n')
+        fh.write('remove "a/unrelated"\n')
+        fh.write('rmdir "a/"\n')
+    sign._update_precomplete(context, work_dir)
+    with open(precomplete) as fh:
+        assert fh.readlines() == [
+            'remove "a/libclearkey.dylib"\n',
+            'remove "a/libclearkey.dylib.sig"\n',
+            'remove "a/unrelated"\n',
+            'rmdir "a/"\n',
+        ]
+
+
+def test_update_precomplete_is_idempotent(context):
+    """Signing an already-signed build must not add a second `remove` for the sig file."""
+    work_dir = context.config["work_dir"]
+    path = os.path.join(work_dir, "foo")
+    makedirs(path)
+    precomplete = os.path.join(path, "precomplete")
+    with open(precomplete, "w") as fh:
+        fh.write('remove "a/libclearkey.dylib"\n')
+        fh.write('remove "a/unrelated"\n')
+    sign._update_precomplete(context, work_dir)
+    with open(precomplete) as fh:
+        once = fh.read()
+    sign._update_precomplete(context, work_dir)
+    with open(precomplete) as fh:
+        assert fh.read() == once
 
 
 # remove_extra_files {{{1

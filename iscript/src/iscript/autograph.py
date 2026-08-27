@@ -19,7 +19,6 @@ from scriptworker_client.aio import raise_future_exceptions, retry_async
 from scriptworker_client.utils import makedirs, rm
 
 from iscript.constants import LANGPACK_AUTOGRAPH_KEY_ID, OMNIJA_AUTOGRAPH_KEY_ID
-from iscript.createprecomplete import generate_precomplete
 from iscript.exceptions import IScriptError
 
 try:
@@ -102,9 +101,9 @@ async def sign_widevine_dir(config, sign_config, app_dir, autograph_fmt):
             all_files.append(to)
         await raise_future_exceptions(tasks)
         remove_extra_files(app_dir, all_files)
-        # Regenerate the `precomplete` file, which is used for cleanup before
+        # Update the `precomplete` file, which is used for cleanup before
         # applying a complete mar.
-        _run_generate_precomplete(config, app_dir)
+        _update_precomplete(config, app_dir)
     return app_dir
 
 
@@ -144,16 +143,55 @@ def _get_widevine_signing_files(file_list):
     return files
 
 
-# _run_generate_precomplete {{{1
-def _run_generate_precomplete(config, app_dir):
-    """Regenerate `precomplete` file with widevine sig paths for complete mar."""
-    log.info("Generating `precomplete` file...")
-    path = _ensure_one_precomplete(app_dir, "before")
-    with open(path, "r") as fh:
+# _update_precomplete {{{1
+def _parse_precomplete_remove(line):
+    """Return the path from a precomplete `remove "<path>"` line, or None.
+
+    Args:
+        line (str): a single line from a `precomplete` file
+
+    Returns:
+        str: the unquoted path, or None if `line` isn't a `remove` instruction
+
+    """
+    parts = line.strip().split(None, 1)
+    if len(parts) != 2:
+        return None
+    instr, path = parts
+    if instr != "remove" or len(path) < 2 or not path.startswith('"') or not path.endswith('"'):
+        return None
+    return path[1:-1]
+
+
+# _update_precomplete {{{1
+def _update_precomplete(config, app_dir):
+    """Add `remove` instructions to `precomplete` for the widevine sig files."""
+    log.info("Updating `precomplete` file...")
+    precomplete = _ensure_one_precomplete(app_dir)
+    with open(precomplete, "r") as fh:
         before = fh.readlines()
-    generate_precomplete(os.path.dirname(path))
-    path = _ensure_one_precomplete(app_dir, "after")
-    with open(path, "r") as fh:
+
+    remove_paths = []
+    for line in before:
+        path = _parse_precomplete_remove(line)
+        if path is not None and path not in remove_paths:
+            remove_paths.append(path)
+    files_to_sign = _get_widevine_signing_files(remove_paths)
+
+    emitted = set()
+    with open(precomplete, "w") as fh:
+        for line in before:
+            fh.write(line)
+            path = _parse_precomplete_remove(line)
+            if path is None or path not in files_to_sign:
+                continue
+            sigfile = _get_mac_sigpath(path)
+            if sigfile in emitted:
+                continue
+            emitted.add(sigfile)
+            fh.write('remove "{}"\n'.format(sigfile))
+
+    with open(precomplete, "r") as fh:
         after = fh.readlines()
     # Create diff file
     makedirs(os.path.join(config["artifact_dir"], "public", "logs"))
@@ -164,13 +202,13 @@ def _run_generate_precomplete(config, app_dir):
 
 
 # _ensure_one_precomplete {{{1
-def _ensure_one_precomplete(tmp_dir, adj):
+def _ensure_one_precomplete(tmp_dir):
     """Ensure we only have one `precomplete` file in `tmp_dir`."""
     precompletes = glob.glob(os.path.join(tmp_dir, "**", "precomplete"), recursive=True)
     if len(precompletes) < 1:
         raise IScriptError('No `precomplete` file found in "%s"', tmp_dir)
     if len(precompletes) > 1:
-        raise IScriptError('More than one `precomplete` file %s in "%s"', adj, tmp_dir)
+        raise IScriptError('More than one `precomplete` file in "%s"', tmp_dir)
     return precompletes[0]
 
 
