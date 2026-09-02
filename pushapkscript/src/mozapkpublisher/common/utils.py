@@ -51,9 +51,10 @@ def add_push_arguments(parser):
              "endpoint; without it the binary is uploaded but left unsubmitted."
     )
     parser.add_argument('--do-not-contact-server', action='store_false', dest='contact_server',
-                        help='''Prevent any request to reach the APK server. Use this option if
+                        help='''Prevent any request from reaching the store. Use this option if
 you want to run the script without any valid credentials nor valid APKs. --credentials must
-still be provided (you can pass a random file name).''')
+still be provided (you can pass a random file name). This overrides --commit: nothing is
+uploaded on any store.''')
     parser.add_argument('track', help='Track on which to upload. This has no effect if the store is not google')
     parser.add_argument(
         '--rollout-percentage',
@@ -64,7 +65,10 @@ still be provided (you can pass a random file name).''')
         help='The percentage of user who will get the update. Specify only if track is rollout'
     )
     parser.add_argument('--commit', action='store_false', dest='dry_run',
-                        help='Commit new release on Google Play. This action cannot be reverted. This has no effect if the store is not google')
+                        help='Actually upload. Required on EVERY store: without it the run stops after the '
+                             'APK checks and nothing is sent. On google this commits the new release, which '
+                             'cannot be reverted; on samsung and huawei it uploads the binaries, and they are '
+                             'additionally submitted for release only if --submit is given.')
 
 
 def check_push_arguments(parser, config):
