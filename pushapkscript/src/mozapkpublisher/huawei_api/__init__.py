@@ -1,21 +1,103 @@
-from typing import Dict, Any, List
+from datetime import datetime, timedelta, timezone
+from typing import Dict, Any, List, Optional
 from .content_info import AppContentInfo
 from .utils import raise_for_status_with_message, raise_for_ret_code
+from .result_codes import (
+    PACKAGE_COMPILING,
+    PACKAGE_PROCESSING_MESSAGES,
+    PERMANENT_SUBMIT_SUB_CODES,
+    SUBMIT_QUERY_FAILED,
+)
 from .error import HuaweiUploadException, HuaweiUpdateException
 from mozapkpublisher.common.store_api import build_apk_file_name, request
 from mozapkpublisher.common.utils import file_sha256sum
 from .auth import create_jwt
 
 import aiohttp
+import asyncio
 import logging
 import os.path
+import time
 
 BASE_URL = "https://connect-api.cloud.huawei.com/"
 logger = logging.getLogger(__name__)
 
-# `releaseType` values accepted by the AppGallery publishing API.
+# `releaseType` values accepted by the AppGallery publishing API. There is no value 2:
+# a phased release is 3, and it only works for an app that already has a released version.
+# https://developer.huawei.com/consumer/en/doc/AppGallery-connect-References/agcapi-app-submit-0000001158245061
 RELEASE_TYPE_FULL_ROLLOUT = 1
-RELEASE_TYPE_PHASED_ROLLOUT = 2
+RELEASE_TYPE_PHASED_ROLLOUT = 3
+
+# AppGallery requires both a start and an end time for a phased release and cannot infer
+# either, so the length of the window is a policy decision made here.
+PHASED_ROLLOUT_WINDOW = timedelta(days=7)
+
+# Format of `phasedReleaseStartTime`/`phasedReleaseEndTime`, documented as
+# `yyyy-MM-ddTHH:mm:ssZZ` with the example 2015-01-01T01:01:01+0800. The offset carries no
+# colon, which is why this is spelled out rather than using `datetime.isoformat()` -- that
+# emits +00:00.
+PHASED_ROLLOUT_TIME_FORMAT = "%Y-%m-%dT%H:%M:%S%z"
+
+# AppGallery parses uploaded packages asynchronously and rejects `app-submit` until that
+# finishes, so the submission is retried rather than sent once.
+#
+# The delay cannot go below two minutes: consecutive `app-submit` calls made less than
+# that apart are rejected outright, so a shorter retry would fail on the interval rather
+# than on the package. Huawei's own message on 204144727 asks for a retry 3 to 5 minutes
+# later, which the 10 minute budget covers.
+# https://developer.huawei.com/consumer/en/doc/AppGallery-connect-Guides/agcapi-pub-releasenotes-0000001111685226
+SUBMIT_MINIMUM_RETRY_DELAY = 120
+SUBMIT_RETRY_DELAY = 120
+SUBMIT_RETRY_TIMEOUT = 600
+
+
+def _is_package_still_processing(ret):
+    """
+    Whether `app-submit` failed only because AppGallery hasn't finished parsing the
+    package that was just uploaded, and is therefore worth retrying.
+
+    Decided by result code wherever a code is decisive, and only by message where none
+    is. PACKAGE_COMPILING has a single meaning, so it decides alone. SUBMIT_QUERY_FAILED
+    is returned both for permanent failures and for a package still being parsed, so a
+    documented sub-code in the message vetoes a retry, and failing that the narrow set of
+    observed "still parsing" phrases allows one. Anything unrecognised is treated as
+    permanent, so a new failure mode surfaces immediately instead of stalling for the
+    whole timeout. See `result_codes` for the provenance of each value.
+    """
+    code = ret.get("code")
+    if code == PACKAGE_COMPILING:
+        return True
+    if code != SUBMIT_QUERY_FAILED:
+        return False
+
+    message = ret.get("msg") or ""
+    if any(sub_code in message for sub_code in PERMANENT_SUBMIT_SUB_CODES):
+        return False
+
+    return any(fragment in message.lower() for fragment in PACKAGE_PROCESSING_MESSAGES)
+
+
+def build_phased_release(rollout_rate, start_time=None):
+    """
+    Build the `app-submit` request body for a phased release. All four fields are
+    mandatory whenever `releaseType` is RELEASE_TYPE_PHASED_ROLLOUT, and
+    `phasedReleasePercent` is a string with two decimals and no percent sign.
+
+    https://developer.huawei.com/consumer/en/doc/AppGallery-connect-References/agcapi-app-submit-0000001158245061
+    """
+    if not 0 < rollout_rate <= 100:
+        raise HuaweiUpdateException(
+            "Rollout percentage must be in (0, 100]. Value given: {}".format(rollout_rate)
+        )
+
+    start_time = start_time or datetime.now(timezone.utc)
+    percent = "{:.2f}".format(rollout_rate)
+    return {
+        "phasedReleaseStartTime": start_time.strftime(PHASED_ROLLOUT_TIME_FORMAT),
+        "phasedReleaseEndTime": (start_time + PHASED_ROLLOUT_WINDOW).strftime(PHASED_ROLLOUT_TIME_FORMAT),
+        "phasedReleasePercent": percent,
+        "phasedReleaseDescription": "Phased rollout to {}% of users".format(percent),
+    }
 
 
 class HuaweiAppGallery:
@@ -39,10 +121,11 @@ class HuaweiAppGallery:
         Upload the APKs passed as arguments. The app to be updated will be inferred from
         the package name.
 
-        If `rollout_rate` is not None, the submission uses `releaseType=2` (phased
-        release). Setting the target rollout percentage is not handled here; that's
-        managed in the AppGallery Connect console (or via a follow-up phased-release
-        endpoint that is not yet wired up).
+        If `rollout_rate` is not None, the submission is a phased release
+        (`releaseType=3`) targeting that percentage of users over
+        `PHASED_ROLLOUT_WINDOW`. AppGallery only accepts a phased release for an app
+        that already has a released version, so the very first submission for a
+        package has to be a full rollout.
         """
         if self._dry_run:
             logger.warning('No APKs were uploaded since `dry_run` was `True`')
@@ -61,16 +144,65 @@ class HuaweiAppGallery:
         await self.api.update_app_file_info(app_id, files)
 
         if submit:
-            release_type = RELEASE_TYPE_PHASED_ROLLOUT if rollout_rate is not None else RELEASE_TYPE_FULL_ROLLOUT
-            await self.api.submit_app(app_id, release_type=release_type)
+            if rollout_rate is None:
+                await self.submit_app(app_id, RELEASE_TYPE_FULL_ROLLOUT)
+            else:
+                await self.submit_app(
+                    app_id, RELEASE_TYPE_PHASED_ROLLOUT, build_phased_release(rollout_rate)
+                )
+
+    async def submit_app(self, app_id, release_type, phased_release=None):
+        """
+        Submit the app for release once AppGallery has finished parsing the binary that
+        was just bound to it.
+
+        Packages are parsed asynchronously and `app-submit` fails while that is in
+        flight, so the first attempt goes out immediately -- a small package is often
+        ready straight away -- and is then retried every `SUBMIT_RETRY_DELAY` seconds
+        until `SUBMIT_RETRY_TIMEOUT`. Any other failure is raised on the first attempt.
+
+        https://developer.huawei.com/consumer/en/doc/AppGallery-connect-References/agcapi-app-submit-0000001158245061
+        """
+        deadline = time.monotonic() + SUBMIT_RETRY_TIMEOUT
+
+        while True:
+            body = await self.api.submit_app(
+                app_id, release_type=release_type, phased_release=phased_release, check_ret=False
+            )
+            ret = body.get("ret") or {}
+
+            if not _is_package_still_processing(ret):
+                raise_for_ret_code(body)
+                return body
+
+            if time.monotonic() >= deadline:
+                raise HuaweiUpdateException(
+                    "AppGallery was still processing the uploaded package {} seconds after it was bound to the "
+                    "release, so it could not be submitted: ret.code={}: {}. The binary is uploaded, so the "
+                    "release can still be submitted from the AppGallery Connect console.".format(
+                        SUBMIT_RETRY_TIMEOUT, ret.get("code"), ret.get("msg")
+                    )
+                )
+
+            logger.info(
+                "AppGallery is still processing the package (%s). Retrying the submission in %s seconds.",
+                ret.get("msg"),
+                SUBMIT_RETRY_DELAY,
+            )
+            await asyncio.sleep(SUBMIT_RETRY_DELAY)
 
     async def upload_file(self, app_id, file, name):
         """
-        Uploads a file to the huawei app gallery and returns its `fileDestUrl`.
+        Uploads a file to the huawei app gallery and returns its file destination URL.
 
-        `fileDestUrl` is the storage reference the upload step returns for the
-        uploaded binary. It is passed to `update_app_file_info` to bind the binary
-        to the app release.
+        That URL is the storage reference the upload step returns for the uploaded
+        binary. It is passed to `update_app_file_info` to bind the binary to the app
+        release.
+
+        The upload response misspells the key as `fileDestUlr`, while the
+        `app-file-info` request that consumes it spells it `fileDestUrl`. Both
+        spellings are accepted here so the client keeps working if Huawei ever fixes
+        the typo.
 
         The file's SHA-256 is sent to `get_upload_url` so the AppGallery store
         verifies the integrity of the uploaded package against it.
@@ -78,27 +210,37 @@ class HuaweiAppGallery:
         sha256 = file_sha256sum(file)
         upload_info = await self.api.get_upload_url(app_id, suffix=os.path.splitext(name)[1].lstrip(".") or "apk", sha256=sha256)
         file_upload = await self.api.upload_file(upload_info["uploadUrl"], upload_info["authCode"], file, name)
-        return file_upload["fileDestUrl"]
+
+        file_dest_url = file_upload.get("fileDestUlr") or file_upload.get("fileDestUrl")
+        if not file_dest_url:
+            raise HuaweiUploadException(
+                "The upload result didn't contain a file destination URL: {}".format(file_upload)
+            )
+        return file_dest_url
 
     async def infer_app_id_from_package_name(self, package_name):
         """
         Returns the app ID related to the package name provided.
+
+        `appid-list` already filters on `packageName` server-side. Its entries are
+        `{"key": <app name>, "value": <app id>}` pairs and carry no package name of
+        their own, so there is nothing left to match on here.
         """
         result = await self.api.app_id_list(package_name=package_name)
-        apps = result.get("appids", []) or []
-        matches = [app["value"] for app in apps if app.get("package") == package_name]
+        apps = result.get("appids") or []
+        app_ids = [app["value"] for app in apps]
 
-        if len(matches) > 1:
+        if len(app_ids) > 1:
             raise HuaweiUpdateException(
-                f"Found multiple app IDs for the package name {package_name}: {matches}. "
+                f"Found multiple app IDs for the package name {package_name}: {app_ids}. "
                 "Refusing to guess which one to publish to."
             )
-        if matches:
-            return matches[0]
+        if not app_ids:
+            raise HuaweiUpdateException(
+                f"Couldn't find an app ID for the following package name {package_name}."
+            )
 
-        raise HuaweiUpdateException(
-            f"Couldn't find an app ID for the following package name {package_name}."
-        )
+        return app_ids[0]
 
 
 class HuaweiAppGalleryApi:
@@ -157,6 +299,17 @@ class HuaweiAppGalleryApi:
         """
         Get an upload URL for a binary. When `sha256` (the hex digest of the file) is
         provided, the store verifies the integrity of the uploaded package against it.
+
+        `/api/publish/v2/upload-url` is undocumented: the reference page below describes
+        `/api/publish/v2/upload-url/for-obs`, which is a separate endpoint rather than a
+        rename. `for-obs` rejects this parameter set with "Parameter is [fileName].
+        Parameter is required.", and its docs additionally make `chineseMainlandFlag`
+        mandatory for developers registered outside the Chinese mainland.
+
+        We call the undocumented route because it is the one that accepts these
+        parameters, confirmed against the production API. Being undocumented, it may be
+        withdrawn without notice; `for-obs` is then the migration target, and moving to it
+        means supplying those two extra parameters rather than only changing the path.
 
         https://developer.huawei.com/consumer/en/doc/AppGallery-connect-References/agcapi-upload-url-new-0000001111685200
         """
@@ -223,17 +376,35 @@ class HuaweiAppGalleryApi:
             json=payload,
         )
 
-    async def submit_app(self, app_id: str, release_type: int = RELEASE_TYPE_FULL_ROLLOUT) -> Dict[str, Any]:
+    async def submit_app(
+        self,
+        app_id: str,
+        release_type: int = RELEASE_TYPE_FULL_ROLLOUT,
+        phased_release: Optional[Dict[str, str]] = None,
+        check_ret: bool = True,
+    ) -> Dict[str, Any]:
         """
         Submit the application for release. `release_type` is RELEASE_TYPE_FULL_ROLLOUT (1) for a
-        full release and RELEASE_TYPE_PHASED_ROLLOUT (2) for a phased release.
+        full release and RELEASE_TYPE_PHASED_ROLLOUT (3) for a phased release.
+
+        A full release takes no request body. A phased release requires `phased_release`,
+        the body built by `build_phased_release`.
+
+        Pass `check_ret=False` to get the raw body back instead of raising on a non-zero
+        `ret.code`, so the caller can tell a retryable failure from a terminal one.
 
         https://developer.huawei.com/consumer/en/doc/appgallery-connect-references/agcapi-app-submit-0000001158245061
         """
+        kwargs = {}
+        if phased_release is not None:
+            kwargs["json"] = phased_release
+
         return await self._request(
             "POST",
             "/api/publish/v2/app-submit",
             params={"appId": app_id, "releaseType": release_type},
+            check_ret=check_ret,
+            **kwargs,
         )
 
     async def get_app_info(self, app_id: str) -> AppContentInfo:

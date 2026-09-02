@@ -2,13 +2,14 @@ import pytest
 
 from contextlib import nullcontext as does_not_raise
 from .common import basic_auth_headers
+from mozapkpublisher.huawei_api import RELEASE_TYPE_FULL_ROLLOUT, RELEASE_TYPE_PHASED_ROLLOUT
 from mozapkpublisher.huawei_api.error import HuaweiAuthenticationException
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "release_type",
-    (1, 2),
+    (RELEASE_TYPE_FULL_ROLLOUT, RELEASE_TYPE_PHASED_ROLLOUT),
 )
 @pytest.mark.parametrize(
     "status,response,expectation",
