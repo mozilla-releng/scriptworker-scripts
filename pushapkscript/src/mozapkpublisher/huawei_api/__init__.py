@@ -132,24 +132,40 @@ class HuaweiAppGallery:
             return
 
         app_id = await self.infer_app_id_from_package_name(package_name)
+        logger.info('Resolved app ID %s for package %s', app_id, package_name)
 
         files = []
         for apk in apks:
             fd, metadata = apk
 
             file_name = build_apk_file_name(metadata)
+            logger.info('Uploading %s...', file_name)
             file_dest_url = await self.upload_file(app_id, fd.name, file_name)
             files.append({"fileName": file_name, "fileDestUrl": file_dest_url})
+            logger.info('Uploaded %s', file_name)
 
         await self.api.update_app_file_info(app_id, files)
+        logger.info('Bound %s binaries to app %s: %s', len(files), app_id, ", ".join(f["fileName"] for f in files))
 
-        if submit:
-            if rollout_rate is None:
-                await self.submit_app(app_id, RELEASE_TYPE_FULL_ROLLOUT)
-            else:
-                await self.submit_app(
-                    app_id, RELEASE_TYPE_PHASED_ROLLOUT, build_phased_release(rollout_rate)
-                )
+        if not submit:
+            logger.warning(
+                'Binaries were uploaded but NOT submitted for release. Pass `--submit` to release them.'
+            )
+            return
+
+        if rollout_rate is None:
+            logger.info('Submitting app %s for a FULL release to all users...', app_id)
+            await self.submit_app(app_id, RELEASE_TYPE_FULL_ROLLOUT)
+            logger.info('Submitted app %s for full release', app_id)
+        else:
+            logger.info(
+                'Submitting app %s for a PHASED release to %s%% of users over %s days...',
+                app_id, rollout_rate, PHASED_ROLLOUT_WINDOW.days,
+            )
+            await self.submit_app(
+                app_id, RELEASE_TYPE_PHASED_ROLLOUT, build_phased_release(rollout_rate)
+            )
+            logger.info('Submitted app %s for a phased release to %s%% of users', app_id, rollout_rate)
 
     async def submit_app(self, app_id, release_type, phased_release=None):
         """

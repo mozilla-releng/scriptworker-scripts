@@ -191,3 +191,52 @@ def test_build_phased_release():
 def test_build_phased_release_rejects_out_of_range_rate(rollout_rate):
     with pytest.raises(HuaweiUpdateException, match="Rollout percentage must be in"):
         build_phased_release(rollout_rate, start_time=FROZEN_NOW)
+
+
+@pytest.mark.asyncio
+async def test_upload_apks_reports_what_it_did(responses_mock, apk_path, mock_jwt, caplog):
+    """A successful run used to print nothing at all after the APK checks, so an operator
+    could not tell an upload from a no-op."""
+    _register_upload_chain(responses_mock, _sha256(apk_path))
+
+    with caplog.at_level("INFO", logger="mozapkpublisher.huawei_api"):
+        async with HuaweiAppGallery(CREDENTIALS) as huawei:
+            await huawei.upload_apks(
+                PACKAGE_NAME, [(_FileDescriptor(apk_path), _apk_metadata())], None
+            )
+
+    messages = [record.getMessage() for record in caplog.records]
+    assert any(APP_ID in m and PACKAGE_NAME in m for m in messages), messages
+    assert any("Uploaded {}-arm64-v8a-1.0.apk".format(PACKAGE_NAME) in m for m in messages), messages
+    assert any(m.startswith("Bound 1 binaries") for m in messages), messages
+    # Not submitting is the surprising outcome, so it must be loud.
+    assert any("NOT submitted" in m for m in messages), messages
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "rollout_rate,expected",
+    (
+        pytest.param(None, "FULL release to all users", id="full"),
+        pytest.param(10, "PHASED release to 10% of users over 7 days", id="phased"),
+    ),
+)
+async def test_release_type_is_announced_before_submitting(
+    responses_mock, apk_path, mock_jwt, frozen_now, caplog, rollout_rate, expected
+):
+    """The release type has to be logged before the submission goes out, so an operator who
+    picked the wrong one can still interrupt."""
+    release_type = RELEASE_TYPE_FULL_ROLLOUT if rollout_rate is None else RELEASE_TYPE_PHASED_ROLLOUT
+    _register_upload_chain(responses_mock, _sha256(apk_path), submit_release_type=release_type)
+
+    with caplog.at_level("INFO", logger="mozapkpublisher.huawei_api"):
+        async with HuaweiAppGallery(CREDENTIALS) as huawei:
+            await huawei.upload_apks(
+                PACKAGE_NAME, [(_FileDescriptor(apk_path), _apk_metadata())], rollout_rate, submit=True
+            )
+
+    messages = [record.getMessage() for record in caplog.records]
+    announcements = [i for i, m in enumerate(messages) if expected in m]
+    assert announcements, messages
+    submitted = [i for i, m in enumerate(messages) if m.startswith("Submitted app")]
+    assert submitted and announcements[0] < submitted[0], messages
