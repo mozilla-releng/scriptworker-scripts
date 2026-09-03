@@ -2,13 +2,15 @@ from contextlib import contextmanager
 
 from mock import ANY
 
+import asyncio
 import copy
+import json
 import mozapkpublisher
 import os
 import pytest
 import sys
 
-from unittest.mock import create_autospec, MagicMock
+from unittest.mock import AsyncMock, create_autospec, MagicMock
 
 from tempfile import NamedTemporaryFile
 
@@ -143,7 +145,8 @@ def test_main_google(monkeypatch):
             False,
             submit=False,
             sgs_service_account_id=None,
-            sgs_access_token=None
+            sgs_access_token=None,
+            huawei_credentials=None
         )
 
 
@@ -179,8 +182,93 @@ def test_main_samsung(monkeypatch):
             False,
             submit=True,
             sgs_service_account_id='123',
-            sgs_access_token='456'
+            sgs_access_token='456',
+            huawei_credentials=None
         )
+
+
+def test_huawei(monkeypatch):
+    """The huawei branch of `push_apk` loads the credentials file and hands each package's
+    APKs to `HuaweiAppGallery.upload_apks` with the requested rollout percentage."""
+    mock_metadata = patch_extract_metadata(monkeypatch)
+    huawei_mock = MagicMock()
+    huawei_mock.return_value.__aenter__.return_value = huawei_mock
+    huawei_mock.upload_apks = AsyncMock()
+    monkeypatch.setattr('mozapkpublisher.push_apk.HuaweiAppGallery', huawei_mock)
+
+    with NamedTemporaryFile('w', suffix='.json') as creds:
+        json.dump({'key_id': 'key-from-file', 'sub_account': 'sub-from-file', 'private_key': 'pem-from-file'}, creds)
+        creds.flush()
+
+        asyncio.run(push_apk(
+            APKS, None, [], 'production', store='huawei', rollout_percentage=25,
+            contact_server=False, submit=True, huawei_credentials=creds.name,
+        ))
+
+    huawei_mock.assert_called_once_with(
+        {'key_id': 'key-from-file', 'sub_account': 'sub-from-file', 'private_key': 'pem-from-file'}, dry_run=True
+    )
+    huawei_mock.upload_apks.assert_called_once_with(
+        'org.mozilla.firefox',
+        [(apk_arm, mock_metadata[apk_arm]), (apk_x86, mock_metadata[apk_x86])],
+        25,
+        submit=True,
+    )
+
+
+def test_main_huawei(monkeypatch):
+    file = os.path.join(os.path.dirname(__file__), 'data', 'blob')
+    test_args = [
+        'script',
+        '--store', 'huawei',
+        '--huawei-credentials', '/path/to/creds.json',
+        '--submit',
+        'alpha',
+        file,
+        '--expected-package-name=org.mozilla.fennec_aurora',
+    ]
+
+    with patch.object(mozapkpublisher.push_apk, 'push_apk') as mock_push_apk:
+        monkeypatch.setattr(sys, 'argv', test_args)
+        main()
+
+        mock_push_apk.assert_called_once_with(
+            ANY,
+            None,
+            ['org.mozilla.fennec_aurora'],
+            'alpha',
+            'huawei',
+            None,
+            True,
+            True,
+            False,
+            False,
+            False,
+            False,
+            submit=True,
+            sgs_service_account_id=None,
+            sgs_access_token=None,
+            huawei_credentials='/path/to/creds.json'
+        )
+
+
+def test_main_huawei_bad_args(monkeypatch):
+    """--huawei-credentials is mandatory for --store=huawei, and argparse must be the one
+    to reject it (exit code 2) rather than push_apk failing later."""
+    file = os.path.join(os.path.dirname(__file__), 'data', 'blob')
+    test_args = [
+        'script',
+        '--store', 'huawei',
+        'alpha',
+        file,
+        '--expected-package-name=org.mozilla.fennec_aurora',
+    ]
+
+    monkeypatch.setattr(sys, 'argv', test_args)
+    with pytest.raises(SystemExit) as exception:
+        main()
+
+    assert exception.value.code == 2
 
 
 def test_main_samsung_bad_args(monkeypatch):

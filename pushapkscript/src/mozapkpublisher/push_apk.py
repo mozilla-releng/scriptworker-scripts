@@ -10,8 +10,23 @@ from mozapkpublisher.common.store import GooglePlayEdit
 from mozapkpublisher.common.utils import add_push_arguments, metadata_by_package_name, check_push_arguments
 from mozapkpublisher.common.exceptions import WrongArgumentGiven
 from mozapkpublisher.sgs_api import SamsungGalaxyStore
+from mozapkpublisher.huawei_api import HuaweiAppGallery
+from mozapkpublisher.huawei_api.auth import load_credentials
 
 logger = logging.getLogger(__name__)
+
+
+def _store_dry_run(dry_run, contact_server):
+    """
+    Whether the samsung/huawei clients should do nothing.
+
+    Google keeps `dry_run` and `contact_server` separate: it opens a real edit
+    transaction and simply never commits it, and `contact_server=False` additionally
+    lets the script run with mock credentials. The async store clients have no
+    transaction to leave uncommitted, so for them "don't reach the server" and "dry
+    run" are the same instruction, and either flag has to be enough to stop an upload.
+    """
+    return dry_run or not contact_server
 
 
 async def push_apk(
@@ -31,6 +46,7 @@ async def push_apk(
     submit=False,
     sgs_service_account_id=None,
     sgs_access_token=None,
+    huawei_credentials=None,
 ):
     """
     Args:
@@ -84,9 +100,17 @@ async def push_apk(
         if not (sgs_service_account_id and sgs_access_token):
             raise RuntimeError("You must provided an account id and access token for the samsung galaxy store")
 
-        async with SamsungGalaxyStore(sgs_service_account_id, sgs_access_token, dry_run=dry_run) as sgs:
+        async with SamsungGalaxyStore(sgs_service_account_id, sgs_access_token, dry_run=_store_dry_run(dry_run, contact_server)) as sgs:
             for package_name, apks in apks_by_package_name.items():
                 await sgs.upload_apks(package_name, apks, rollout_percentage, submit=submit)
+    elif store == "huawei":
+        if not huawei_credentials:
+            raise RuntimeError("You must provide a credentials file for the huawei app gallery")
+
+        credentials = load_credentials(huawei_credentials)
+        async with HuaweiAppGallery(credentials, dry_run=_store_dry_run(dry_run, contact_server)) as huawei:
+            for package_name, apks in apks_by_package_name.items():
+                await huawei.upload_apks(package_name, apks, rollout_percentage, submit=submit)
     else:
         raise WrongArgumentGiven("Unkown target store: {}".format(store))
 
@@ -114,6 +138,7 @@ def main():
         submit=config.submit,
         sgs_service_account_id=config.sgs_service_account_id,
         sgs_access_token=config.sgs_access_token,
+        huawei_credentials=config.huawei_credentials,
     ))
 
 

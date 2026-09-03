@@ -1,6 +1,13 @@
 import aiohttp
-import json
+from typing import Any, Dict, Optional
+from mozapkpublisher.common.store_api import raise_for_status_with_message as _raise_for_status_with_message
 from .error import SgsAuthenticationException, SgsAuthorizationException
+
+
+def _extract_error_message(body: Dict[str, Any]) -> Optional[str]:
+    if "body" in body:
+        return body["body"].get("errorMsg")
+    return None
 
 
 async def raise_for_status_with_message(resp: aiohttp.ClientResponse) -> None:
@@ -10,32 +17,9 @@ async def raise_for_status_with_message(resp: aiohttp.ClientResponse) -> None:
 
     Note: this will exhaust the request body if it raises an exception
     """
-    if resp.ok:
-        return None
-
-    try:
-        body = await resp.json()
-    except (aiohttp.ContentTypeError, json.JSONDecodeError):
-        # If the body isn't valid JSON, something went horribly wrong,
-        # just defer the error reporting back to aiohttp.
-        resp.raise_for_status()
-
-    error_message = None
-    if "body" in body:
-        error_message = body["body"].get("errorMsg")
-
-    if error_message is None:
-        error_message = body.get("message", resp.reason)
-
-    if resp.status == 401:
-        raise SgsAuthenticationException(error_message)
-    elif resp.status == 403:
-        raise SgsAuthorizationException(error_message)
-
-    raise aiohttp.ClientResponseError(
-        resp.request_info,
-        resp.history,
-        status=resp.status,
-        message=error_message,
-        headers=resp.headers,
+    return await _raise_for_status_with_message(
+        resp,
+        extract_error_message=_extract_error_message,
+        authentication_exception=SgsAuthenticationException,
+        authorization_exception=SgsAuthorizationException,
     )

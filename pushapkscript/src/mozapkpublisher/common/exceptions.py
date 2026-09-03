@@ -9,6 +9,13 @@ class LoggedError(Exception):
         super(LoggedError, self).__init__(msg)
 
 
+class StoreException(Exception):
+    """Base exception for the async store API clients (Samsung, Huawei)."""
+
+    def __init__(self, message: str):
+        self.message = message
+
+
 class WrongArgumentGiven(LoggedError):
     pass
 

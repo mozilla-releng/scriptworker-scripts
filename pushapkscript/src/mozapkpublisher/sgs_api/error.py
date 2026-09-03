@@ -1,6 +1,8 @@
-class SgsException(Exception):
-    def __init__(self, message: str):
-        self.message = message
+from mozapkpublisher.common.exceptions import StoreException
+
+
+class SgsException(StoreException):
+    pass
 
 
 class SgsAuthenticationException(SgsException):
