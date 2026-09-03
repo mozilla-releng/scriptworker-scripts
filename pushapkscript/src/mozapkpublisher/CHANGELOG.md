@@ -2,6 +2,23 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [12.0.0] - 2026-09-03
+
+### Added
+
+* Added support for pushing APKs to the Huawei AppGallery, via `--store huawei`
+
+### Changed
+
+* `--do-not-contact-server` is now honored by the samsung and huawei stores. Previously both branches read only `dry_run`, so `--commit --do-not-contact-server` uploaded for real.
+* `--commit` gates uploads on every store, not just google. Its help text claimed the opposite.
+
+### Fixed
+
+* Corrected the huawei publishing API contract against the live AppGallery Connect API: appid-list entries are `{key, value}` pairs, both the `fileDestUlr` and `fileDestUrl` spellings of the upload destination are accepted, a phased release is `releaseType` 3 with its four mandatory `phasedRelease*` fields, and app-submit is retried while AppGallery finishes parsing the package.
+* `push_apk --store huawei` now logs the app ID, the uploaded filenames, the binding, and that the release was left unsubmitted. A real upload and a no-op used to look identical.
+* Declare `pyjwt[crypto]`. PS256 and RS256 signing need `cryptography`, which only reached an install transitively through `google-auth`.
+
 ## [11.0.2] - 2026-07-16
 
 ### Fixed
