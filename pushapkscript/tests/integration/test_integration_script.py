@@ -264,7 +264,7 @@ class MainTest(unittest.TestCase):
         with open(task_file, "w") as f:
             json.dump(task, f)
 
-    @unittest.mock.patch("pushapkscript.publish.push_apk")
+    @unittest.mock.patch("pushapkscript.publish.push_apk", autospec=True)
     def test_main_fennec_style(self, push_apk):
         task_generator = TaskGenerator()
         self.write_task_file(task_generator.generate_task("aurora"))
@@ -294,7 +294,7 @@ class MainTest(unittest.TestCase):
             submit=False,
         )
 
-    @unittest.mock.patch("pushapkscript.publish.push_apk")
+    @unittest.mock.patch("pushapkscript.publish.push_apk", autospec=True)
     def test_main_focus_style(self, push_apk):
         task_generator = TaskGenerator()
         self.write_task_file(task_generator.generate_task("focus", "production"))
@@ -324,7 +324,7 @@ class MainTest(unittest.TestCase):
             submit=False,
         )
 
-    @unittest.mock.patch("pushapkscript.publish.push_apk")
+    @unittest.mock.patch("pushapkscript.publish.push_apk", autospec=True)
     def test_main_fenix_style(self, push_apk):
         task_generator = TaskGenerator()
         self.write_task_file(task_generator.generate_task("fenix", "nightly"))
@@ -354,7 +354,7 @@ class MainTest(unittest.TestCase):
             submit=False,
         )
 
-    @unittest.mock.patch("pushapkscript.publish.push_apk")
+    @unittest.mock.patch("pushapkscript.publish.push_apk", autospec=True)
     def test_main_downloads_verifies_signature_and_gives_the_right_config_to_mozapkpublisher(self, push_apk):
         task_generator = TaskGenerator()
         self.write_task_file(task_generator.generate_task("aurora"))
@@ -384,7 +384,7 @@ class MainTest(unittest.TestCase):
             submit=False,
         )
 
-    @unittest.mock.patch("pushapkscript.publish.push_apk")
+    @unittest.mock.patch("pushapkscript.publish.push_apk", autospec=True)
     def test_main_allows_rollout_percentage(self, push_apk):
         task_generator = TaskGenerator(rollout_percentage=25)
         self.write_task_file(task_generator.generate_task("aurora"))
@@ -414,7 +414,7 @@ class MainTest(unittest.TestCase):
             submit=False,
         )
 
-    @unittest.mock.patch("pushapkscript.publish.push_apk")
+    @unittest.mock.patch("pushapkscript.publish.push_apk", autospec=True)
     def test_main_allows_commit_transaction(self, push_apk):
         task_generator = TaskGenerator(should_commit_transaction=True)
 
@@ -445,7 +445,7 @@ class MainTest(unittest.TestCase):
             submit=False,
         )
 
-    @unittest.mock.patch("pushapkscript.publish.push_apk")
+    @unittest.mock.patch("pushapkscript.publish.push_apk", autospec=True)
     def test_main_with_samsung_store(self, push_apk):
         task_generator = TaskGenerator(should_commit_transaction=True, store="samsung")
 
@@ -476,7 +476,7 @@ class MainTest(unittest.TestCase):
             submit=False,
         )
 
-    @unittest.mock.patch("pushapkscript.publish.push_apk")
+    @unittest.mock.patch("pushapkscript.publish.push_apk", autospec=True)
     def test_main_with_huawei_store(self, push_apk):
         task_generator = TaskGenerator(should_commit_transaction=True, store="huawei")
 
