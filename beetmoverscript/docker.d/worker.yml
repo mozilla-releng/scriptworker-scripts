@@ -28,10 +28,13 @@ url_prefix:
     $match:
       'COT_PRODUCT == "firefox" && (ENV == "dev" || ENV == "fake-prod")':
         dep: 'https://ftp.stage.mozaws.net'
+        linuxfirefoxcom-stage: 'https://linuxfirefoxcom-stage.data-static-websites.nonprod.webservices.mozgcp.net'
       'COT_PRODUCT == "firefox" && ENV == "prod"':
         nightly: 'https://archive.mozilla.org'
         release: 'https://archive.mozilla.org'
         dep: 'https://ftp.stage.mozaws.net'
+        linuxfirefoxcom-stage: 'https://linuxfirefoxcom-stage.data-static-websites.nonprod.webservices.mozgcp.net'
+        linuxfirefoxcom: 'https://linux.firefox.com'
       'COT_PRODUCT == "xpi" && (ENV == "dev" || ENV == "fake-prod")':
         dep: 'https://ftp.stage.mozaws.net'
       'COT_PRODUCT == "xpi" && ENV == "prod"':
@@ -83,6 +86,13 @@ clouds:
                 name: 'mozilla-rpm'
                 location: 'us'
                 project: 'moz-fx-productdelivery-no-7d6a'
+          # curl https://linux.firefox.com | sh
+          linuxfirefoxcom-stage:
+            credentials: { "$eval": "GCS_LINUXFIREFOXCOM_STAGE_CREDS" }
+            fail_task_on_error: True
+            enabled: True
+            product_buckets:
+              firefox: 'moz-fx-data-static-websit-f7e0-linuxfirefoxcom'
         'COT_PRODUCT == "firefox" && ENV == "prod"':
           nightly:
             credentials: { "$eval": "GCS_RELEASE_CREDS" }
@@ -146,6 +156,13 @@ clouds:
             product_buckets:
               firefox:    'moz-fx-productdelivery-pr-38b5-productdelivery'
               fenix:      'moz-fx-productdelivery-pr-38b5-productdelivery'
+          # curl https://linux.firefox.com | sh
+          linuxfirefoxcom:
+            credentials: { "$eval": "GCS_LINUXFIREFOXCOM_CREDS" }
+            fail_task_on_error: True
+            enabled: True
+            product_buckets:
+              firefox: 'moz-fx-data-static-websit-8565-linuxfirefoxcom'
         'COT_PRODUCT == "xpi" && (ENV == "dev" || ENV == "fake-prod")':
           dep:
             credentials: { "$eval": "GCS_DEP_CREDS" }
