@@ -436,7 +436,7 @@ async def test_json_manifest_bump(aioresponses, github_installation_responses, c
         ["version_bump"],
         assert_func=lambda req: assert_success(
             req,
-            ["Automatic version bump", "NO BUG", "a=release", "CLOSED TREE"],
+            ["Automatic newtab version bump", "NO BUG", "a=release", "CLOSED TREE"],
             {MANIFEST_FILE: f'  "version": "{initial_version}"'},
             {MANIFEST_FILE: f'  "version": "{expected_version}"'},
         ),
@@ -484,8 +484,71 @@ async def test_webcompat_manifest_bump(aioresponses, github_installation_respons
         ["version_bump"],
         assert_func=lambda req: assert_success(
             req,
-            ["Automatic version bump", "NO BUG", "a=release", "CLOSED TREE"],
+            ["Automatic webcompat version bump", "NO BUG", "a=release", "CLOSED TREE"],
             {WEBCOMPAT_MANIFEST: '  "version": "151.0.0"'},
             {WEBCOMPAT_MANIFEST: '  "version": "151.1.0"'},
+        ),
+    )
+
+
+@pytest.mark.asyncio
+async def test_multiple_extension_manifest_bump(aioresponses, github_installation_responses, context):
+    payload = {
+        "actions": ["version_bump"],
+        "lando_repo": "repo_name",
+        "version_bump_info": {
+            "files": [NEWTAB_MANIFEST, WEBCOMPAT_MANIFEST],
+            "next_version": "151.1.0",
+        },
+    }
+    setup_github_graphql_responses(
+        aioresponses,
+        get_files_payload({NEWTAB_MANIFEST: _manifest("151.0.0"), WEBCOMPAT_MANIFEST: _manifest("151.0.0")}),
+    )
+    await run_test(
+        aioresponses,
+        github_installation_responses,
+        context,
+        payload,
+        ["version_bump"],
+        assert_func=lambda req: assert_success(
+            req,
+            # both extensions are named, sorted, in a single message
+            ["Automatic newtab, webcompat version bump", "NO BUG", "a=release", "CLOSED TREE"],
+            {NEWTAB_MANIFEST: '  "version": "151.0.0"', WEBCOMPAT_MANIFEST: '  "version": "151.0.0"'},
+            {NEWTAB_MANIFEST: '  "version": "151.1.0"', WEBCOMPAT_MANIFEST: '  "version": "151.1.0"'},
+        ),
+    )
+
+
+@pytest.mark.asyncio
+async def test_extension_and_browser_version_bump(aioresponses, github_installation_responses, context):
+    # A bump that mixes an extension manifest with a browser version file is not a
+    # standalone extension bump, so it falls back to the generic commit message.
+    VERSION_FILE = "browser/config/version.txt"
+    payload = {
+        "actions": ["version_bump"],
+        "lando_repo": "repo_name",
+        "version_bump_info": {
+            "files": [VERSION_FILE, NEWTAB_MANIFEST],
+            "next_version": "135.0",
+        },
+    }
+    setup_github_graphql_responses(
+        aioresponses,
+        get_files_payload({VERSION_FILE: "134.0", NEWTAB_MANIFEST: _manifest("134.0")}),
+    )
+    await run_test(
+        aioresponses,
+        github_installation_responses,
+        context,
+        payload,
+        ["version_bump"],
+        assert_func=lambda req: assert_success(
+            req,
+            # generic message: the extension name is not called out
+            ["Automatic version bump", "NO BUG", "a=release", "CLOSED TREE"],
+            {VERSION_FILE: "134.0", NEWTAB_MANIFEST: '  "version": "134.0"'},
+            {VERSION_FILE: "135.0", NEWTAB_MANIFEST: '  "version": "135.0"'},
         ),
     )
