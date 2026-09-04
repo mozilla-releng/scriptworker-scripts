@@ -74,6 +74,7 @@ tasks:
             - scriptworker_client
     init:
         resources:
+            - tests
             - docker.d
             - addonscript/docker.d
             - balrogscript/docker.d
