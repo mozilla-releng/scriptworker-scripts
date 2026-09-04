@@ -2520,7 +2520,7 @@ wheels = [
 
 [[package]]
 name = "mozapkpublisher"
-version = "11.0.2"
+version = "12.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
@@ -2528,12 +2528,12 @@ dependencies = [
     { name = "google-auth" },
     { name = "mozilla-version" },
     { name = "pyaxmlparser" },
-    { name = "pyjwt" },
+    { name = "pyjwt", extra = ["crypto"] },
     { name = "requests" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f7/d1/01e47ead7dc9ddc8f0f827fd0f4f6b97502b27e3595780bec995321bae42/mozapkpublisher-11.0.2.tar.gz", hash = "sha256:9de539b6d348ace432a4f20bb9db06daf4820ff812700fdda14ce6e6088edcd6", size = 151855, upload-time = "2026-07-16T14:45:01.459Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/84/b7/ae15b448f826cc4d66b21540d04e4621a0b163379ac0100adbe18ffe05df/mozapkpublisher-12.0.0.tar.gz", hash = "sha256:20d8a117b40653a517bf994156966ac5aa3bc62e1ed938dbd96b9dd22a337bf8", size = 185839, upload-time = "2026-09-04T16:05:49.559Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/53/82/0b1e9c14de8dfeb3d68819496598d1bbfcfc32c075ab841eda2c61f1911d/mozapkpublisher-11.0.2-py3-none-any.whl", hash = "sha256:5f0b69af145ea21baabf07b588735568586bbe3e71d91d531a66522a26594409", size = 64369, upload-time = "2026-07-16T14:44:59.887Z" },
+    { url = "https://files.pythonhosted.org/packages/9e/d5/be4f2477047cfea4a719ba1934f6ab5d8c9b9ae5fb9bd2f11079cb731793/mozapkpublisher-12.0.0-py3-none-any.whl", hash = "sha256:b3a1f35760e0ebf22000d9f0d767649b952c0dfc0852f02b7f5e6c4111040f14", size = 94188, upload-time = "2026-09-04T16:05:48.161Z" },
 ]
 
 [[package]]
@@ -3038,7 +3038,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "mozapkpublisher" },
+    { name = "mozapkpublisher", specifier = ">=12.0.0" },
     { name = "scriptworker" },
 ]
 
