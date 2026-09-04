@@ -3,7 +3,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 from pushapkscript import jarsigner
-from pushapkscript.exceptions import SignatureError
+from pushapkscript.exceptions import ConfigValidationError, SignatureError
 
 
 class JarSignerTest(unittest.TestCase):
@@ -68,3 +68,15 @@ class JarSignerTest(unittest.TestCase):
 
     def test_pluck_configuration_uses_defaults(self):
         self.assertEqual(jarsigner._pluck_configuration(self.minimal_context, {"certificate_alias": "nightly"}), ("jarsigner", "/path/to/keystore", "nightly"))
+
+    def test_pluck_configuration_raises_when_no_alias_is_configured(self):
+        for publish_config in ({"target_store": "samsung"}, {"target_store": "google", "certificate_alias": None}):
+            with self.assertRaises(ConfigValidationError):
+                jarsigner._pluck_configuration(self.context, publish_config)
+
+    def test_verify_raises_before_running_jarsigner_when_no_alias_is_configured(self):
+        with patch("subprocess.run") as run:
+            with self.assertRaises(ConfigValidationError):
+                jarsigner.verify(self.context, {"target_store": "samsung"}, "/path/to/apk")
+
+            run.assert_not_called()

@@ -180,6 +180,9 @@ products:
           skip_check_multiple_locales: true
           skip_check_same_locales: true
           skip_checks_fennec: true
+          # There is no dep signing for mozillavpn yet, so init_worker.sh imports no
+          # certificate and there is no alias to verify against.
+          skip_check_signature: true
           override_channel_model: "single_google_app"
           app:
             package_names:

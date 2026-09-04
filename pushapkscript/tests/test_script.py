@@ -74,6 +74,55 @@ async def test_async_main(monkeypatch, android_product, upstream_artifacts, is_a
             await async_main(context)
 
 
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "product_config_extras, expected_verifications",
+    (
+        # Omitting the option means the signature is verified.
+        ({}, 2),
+        ({"skip_check_signature": False}, 2),
+        ({"skip_check_signature": True}, 0),
+    ),
+)
+async def test_async_main_honours_skip_check_signature(monkeypatch, product_config_extras, expected_verifications):
+    apks = ["/some/path/to/one.apk", "/some/path/to/another.apk"]
+    jarsigner_calls = []
+    manifest_calls = []
+
+    monkeypatch.setattr(artifacts, "get_upstream_artifacts_full_paths_per_task_id", lambda _: ({"someTaskId": apks}, {}))
+    monkeypatch.setattr(jarsigner, "verify", lambda _, __, apk_path: jarsigner_calls.append(apk_path))
+    monkeypatch.setattr(manifest, "verify", lambda _, apk_path: manifest_calls.append(apk_path))
+    monkeypatch.setattr(task, "extract_android_product_from_scopes", lambda _: "fenix")
+
+    product_config = {
+        "apps": {
+            "release": {
+                "package_names": ["org.mozilla.fenix"],
+                "certificate_alias": "fenix-release",
+                "google": {"default_track": "production", "credentials_file": "fenix.json"},
+            }
+        }
+    }
+    product_config.update(product_config_extras)
+    monkeypatch.setattr(pushapkscript.script, "_get_product_config", lambda _, __: product_config)
+
+    async def noop(*args, **kwargs):
+        pass
+
+    monkeypatch.setattr(publish, "publish", noop)
+    monkeypatch.setattr(publish, "publish_aab", noop)
+
+    context = MagicMock()
+    context.config = {"do_not_contact_server": True}
+    context.task = {"payload": {"channel": "release"}}
+
+    with patch("pushapkscript.script.open", new=mock_open):
+        await async_main(context)
+
+    assert len(jarsigner_calls) == expected_verifications
+    assert len(manifest_calls) == expected_verifications
+
+
 def test_get_product_config_validation():
     context = Context()
     context.config = {}
