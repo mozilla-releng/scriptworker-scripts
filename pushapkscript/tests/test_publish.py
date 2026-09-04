@@ -7,8 +7,8 @@ from .helpers.mock_file import MockFile, mock_open
 
 
 @patch("pushapkscript.publish.open", new=mock_open)
-@patch("pushapkscript.publish.push_apk")
-@patch("pushapkscript.publish.push_aab")
+@patch("pushapkscript.publish.push_apk", autospec=True)
+@patch("pushapkscript.publish.push_aab", autospec=True)
 @pytest.mark.asyncio
 class TestPublish:
     def setup_method(self):
