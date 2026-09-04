@@ -153,12 +153,27 @@ def test_get_product_config():
             True,
             False,
             "google",
-            "You will publish APKs to Google Play. This action is irreversible,\
-if no error is detected either by this script or by Google Play.",
+            "You will publish APKs to Google Play. This action is irreversible, if no error is detected either by this script or by Google Play.",
         ),
-        (True, True, "google", "APKs will be submitted, but no change will not be committed."),
+        (True, True, "google", "APKs will be submitted to Google Play, but no change will be committed."),
         (False, True, "google", "This pushapk instance is not allowed to talk to Google Play. *All* requests will be mocked."),
         (False, False, "google", "This pushapk instance is not allowed to talk to Google Play. *All* requests will be mocked."),
+        (
+            True,
+            False,
+            "samsung",
+            "You will publish APKs to the Samsung Galaxy Store. This action is irreversible, "
+            "if no error is detected either by this script or by the Samsung Galaxy Store.",
+        ),
+        (
+            True,
+            False,
+            "huawei",
+            "You will publish APKs to the Huawei AppGallery. This action is irreversible, "
+            "if no error is detected either by this script or by the Huawei AppGallery.",
+        ),
+        (True, True, "huawei", "APKs will be submitted to the Huawei AppGallery, but no change will be committed."),
+        (False, False, "huawei", "This pushapk instance is not allowed to talk to the Huawei AppGallery. *All* requests will be mocked."),
     ),
 )
 def test_log_warning_forewords(caplog, monkeypatch, is_allowed_to_push, dry_run, target_store, expected):
