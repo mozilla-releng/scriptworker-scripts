@@ -19,6 +19,7 @@ task-defaults:
     description: "{name} tox-py{{matrix[python]}}"
     run-on-tasks-for:
         - "github-pull-request"
+        - "github-pull-request-untrusted"
         - "github-push"
     attributes:
         code-review: true

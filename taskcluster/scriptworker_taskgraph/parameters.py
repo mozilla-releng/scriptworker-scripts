@@ -44,7 +44,7 @@ def get_decision_parameters(graph_config, parameters):
     If we're on a production- or dev- branch, detect and set the `script_name`.
 
     """
-    if parameters["tasks_for"] == "github-pull-request":
+    if parameters["tasks_for"].startswith("github-pull-request"):
         parameters["docker_tag"] = "github-pull-request"
     elif parameters["head_ref"].startswith("refs/heads/"):
         parameters["docker_tag"] = parameters["head_ref"].replace("refs/heads/", "")
