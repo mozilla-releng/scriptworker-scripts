@@ -165,6 +165,7 @@ def test_get_product_config():
             "You will publish APKs to the Samsung Galaxy Store. This action is irreversible, "
             "if no error is detected either by this script or by the Samsung Galaxy Store.",
         ),
+        (True, True, "samsung", "Nothing will be uploaded to the Samsung Galaxy Store, since this is a dry run."),
         (
             True,
             False,
@@ -172,8 +173,22 @@ def test_get_product_config():
             "You will publish APKs to the Huawei AppGallery. This action is irreversible, "
             "if no error is detected either by this script or by the Huawei AppGallery.",
         ),
-        (True, True, "huawei", "APKs will be submitted to the Huawei AppGallery, but no change will be committed."),
-        (False, False, "huawei", "This pushapk instance is not allowed to talk to the Huawei AppGallery. *All* requests will be mocked."),
+        # Unlike Google Play, these stores upload nothing at all when they aren't committing.
+        (True, True, "huawei", "Nothing will be uploaded to the Huawei AppGallery, since this is a dry run."),
+        (
+            False,
+            True,
+            "huawei",
+            "Nothing will be uploaded to the Huawei AppGallery, since this pushapk instance is not allowed to talk to it.",
+        ),
+        (
+            False,
+            False,
+            "huawei",
+            "Nothing will be uploaded to the Huawei AppGallery, since this pushapk instance is not allowed to talk to it.",
+        ),
+        # An unrecognised store falls back to its raw payload value rather than crashing.
+        (True, True, "amazon", "Nothing will be uploaded to amazon, since this is a dry run."),
     ),
 )
 def test_log_warning_forewords(caplog, monkeypatch, is_allowed_to_push, dry_run, target_store, expected):

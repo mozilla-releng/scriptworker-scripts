@@ -91,14 +91,24 @@ def _get_product_config(context, android_product):
 
 def _log_warning_forewords(contact_server, dry_run, target_store):
     store_name = STORE_NAMES.get(target_store, target_store)
-    if not contact_server:
-        log.warning("This pushapk instance is not allowed to talk to {}. *All* requests will be mocked.".format(store_name))
-    elif dry_run:
-        log.warning("APKs will be submitted to {}, but no change will be committed.".format(store_name))
-    else:
+    if contact_server and not dry_run:
         log.warning(
             "You will publish APKs to {}. This action is irreversible, if no error is detected either by this script or by {}.".format(store_name, store_name)
         )
+    elif target_store == "google":
+        # Google Play uploads inside an edit transaction it then declines to commit, and
+        # mocks the API outright when this instance may not contact the server.
+        if contact_server:
+            log.warning("APKs will be submitted to {}, but no change will be committed.".format(store_name))
+        else:
+            log.warning("This pushapk instance is not allowed to talk to {}. *All* requests will be mocked.".format(store_name))
+    else:
+        # The other stores have no transaction to leave uncommitted, so mozapkpublisher
+        # skips the upload rather than performing or mocking it.
+        if contact_server:
+            log.warning("Nothing will be uploaded to {}, since this is a dry run.".format(store_name))
+        else:
+            log.warning("Nothing will be uploaded to {}, since this pushapk instance is not allowed to talk to it.".format(store_name))
 
 
 def get_default_config():
