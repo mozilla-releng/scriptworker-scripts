@@ -73,6 +73,7 @@ CONTEXT = {
         "GOOGLE_SERVICE_ACCOUNT_REFERENCE_BROWSER": "Zm9vYmFyCg==",
         "SGS_SERVICE_ACCOUNT_ID": "Zm9vYmFyCg==",
         "SGS_ACCESS_TOKEN": "Zm9vYmFyCg==",
+        "HUAWEI_SERVICE_ACCOUNT": "Zm9vYmFyCg==",
     },
     re.compile(r"pushflatpak:.*"): {
         "FLATHUB_URL": "https://flathub.example.com",
