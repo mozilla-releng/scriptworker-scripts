@@ -5,7 +5,10 @@ import shutil
 import subprocess
 import tempfile
 import unittest
+
 import pytest
+
+from scriptworker.constants import STATUSES
 
 import pushapkscript
 from pushapkscript.script import main
@@ -17,17 +20,51 @@ this_dir = os.path.dirname(os.path.realpath(__file__))
 project_dir = os.path.dirname(pushapkscript.__file__)
 project_data_dir = os.path.join(project_dir, "data")
 test_data_dir = os.path.join(this_dir, "..", "data")
+# The certificates init_worker.sh imports in production, used here to stand in for
+# "some other Mozilla certificate" in the negative test.
+files_dir = os.path.join(this_dir, "..", "..", "files")
+
+# What the fixtures actually declare, and what Autograph still produces in
+# production. Deliberately not SHA-256: verifying anything else here would stop the
+# test telling us whether real pushapk tasks work. See bug 1838680.
+DIGEST_ALGORITHM = "SHA1"
+
+
+def _has_working_jdk():
+    # The binaries have to be run, not just located: macOS ships stubs at /usr/bin that
+    # exist but exit non-zero with "Unable to locate a Java Runtime".
+    for binary in ("keytool", "jarsigner"):
+        try:
+            if subprocess.run([binary, "-help"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode != 0:
+                return False
+        except OSError:
+            return False
+    return True
+
+
+requires_jdk = pytest.mark.skipif(
+    not _has_working_jdk(),
+    reason="verifying the test APKs needs keytool and jarsigner from a JDK",
+)
 
 
 class KeystoreManager(object):
+    STORE_PASSWORD = "12345678"
+
     def __init__(self, temp_dir):
         self.keystore_path = os.path.join(temp_dir, "keystore")
 
     def add_certificate(self, certificate_alias):
+        # The certificate the fixtures were really signed with. It is SHA1withDSA with a
+        # 1024-bit key, which is why jarsigner needs the security override to accept it.
+        self.add_certificate_from_file(os.path.join(project_data_dir, "android-nightly.cer"), certificate_alias)
+
+    def add_certificate_from_file(self, certificate_path, certificate_alias):
+        # Imported the same way init_worker.sh imports the production certificates.
         subprocess.run(
             [
                 "keytool",
-                "-import",
+                "-importcert",
                 "-noprompt",
                 # JDK 9 changes default type to PKCS12, which causes "jarsigner -verify" to fail
                 "-storetype",
@@ -35,12 +72,15 @@ class KeystoreManager(object):
                 "-keystore",
                 self.keystore_path,
                 "-storepass",
-                "12345678",
+                self.STORE_PASSWORD,
                 "-file",
-                os.path.join(project_data_dir, "android-nightly.cer"),
+                certificate_path,
                 "-alias",
                 certificate_alias,
-            ]
+            ],
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
         )
 
 
@@ -69,7 +109,7 @@ class ConfigFileGenerator(object):
                 "products": [
                     {
                         "product_names": ["aurora", "beta", "release"],
-                        "digest_algorithm": "SHA1",
+                        "digest_algorithm": DIGEST_ALGORITHM,
                         "override_channel_model": "choose_google_app_with_scope",
                         "apps": {
                             "aurora": {
@@ -108,7 +148,7 @@ class ConfigFileGenerator(object):
                 "products": [
                     {
                         "product_names": ["focus"],
-                        "digest_algorithm": "SHA1",
+                        "digest_algorithm": DIGEST_ALGORITHM,
                         "skip_check_ordered_version_codes": True,
                         "skip_checks_fennec": True,
                         "override_channel_model": "single_google_app",
@@ -134,7 +174,7 @@ class ConfigFileGenerator(object):
                 "products": [
                     {
                         "product_names": ["fenix"],
-                        "digest_algorithm": "SHA1",
+                        "digest_algorithm": DIGEST_ALGORITHM,
                         "skip_check_multiple_locales": True,
                         "skip_check_same_locales": True,
                         "skip_checks_fennec": True,
@@ -175,6 +215,7 @@ class ConfigFileGenerator(object):
         )
 
 
+@requires_jdk
 @unittest.mock.patch("pushapkscript.script.open", new=mock_open)
 @unittest.mock.patch("pushapkscript.publish.open", new=mock_open)
 class MainTest(unittest.TestCase):
@@ -196,8 +237,10 @@ class MainTest(unittest.TestCase):
         self.test_temp_dir_fp.cleanup()
 
     def _copy_all_apks_to_test_temp_dir(self, task_generator):
-        for task_id in (task_generator.x86_task_id, task_generator.arm_task_id):
+        return [
             self._copy_single_file_to_test_temp_dir(task_id, origin_file_name="target-{}.apk".format(task_id), destination_path="public/build/target.apk")
+            for task_id in (task_generator.x86_task_id, task_generator.arm_task_id)
+        ]
 
     def _copy_single_file_to_test_temp_dir(self, task_id, origin_file_name, destination_path):
         original_path = os.path.join(test_data_dir, origin_file_name)
@@ -205,6 +248,13 @@ class MainTest(unittest.TestCase):
         target_dir = os.path.dirname(target_path)
         os.makedirs(target_dir)
         shutil.copy(original_path, target_path)
+        return target_path
+
+    def _prepare_apks(self, task_generator, certificate_alias):
+        """Copy the fixtures in as they are and trust their certificate under
+        `certificate_alias`, which is the alias the product config under test expects."""
+        self._copy_all_apks_to_test_temp_dir(task_generator)
+        self.keystore_manager.add_certificate(certificate_alias)
 
     def write_task_file(self, task):
         task_file = os.path.join(self.config_generator.work_dir, "task.json")
@@ -216,8 +266,7 @@ class MainTest(unittest.TestCase):
         task_generator = TaskGenerator()
         self.write_task_file(task_generator.generate_task("aurora"))
 
-        self._copy_all_apks_to_test_temp_dir(task_generator)
-        self.keystore_manager.add_certificate("nightly")
+        self._prepare_apks(task_generator, "nightly")
         main(config_path=self.config_generator.generate_fennec_config())
 
         push_apk.assert_called_with(
@@ -246,8 +295,7 @@ class MainTest(unittest.TestCase):
         task_generator = TaskGenerator()
         self.write_task_file(task_generator.generate_task("focus", "production"))
 
-        self._copy_all_apks_to_test_temp_dir(task_generator)
-        self.keystore_manager.add_certificate("focus")
+        self._prepare_apks(task_generator, "focus")
         main(config_path=self.config_generator.generate_focus_config())
 
         push_apk.assert_called_with(
@@ -276,8 +324,7 @@ class MainTest(unittest.TestCase):
         task_generator = TaskGenerator()
         self.write_task_file(task_generator.generate_task("fenix", "nightly"))
 
-        self._copy_all_apks_to_test_temp_dir(task_generator)
-        self.keystore_manager.add_certificate("fenix-nightly")
+        self._prepare_apks(task_generator, "fenix-nightly")
         main(config_path=self.config_generator.generate_fenix_config())
 
         push_apk.assert_called_with(
@@ -306,8 +353,7 @@ class MainTest(unittest.TestCase):
         task_generator = TaskGenerator()
         self.write_task_file(task_generator.generate_task("aurora"))
 
-        self._copy_all_apks_to_test_temp_dir(task_generator)
-        self.keystore_manager.add_certificate("nightly")
+        self._prepare_apks(task_generator, "nightly")
         main(config_path=self.config_generator.generate_fennec_config())
 
         push_apk.assert_called_with(
@@ -336,8 +382,7 @@ class MainTest(unittest.TestCase):
         task_generator = TaskGenerator(rollout_percentage=25)
         self.write_task_file(task_generator.generate_task("aurora"))
 
-        self._copy_all_apks_to_test_temp_dir(task_generator)
-        self.keystore_manager.add_certificate("nightly")
+        self._prepare_apks(task_generator, "nightly")
         main(config_path=self.config_generator.generate_fennec_config())
 
         push_apk.assert_called_with(
@@ -367,8 +412,7 @@ class MainTest(unittest.TestCase):
 
         self.write_task_file(task_generator.generate_task("aurora"))
 
-        self._copy_all_apks_to_test_temp_dir(task_generator)
-        self.keystore_manager.add_certificate("nightly")
+        self._prepare_apks(task_generator, "nightly")
         main(config_path=self.config_generator.generate_fennec_config())
 
         push_apk.assert_called_with(
@@ -398,8 +442,7 @@ class MainTest(unittest.TestCase):
 
         self.write_task_file(task_generator.generate_task("fenix", channel="release"))
 
-        self._copy_all_apks_to_test_temp_dir(task_generator)
-        self.keystore_manager.add_certificate("nightly")
+        self._prepare_apks(task_generator, "fenix-production")
         main(config_path=self.config_generator.generate_fenix_config())
 
         push_apk.assert_called_with(
@@ -422,3 +465,21 @@ class MainTest(unittest.TestCase):
             sgs_access_token="456",
             submit=False,
         )
+
+    @unittest.mock.patch("pushapkscript.publish.push_apk")
+    def test_main_rejects_an_apk_signed_by_another_certificate(self, push_apk):
+        """The check has to actually bite. The fixtures carry the Fennec nightly
+        certificate, so trusting a different one under the alias the config expects must
+        stop the task before anything is published."""
+        task_generator = TaskGenerator()
+        self.write_task_file(task_generator.generate_task("aurora"))
+
+        self._copy_all_apks_to_test_temp_dir(task_generator)
+        self.keystore_manager.add_certificate_from_file(os.path.join(files_dir, "fenix_release.pem"), "nightly")
+
+        # scriptworker turns the SignatureError into the task's exit code.
+        with self.assertRaises(SystemExit) as context_manager:
+            main(config_path=self.config_generator.generate_fennec_config())
+
+        self.assertEqual(context_manager.exception.code, STATUSES["internal-error"])
+        push_apk.assert_not_called()
