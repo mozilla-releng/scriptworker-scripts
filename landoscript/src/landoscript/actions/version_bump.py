@@ -1,6 +1,7 @@
 import json
 import logging
 import os.path
+import re
 import typing
 from dataclasses import dataclass
 
@@ -29,6 +30,12 @@ ALLOWED_BUMP_FILES = (
     "mail/config/version.txt",
     "mail/config/version_display.txt",
 )
+
+# Standalone browser extensions live at browser/extensions/<name>/manifest.json and are
+# version bumped independently of the Gecko/Firefox version. Their commit messages call out
+# the extension name so they're distinguishable from a Gecko version bump, which has broader
+# implications. See bug 2068060.
+_EXTENSION_MANIFEST_RE = re.compile(r"^browser/extensions/(?P<name>[^/]+)/manifest\.json$")
 
 
 @dataclass(frozen=True)
@@ -59,6 +66,7 @@ async def run(
     are discouraged, and should be avoided if at all possible."""
 
     diffs = []
+    bumped_files = set()
 
     for version_bump_info in version_bump_infos:
         next_version = version_bump_info.next_version
@@ -102,6 +110,7 @@ async def run(
             log.info(f"{file}: successfully bumped! new contents are:")
             log_file_contents(modified)
 
+            bumped_files.add(file)
             diffs.append(diff_contents(orig, modified, file))
 
     if not diffs:
@@ -121,11 +130,33 @@ async def run(
     log_file_contents(diff)
 
     # version bumps always ignore a closed tree
-    commitmsg = "Automatic version bump NO BUG a=release CLOSED TREE"
+    component = extension_component(bumped_files)
+    commitmsg = f"Automatic {component}version bump NO BUG a=release CLOSED TREE"
     if dontbuild:
         commitmsg += " DONTBUILD"
 
     return [create_commit_action(commitmsg, diff)]
+
+
+def extension_component(bumped_files: set[str]) -> str:
+    """Return a commit message component naming the standalone extension(s) being bumped.
+
+    If every bumped file is a standalone browser extension manifest, return the extension
+    name(s) so the commit reads e.g. ``Automatic newtab version bump ...`` or, for a mix of
+    extensions, ``Automatic newtab, webcompat version bump ...``. Otherwise (a Gecko version
+    bump, or a mix that includes non-extension files) return an empty string for the generic
+    message.
+    """
+    names = set()
+    for file in bumped_files:
+        match = _EXTENSION_MANIFEST_RE.match(file)
+        if not match:
+            return ""
+        names.add(match.group("name"))
+
+    if names:
+        return f"{', '.join(sorted(names))} "
+    return ""
 
 
 def get_cur_and_next_version(filename, orig_contents, next_version, munge_next_version):
