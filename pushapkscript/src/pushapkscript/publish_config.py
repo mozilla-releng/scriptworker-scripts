@@ -77,6 +77,7 @@ def _get_channel_publish_config(product_config, task):
         return {
             "target_store": target_store,
             "dry_run": _should_do_dry_run(task),
+            "certificate_alias": publish_config.get("certificate_alias"),
             "package_names": publish_config["package_names"],
             "rollout_percentage": rollout_percentage,
             "sgs_service_account_id": store_config["service_account_id"],
