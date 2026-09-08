@@ -33,7 +33,17 @@ class JarSignerTest(unittest.TestCase):
                 jarsigner.verify(self.context, {"certificate_alias": alias}, "/path/to/apk")
 
                 run.assert_called_with(
-                    ["/path/to/jarsigner", "-verify", "-strict", "-verbose", "-keystore", "/path/to/keystore", "/path/to/apk", alias],
+                    [
+                        "/path/to/jarsigner",
+                        "-verify",
+                        "-strict",
+                        "-verbose",
+                        "-J-Djava.security.properties={}".format(jarsigner.SECURITY_PROPERTIES_PATH),
+                        "-keystore",
+                        "/path/to/keystore",
+                        "/path/to/apk",
+                        alias,
+                    ],
                     stdout=subprocess.PIPE,
                     stderr=subprocess.STDOUT,
                     universal_newlines=True,
@@ -47,7 +57,17 @@ class JarSignerTest(unittest.TestCase):
             jarsigner.verify(self.minimal_context, {"certificate_alias": "nightly"}, "/path/to/apk")
 
             run.assert_called_with(
-                ["jarsigner", "-verify", "-strict", "-verbose", "-keystore", "/path/to/keystore", "/path/to/apk", "nightly"],
+                [
+                    "jarsigner",
+                    "-verify",
+                    "-strict",
+                    "-verbose",
+                    "-J-Djava.security.properties={}".format(jarsigner.SECURITY_PROPERTIES_PATH),
+                    "-keystore",
+                    "/path/to/keystore",
+                    "/path/to/apk",
+                    "nightly",
+                ],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 universal_newlines=True,
