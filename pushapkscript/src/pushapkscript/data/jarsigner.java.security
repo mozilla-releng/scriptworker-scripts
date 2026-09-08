@@ -1,0 +1,17 @@
+# Overrides for `jarsigner -verify`, passed via -J-Djava.security.properties.
+#
+# The single "=" form of that flag appends to the JDK's own java.security rather
+# than replacing it, so only the property named here is affected.
+#
+# Autograph still writes v1 (JAR) signatures with SHA-1 digests, because it
+# forces --min-sdk-version below the API level at which apksigner switches to
+# SHA-256. That is bug 1838680, which is still open. Since JDK-8264362, jarsigner
+# refuses to verify SHA-1 signatures at all: it reports the archive as unsigned
+# and `-strict` exits 16, whatever certificate actually signed it.
+#
+# Dropping the "SHA1 denyAfter" leg lets `-verify -strict` do the job we need it
+# for, which is asserting that the artifact was signed by the certificate this
+# channel expects. The keySize legs are kept, so undersized keys are still
+# rejected. Once bug 1838680 is fixed, delete this file and the flag that points
+# at it, and set digest_algorithm back to SHA-256 in worker.yml.
+jdk.jar.disabledAlgorithms=MD2, MD5, RSA keySize < 1024, DSA keySize < 1024

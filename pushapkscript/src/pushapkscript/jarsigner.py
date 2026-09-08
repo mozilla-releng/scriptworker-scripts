@@ -1,16 +1,33 @@
 import logging
+import os
 import subprocess
 
 from pushapkscript.exceptions import ConfigValidationError, SignatureError
 
 log = logging.getLogger(__name__)
 
+# Re-enables SHA-1 for verification only. Without it, `-strict` exits 16 on every
+# artifact Autograph currently produces. See the file itself and bug 1838680.
+SECURITY_PROPERTIES_PATH = os.path.join(os.path.dirname(__file__), "data", "jarsigner.java.security")
+
 
 def verify(context, publish_config, apk_path):
     binary_path, keystore_path, certificate_alias = _pluck_configuration(context, publish_config)
 
     completed_process = subprocess.run(
-        [binary_path, "-verify", "-strict", "-verbose", "-keystore", keystore_path, apk_path, certificate_alias],  # Needed to check the digest algorithm
+        [
+            binary_path,
+            "-verify",
+            # Without `-strict`, jarsigner exits 0 even when the archive was signed by a
+            # certificate other than `certificate_alias`, which is the whole point here.
+            "-strict",
+            "-verbose",  # Needed to check the digest algorithm
+            "-J-Djava.security.properties={}".format(SECURITY_PROPERTIES_PATH),
+            "-keystore",
+            keystore_path,
+            apk_path,
+            certificate_alias,
+        ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         universal_newlines=True,
