@@ -36,7 +36,10 @@ async def async_main(context):
         # Google Play won't accept both APK and AAB
         raise TaskVerificationError("The configuration is invalid: Unable to push both APK and AAB files for the same product.")
 
-    if not publish_config.get("skip_check_signature", True):
+    # `skip_check_signature` is a product-level option, and omitting it means "do verify".
+    if product_config.get("skip_check_signature", False):
+        log.warning('This product is configured with "skip_check_signature", so the signing of the files will not be verified.')
+    else:
         log.info("Verifying APKs' signatures...")
         for apk_path in all_apks_paths:
             jarsigner.verify(context, publish_config, apk_path)
@@ -45,8 +48,6 @@ async def async_main(context):
         for aab_path in all_aabs_paths:
             jarsigner.verify(context, publish_config, aab_path)
             manifest.verify(product_config, aab_path)
-    else:
-        log.info('This product is configured with "skip_check_signature", so the signing of the files will not be verified.')
 
     log.info("Delegating publication to mozapkpublisher...")
     with contextlib.ExitStack() as stack:
