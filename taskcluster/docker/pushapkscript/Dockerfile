@@ -8,8 +8,13 @@ FROM $DOCKER_IMAGE_PARENT
 ADD --chown=app:app topsrcdir/pushapkscript /app/pushapkscript
 
 USER root
+# jarsigner verifies the signature of the APKs/AABs before they are published, and it
+# ships in the JDK rather than the JRE, so this needs default-jdk-headless. #1399 moved
+# this to default-jre-headless on the grounds that only keytool and bundletool needed
+# java, which was true at the time because the jarsigner call was unreachable. It is
+# reachable again, so jarsigner has to come back.
 RUN apt-get update \
- && apt-get install --no-install-recommends -y curl default-jre-headless \
+ && apt-get install --no-install-recommends -y curl default-jdk-headless \
  && apt-get clean
 
 USER app

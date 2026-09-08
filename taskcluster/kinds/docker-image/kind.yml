@@ -96,7 +96,8 @@ tasks:
         args:
             PYTHON_VERSION: *py314
             UV_VERSION: *uv_version
-            APT_PACKAGES: default-jre-headless
+            # default-jdk-headless, not the JRE: the tests shell out to jarsigner.
+            APT_PACKAGES: default-jdk-headless
 
     pushflatpakscript-test-py314:
         definition: base-test
