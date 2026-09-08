@@ -1,7 +1,7 @@
 import logging
 import subprocess
 
-from pushapkscript.exceptions import SignatureError
+from pushapkscript.exceptions import ConfigValidationError, SignatureError
 
 log = logging.getLogger(__name__)
 
@@ -36,4 +36,11 @@ def _pluck_configuration(context, publish_config):
     # Uses jarsigner in PATH if config doesn't provide it
     binary_path = context.config.get("jarsigner_binary", "jarsigner")
 
-    return binary_path, keystore_path, publish_config["certificate_alias"]
+    certificate_alias = publish_config.get("certificate_alias")
+    if not certificate_alias:
+        raise ConfigValidationError(
+            'No "certificate_alias" is configured for the "{}" target store, so the signature cannot be verified. Either configure one or set '
+            '"skip_check_signature" on the product.'.format(publish_config.get("target_store"))
+        )
+
+    return binary_path, keystore_path, certificate_alias
