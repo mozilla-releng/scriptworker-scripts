@@ -150,6 +150,7 @@ def test_target_samsung():
     assert get_publish_config(FENIX_CONFIG, payload, "fenix") == {
         "target_store": "samsung",
         "dry_run": True,
+        "certificate_alias": "fenix",
         "sgs_service_account_id": "123456",
         "sgs_access_token": "abcdef",
         "package_names": ["org.mozilla.fenix"],
@@ -164,6 +165,7 @@ def test_target_samsung_with_commit():
     assert get_publish_config(FENIX_CONFIG, payload, "fenix") == {
         "target_store": "samsung",
         "dry_run": False,
+        "certificate_alias": "fenix",
         "sgs_service_account_id": "123456",
         "sgs_access_token": "abcdef",
         "package_names": ["org.mozilla.fenix"],
@@ -178,6 +180,7 @@ def test_target_samsung_rollout():
     assert get_publish_config(FENIX_CONFIG, payload, "fenix") == {
         "target_store": "samsung",
         "dry_run": True,
+        "certificate_alias": "fenix",
         "sgs_service_account_id": "123456",
         "sgs_access_token": "abcdef",
         "package_names": ["org.mozilla.fenix"],
@@ -192,12 +195,31 @@ def test_target_samsung_submit():
     assert get_publish_config(FENIX_CONFIG, payload, "fenix") == {
         "target_store": "samsung",
         "dry_run": True,
+        "certificate_alias": "fenix",
         "sgs_service_account_id": "123456",
         "sgs_access_token": "abcdef",
         "package_names": ["org.mozilla.fenix"],
         "rollout_percentage": None,
         "submit": True,
     }
+
+
+def test_certificate_alias_does_not_depend_on_the_target_store():
+    # The alias identifies the certificate the incoming artifact was signed with, which is
+    # decided by the upstream signing task, so it is the same whichever store it goes to.
+    google = get_publish_config(FENIX_CONFIG, {"channel": "production", "target_store": "google"}, "fenix")
+    samsung = get_publish_config(FENIX_CONFIG, {"channel": "production", "target_store": "samsung"}, "fenix")
+
+    assert google["certificate_alias"] == "fenix"
+    assert samsung["certificate_alias"] == "fenix"
+
+
+def test_certificate_alias_is_none_when_nothing_configures_it():
+    config = {"apps": {"production": {"package_names": ["org.mozilla.fenix"], "samsung": {"service_account_id": "1", "access_token": "2"}}}}
+
+    publish_config = get_publish_config(config, {"channel": "production", "target_store": "samsung"}, "fenix")
+
+    assert publish_config["certificate_alias"] is None
 
 
 def test_should_do_dry_run():
