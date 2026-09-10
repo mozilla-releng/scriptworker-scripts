@@ -430,4 +430,4 @@ def test_main(monkeypatch, mocker):
     sync_main_mock = mocker.MagicMock()
     monkeypatch.setattr(scriptworker_client.client, "sync_main", sync_main_mock)
     bscript.main()
-    sync_main_mock.asset_called_once_with(bscript.async_main, default_config=bscript.get_default_config())
+    sync_main_mock.assert_called_once_with(bscript.async_main, default_config=bscript.get_default_config(), should_verify_task=False)
