@@ -85,4 +85,4 @@ def test_main(monkeypatch):
     sync_main_mock = MagicMock()
     monkeypatch.setattr(script, "sync_main", sync_main_mock)
     script.main()
-    sync_main_mock.asset_called_once_with(script.async_main, default_config=script.get_default_config())
+    sync_main_mock.assert_called_once_with(script.async_main, config_path=None, default_config=script.get_default_config(), should_verify_task=False)
