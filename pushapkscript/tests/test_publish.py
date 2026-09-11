@@ -1,20 +1,17 @@
-import unittest
 from unittest.mock import patch
 
 import pytest
-import asyncio
 from pushapkscript.publish import publish, publish_aab
 
 from .helpers.mock_file import MockFile, mock_open
 
 
-# TODO: refactor to pytest instead of unittest
 @patch("pushapkscript.publish.open", new=mock_open)
-@patch("pushapkscript.publish.push_apk")
-@patch("pushapkscript.publish.push_aab")
+@patch("pushapkscript.publish.push_apk", autospec=True)
+@patch("pushapkscript.publish.push_aab", autospec=True)
 @pytest.mark.asyncio
-class PublishTest:
-    def setUp(self):
+class TestPublish:
+    def setup_method(self):
         self.publish_config = {
             "target_store": "google",
             "dry_run": True,
@@ -43,7 +40,26 @@ class PublishTest:
             skip_checks_fennec=False,
             sgs_service_account_id=None,
             sgs_access_token=None,
+            huawei_credentials=None,
+            submit=False,
         )
+
+    async def test_publish_huawei_config(self, mock_push_aab, mock_push_apk):
+        publish_config = {
+            "target_store": "huawei",
+            "dry_run": False,
+            "package_names": ["org.mozilla.fenix"],
+            "huawei_credentials": "/huawei.json",
+            "submit": True,
+        }
+        await publish({}, publish_config, self.apks, contact_server=True)
+
+        _, args = mock_push_apk.call_args
+        assert args["store"] == "huawei"
+        assert args["huawei_credentials"] == "/huawei.json"
+        assert args["submit"] is True
+        # Huawei uses its own credentials file, so the Google Play secret is unset.
+        assert args["secret"] is None
 
     async def test_publish_aab_config(self, mock_push_aab, mock_push_apk):
         await publish_aab({}, self.publish_config, self.aabs, contact_server=True)
@@ -98,7 +114,7 @@ class PublishTest:
         _, args = mock_push_aab.call_args
         assert args["contact_server"] is True
 
-        publish_aab({}, self.publish_config, self.aabs, False)
+        await publish_aab({}, self.publish_config, self.aabs, False)
         _, args = mock_push_aab.call_args
         assert args["contact_server"] is False
 

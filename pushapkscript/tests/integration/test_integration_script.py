@@ -206,6 +206,9 @@ class ConfigFileGenerator(object):
                                     "service_account_id": "123",
                                     "access_token": "456",
                                 },
+                                "huawei": {
+                                    "credentials_file": "huawei.json",
+                                },
                             },
                         },
                     }
@@ -261,7 +264,7 @@ class MainTest(unittest.TestCase):
         with open(task_file, "w") as f:
             json.dump(task, f)
 
-    @unittest.mock.patch("pushapkscript.publish.push_apk")
+    @unittest.mock.patch("pushapkscript.publish.push_apk", autospec=True)
     def test_main_fennec_style(self, push_apk):
         task_generator = TaskGenerator()
         self.write_task_file(task_generator.generate_task("aurora"))
@@ -287,10 +290,11 @@ class MainTest(unittest.TestCase):
             skip_checks_fennec=False,
             sgs_service_account_id=None,
             sgs_access_token=None,
+            huawei_credentials=None,
             submit=False,
         )
 
-    @unittest.mock.patch("pushapkscript.publish.push_apk")
+    @unittest.mock.patch("pushapkscript.publish.push_apk", autospec=True)
     def test_main_focus_style(self, push_apk):
         task_generator = TaskGenerator()
         self.write_task_file(task_generator.generate_task("focus", "production"))
@@ -316,10 +320,11 @@ class MainTest(unittest.TestCase):
             skip_checks_fennec=True,
             sgs_service_account_id=None,
             sgs_access_token=None,
+            huawei_credentials=None,
             submit=False,
         )
 
-    @unittest.mock.patch("pushapkscript.publish.push_apk")
+    @unittest.mock.patch("pushapkscript.publish.push_apk", autospec=True)
     def test_main_fenix_style(self, push_apk):
         task_generator = TaskGenerator()
         self.write_task_file(task_generator.generate_task("fenix", "nightly"))
@@ -345,10 +350,11 @@ class MainTest(unittest.TestCase):
             skip_checks_fennec=True,
             sgs_service_account_id=None,
             sgs_access_token=None,
+            huawei_credentials=None,
             submit=False,
         )
 
-    @unittest.mock.patch("pushapkscript.publish.push_apk")
+    @unittest.mock.patch("pushapkscript.publish.push_apk", autospec=True)
     def test_main_downloads_verifies_signature_and_gives_the_right_config_to_mozapkpublisher(self, push_apk):
         task_generator = TaskGenerator()
         self.write_task_file(task_generator.generate_task("aurora"))
@@ -374,10 +380,11 @@ class MainTest(unittest.TestCase):
             skip_checks_fennec=False,
             sgs_service_account_id=None,
             sgs_access_token=None,
+            huawei_credentials=None,
             submit=False,
         )
 
-    @unittest.mock.patch("pushapkscript.publish.push_apk")
+    @unittest.mock.patch("pushapkscript.publish.push_apk", autospec=True)
     def test_main_allows_rollout_percentage(self, push_apk):
         task_generator = TaskGenerator(rollout_percentage=25)
         self.write_task_file(task_generator.generate_task("aurora"))
@@ -403,10 +410,11 @@ class MainTest(unittest.TestCase):
             skip_checks_fennec=False,
             sgs_service_account_id=None,
             sgs_access_token=None,
+            huawei_credentials=None,
             submit=False,
         )
 
-    @unittest.mock.patch("pushapkscript.publish.push_apk")
+    @unittest.mock.patch("pushapkscript.publish.push_apk", autospec=True)
     def test_main_allows_commit_transaction(self, push_apk):
         task_generator = TaskGenerator(should_commit_transaction=True)
 
@@ -433,10 +441,11 @@ class MainTest(unittest.TestCase):
             skip_checks_fennec=False,
             sgs_service_account_id=None,
             sgs_access_token=None,
+            huawei_credentials=None,
             submit=False,
         )
 
-    @unittest.mock.patch("pushapkscript.publish.push_apk")
+    @unittest.mock.patch("pushapkscript.publish.push_apk", autospec=True)
     def test_main_with_samsung_store(self, push_apk):
         task_generator = TaskGenerator(should_commit_transaction=True, store="samsung")
 
@@ -463,6 +472,38 @@ class MainTest(unittest.TestCase):
             skip_checks_fennec=True,
             sgs_service_account_id="123",
             sgs_access_token="456",
+            huawei_credentials=None,
+            submit=False,
+        )
+
+    @unittest.mock.patch("pushapkscript.publish.push_apk", autospec=True)
+    def test_main_with_huawei_store(self, push_apk):
+        task_generator = TaskGenerator(should_commit_transaction=True, store="huawei")
+
+        self.write_task_file(task_generator.generate_task("fenix", channel="release"))
+
+        self._prepare_apks(task_generator, "fenix-production")
+        main(config_path=self.config_generator.generate_fenix_config())
+
+        push_apk.assert_called_with(
+            apks=[
+                MockFile("{}/work/cot/{}/public/build/target.apk".format(self.test_temp_dir, task_generator.arm_task_id)),
+                MockFile("{}/work/cot/{}/public/build/target.apk".format(self.test_temp_dir, task_generator.x86_task_id)),
+            ],
+            secret=None,
+            track=None,
+            expected_package_names=["org.mozilla.fenix"],
+            store="huawei",
+            rollout_percentage=None,
+            dry_run=False,
+            contact_server=True,
+            skip_check_multiple_locales=True,
+            skip_check_ordered_version_codes=False,
+            skip_check_same_locales=True,
+            skip_checks_fennec=True,
+            sgs_service_account_id=None,
+            sgs_access_token=None,
+            huawei_credentials="huawei.json",
             submit=False,
         )
 

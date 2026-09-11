@@ -153,12 +153,42 @@ def test_get_product_config():
             True,
             False,
             "google",
-            "You will publish APKs to Google Play. This action is irreversible,\
-if no error is detected either by this script or by Google Play.",
+            "You will publish APKs to Google Play. This action is irreversible, if no error is detected either by this script or by Google Play.",
         ),
-        (True, True, "google", "APKs will be submitted, but no change will not be committed."),
+        (True, True, "google", "APKs will be submitted to Google Play, but no change will be committed."),
         (False, True, "google", "This pushapk instance is not allowed to talk to Google Play. *All* requests will be mocked."),
         (False, False, "google", "This pushapk instance is not allowed to talk to Google Play. *All* requests will be mocked."),
+        (
+            True,
+            False,
+            "samsung",
+            "You will publish APKs to the Samsung Galaxy Store. This action is irreversible, "
+            "if no error is detected either by this script or by the Samsung Galaxy Store.",
+        ),
+        (True, True, "samsung", "Nothing will be uploaded to the Samsung Galaxy Store, since this is a dry run."),
+        (
+            True,
+            False,
+            "huawei",
+            "You will publish APKs to the Huawei AppGallery. This action is irreversible, "
+            "if no error is detected either by this script or by the Huawei AppGallery.",
+        ),
+        # Unlike Google Play, these stores upload nothing at all when they aren't committing.
+        (True, True, "huawei", "Nothing will be uploaded to the Huawei AppGallery, since this is a dry run."),
+        (
+            False,
+            True,
+            "huawei",
+            "Nothing will be uploaded to the Huawei AppGallery, since this pushapk instance is not allowed to talk to it.",
+        ),
+        (
+            False,
+            False,
+            "huawei",
+            "Nothing will be uploaded to the Huawei AppGallery, since this pushapk instance is not allowed to talk to it.",
+        ),
+        # An unrecognised store falls back to its raw payload value rather than crashing.
+        (True, True, "amazon", "Nothing will be uploaded to amazon, since this is a dry run."),
     ),
 )
 def test_log_warning_forewords(caplog, monkeypatch, is_allowed_to_push, dry_run, target_store, expected):
