@@ -7,9 +7,7 @@ from mozapkpublisher.common.apk import add_apk_checks_arguments, extract_and_che
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description='Check set of APKs is valid. These checks are also performed in push_apk.py'
-    )
+    parser = argparse.ArgumentParser(description="Check set of APKs is valid. These checks are also performed in push_apk.py")
 
     add_apk_checks_arguments(parser)
 
@@ -27,4 +25,4 @@ def main():
     )
 
 
-__name__ == '__main__' and main()
+__name__ == "__main__" and main()

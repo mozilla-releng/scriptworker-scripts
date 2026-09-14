@@ -3,7 +3,7 @@
 import argparse
 import asyncio
 
-from mozapkpublisher.sgs_api.auth import create_jwt_for_auth, create_access_token
+from mozapkpublisher.sgs_api.auth import create_access_token, create_jwt_for_auth
 
 
 async def main(args: argparse.Namespace) -> None:

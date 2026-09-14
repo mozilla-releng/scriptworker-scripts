@@ -1,12 +1,14 @@
-from typing import Dict, Any, List
-from .content_info import AppContentInfo
-from .utils import raise_for_status_with_message
-from .error import SgsUploadException, SgsContentInfoException, SgsUpdateException
-from mozapkpublisher.common.store_api import build_apk_file_name, request
-
-import aiohttp
 import logging
 import os.path
+from typing import Any, Dict, List
+
+import aiohttp
+
+from mozapkpublisher.common.store_api import build_apk_file_name, request
+
+from .content_info import AppContentInfo
+from .error import SgsContentInfoException, SgsUpdateException, SgsUploadException
+from .utils import raise_for_status_with_message
 
 BASE_DEVAPI_URL = "https://devapi.samsungapps.com/"
 BASE_SELLER_URL = "https://seller.samsungapps.com/"
@@ -37,7 +39,7 @@ class SamsungGalaxyStore:
         Notes: The app needs to be in the `FOR_SALE` status and needs to not be in the middle of an update.
         """
         if self._dry_run:
-            logger.warning('No APKs were uploaded since `dry_run` was `True`')
+            logger.warning("No APKs were uploaded since `dry_run` was `True`")
             return
 
         content_id = await self.infer_content_id_from_package_name(package_name)
@@ -71,9 +73,7 @@ class SamsungGalaxyStore:
 
             file_name = build_apk_file_name(metadata)
             file_key = await self.upload_file(fd.name, file_name)
-            result = await self.api.add_binary(
-                content_id, file_key, gms
-            )
+            result = await self.api.add_binary(content_id, file_key, gms)
             new_binary_seqs.append(result["data"]["binarySeq"])
 
         if rollout_rate is not None:
@@ -107,9 +107,7 @@ class SamsungGalaxyStore:
                 if binary["packageName"] == package_name:
                     return app["contentId"]
 
-        raise SgsUpdateException(
-            f"Couldn't find a content ID for the following package name {package_name}."
-        )
+        raise SgsUpdateException(f"Couldn't find a content ID for the following package name {package_name}.")
 
 
 class SamsungGalaxyApi:
@@ -184,9 +182,7 @@ class SamsungGalaxyApi:
         """
         return await self._request("POST", "/seller/createUploadSessionId")
 
-    async def upload_file(
-        self, session_id: str, file_path: str, name: str
-    ) -> Dict[str, Any]:
+    async def upload_file(self, session_id: str, file_path: str, name: str) -> Dict[str, Any]:
         """
         Upload  a file required for app submission or for updating one
         The required `session_id` can be gotten through `create_upload_session_id`.
@@ -201,16 +197,12 @@ class SamsungGalaxyApi:
             form.add_field("sessionId", session_id)
 
             # This API uses a different base URL for some reason
-            result = await self._request(
-                "POST", "/galaxyapi/fileUpload", base_url=BASE_SELLER_URL, data=form
-            )
+            result = await self._request("POST", "/galaxyapi/fileUpload", base_url=BASE_SELLER_URL, data=form)
 
         # Since they don't respond with a checksum, best we can do is validate that the size matches what we expect
         if int(result["fileSize"]) != original_file_size:
             raise SgsUploadException(
-                "The upload result gave a file size different than what was uploaded. Got {}, expected {}".format(
-                    int(result["fileSize"]), original_file_size
-                )
+                "The upload result gave a file size different than what was uploaded. Got {}, expected {}".format(int(result["fileSize"]), original_file_size)
             )
 
         return result
@@ -221,38 +213,24 @@ class SamsungGalaxyApi:
 
         https://developer.samsung.com/galaxy-store/galaxy-store-developer-api/content-publish-api/view-sellers-app-details.html
         """
-        result = await self._request(
-            "GET", "/seller/contentInfo", params={"contentId": content_id}
-        )
+        result = await self._request("GET", "/seller/contentInfo", params={"contentId": content_id})
 
         if not result:
-            raise SgsContentInfoException(
-                "The samsung API an unexpected number of items (got {}, expected >=1) for a given content ID".format(
-                    len(result)
-                )
-            )
+            raise SgsContentInfoException("The samsung API an unexpected number of items (got {}, expected >=1) for a given content ID".format(len(result)))
 
         content = result[0]
         if content["contentId"] != content_id:
-            raise SgsContentInfoException(
-                "The samsung API returned information about another content ID than the one given: {}".format(
-                    content["contentId"]
-                )
-            )
+            raise SgsContentInfoException("The samsung API returned information about another content ID than the one given: {}".format(content["contentId"]))
 
         return [AppContentInfo(content) for content in result]
 
-    async def update_content_info(
-        self, new_content_info: AppContentInfo
-    ) -> Dict[str, Any]:
+    async def update_content_info(self, new_content_info: AppContentInfo) -> Dict[str, Any]:
         """
         Modify app information. Use `get_content_info`, modify the object and pass it into this function
 
         https://developer.samsung.com/galaxy-store/galaxy-store-developer-api/content-publish-api/modify-app-data.html
         """
-        return await self._request(
-            "POST", "/seller/contentUpdate", json=new_content_info.as_new_data()
-        )
+        return await self._request("POST", "/seller/contentUpdate", json=new_content_info.as_new_data())
 
     async def add_binary(
         self,
@@ -276,9 +254,7 @@ class SamsungGalaxyApi:
 
         return await self._request("POST", "/seller/v2/content/binary", json=data)
 
-    async def delete_binary(
-        self, content_id: str, binary_seq: str
-    ) -> Dict[str, Any]:
+    async def delete_binary(self, content_id: str, binary_seq: str) -> Dict[str, Any]:
         """
         Delete an existing binary from the given content. The app must already be in
         the `REGISTERING`/`UPDATING` state.
@@ -305,9 +281,7 @@ class SamsungGalaxyApi:
             "rolloutRate": rollout_rate,
         }
 
-        return await self._request(
-            "PUT", "/seller/v2/content/stagedRolloutRate", json=data
-        )
+        return await self._request("PUT", "/seller/v2/content/stagedRolloutRate", json=data)
 
     async def add_binary_to_staged_rollout(self, content_id: str, binary_seq: str):
         """
@@ -322,9 +296,7 @@ class SamsungGalaxyApi:
             "binarySeq": binary_seq,
         }
 
-        return await self._request(
-            "PUT", "/seller/v2/content/stagedRolloutBinary", json=data
-        )
+        return await self._request("PUT", "/seller/v2/content/stagedRolloutBinary", json=data)
 
     async def submit_app(self, content_id: str):
         """

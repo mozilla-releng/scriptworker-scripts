@@ -1,14 +1,13 @@
-from typing import cast, List
+import time
+from typing import List, cast
 
 import aiohttp
 import jwt
-import time
+
 from .utils import raise_for_status_with_message
 
 
-def create_jwt_for_auth(
-    service_account_id: str, scopes: List[str], secret_key: str
-) -> str:
+def create_jwt_for_auth(service_account_id: str, scopes: List[str], secret_key: str) -> str:
     """
     Creates a JWT for use with `/auth/accessToken` according to
     https://developer.samsung.com/galaxy-store/galaxy-store-developer-api/create-an-access-token.html#Create-a-JSON-Web-Token
@@ -32,9 +31,7 @@ async def create_access_token(jwt: str) -> str:
     }
 
     async with aiohttp.ClientSession() as session:
-        async with session.post(
-            "https://devapi.samsungapps.com/auth/accessToken", headers=headers
-        ) as resp:
+        async with session.post("https://devapi.samsungapps.com/auth/accessToken", headers=headers) as resp:
             await raise_for_status_with_message(resp)
 
             result = await resp.json()

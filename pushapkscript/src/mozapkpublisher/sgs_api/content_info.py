@@ -1,6 +1,7 @@
-from typing import Dict, Any
-from .error import SgsContentInfoException
 import copy
+from typing import Any, Dict
+
+from .error import SgsContentInfoException
 
 # This is a list of key that we know the API gets angry about if they're missing
 MANDATORY_CONTENT_INFO_KEYS = [
@@ -23,9 +24,7 @@ class AppContentInfo:
         """
         for key in MANDATORY_CONTENT_INFO_KEYS:
             if key not in self._inner:
-                raise SgsContentInfoException(
-                    "The app content info is missing a mandatory key: {}".format(key)
-                )
+                raise SgsContentInfoException("The app content info is missing a mandatory key: {}".format(key))
 
     @property
     def binary_list(self):

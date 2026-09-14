@@ -1,12 +1,14 @@
-import aiohttp
 from typing import Any, Dict, Optional
+
+import aiohttp
+
 from mozapkpublisher.common.store_api import raise_for_status_with_message as _raise_for_status_with_message
+
 from .error import (
     HuaweiAuthenticationException,
     HuaweiAuthorizationException,
     HuaweiException,
 )
-
 
 # Reference page listing every documented `ret.code` the publishing API can return.
 RESULT_CODES_DOC_URL = "https://developer.huawei.com/consumer/en/doc/AppGallery-connect-References/agcapi-publishingapi-errorcode-0000001163523297"
@@ -46,8 +48,4 @@ def raise_for_ret_code(body: dict) -> None:
     code = ret.get("code")
     if code in (None, 0):
         return
-    raise HuaweiException(
-        "Huawei API returned ret.code={}: {}. See {} for the list of result codes.".format(
-            code, ret.get("msg"), RESULT_CODES_DOC_URL
-        )
-    )
+    raise HuaweiException("Huawei API returned ret.code={}: {}. See {} for the list of result codes.".format(code, ret.get("msg"), RESULT_CODES_DOC_URL))

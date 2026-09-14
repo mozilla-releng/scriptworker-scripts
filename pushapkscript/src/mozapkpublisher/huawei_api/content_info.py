@@ -1,4 +1,5 @@
-from typing import Dict, Any, List
+from typing import Any, Dict, List
+
 from .error import HuaweiContentInfoException
 
 # This is a list of keys we expect the GET app-info response to surface.
@@ -21,9 +22,7 @@ class AppContentInfo:
         """
         for key in MANDATORY_CONTENT_INFO_KEYS:
             if key not in self._inner:
-                raise HuaweiContentInfoException(
-                    "The app content info is missing a mandatory key: {}".format(key)
-                )
+                raise HuaweiContentInfoException("The app content info is missing a mandatory key: {}".format(key))
 
     @property
     def app_id(self):

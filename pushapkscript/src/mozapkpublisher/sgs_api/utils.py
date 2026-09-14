@@ -1,6 +1,9 @@
-import aiohttp
 from typing import Any, Dict, Optional
+
+import aiohttp
+
 from mozapkpublisher.common.store_api import raise_for_status_with_message as _raise_for_status_with_message
+
 from .error import SgsAuthenticationException, SgsAuthorizationException
 
 

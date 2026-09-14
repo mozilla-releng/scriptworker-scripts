@@ -211,7 +211,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ## [0.14.0] - 2019-01-29
 
 ### Changed
-* `push_apk` must be called as a function with parameters, rather than mocked `argv` arguments* Refactors `push_apk` to use a variable Google Play Strings interface  
+* `push_apk` must be called as a function with parameters, rather than mocked `argv` arguments* Refactors `push_apk` to use a variable Google Play Strings interface
 
 ### Removed
 * Auto-detection of which package-name corresponds to which sanity checks

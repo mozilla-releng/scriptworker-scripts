@@ -1,23 +1,25 @@
+import asyncio
+import logging
+import os.path
+import time
 from datetime import datetime, timedelta, timezone
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
+
+import aiohttp
+
+from mozapkpublisher.common.store_api import build_apk_file_name, request
+from mozapkpublisher.common.utils import file_sha256sum
+
+from .auth import create_jwt
 from .content_info import AppContentInfo
-from .utils import raise_for_status_with_message, raise_for_ret_code
+from .error import HuaweiUpdateException, HuaweiUploadException
 from .result_codes import (
     PACKAGE_COMPILING,
     PACKAGE_PROCESSING_MESSAGES,
     PERMANENT_SUBMIT_SUB_CODES,
     SUBMIT_QUERY_FAILED,
 )
-from .error import HuaweiUploadException, HuaweiUpdateException
-from mozapkpublisher.common.store_api import build_apk_file_name, request
-from mozapkpublisher.common.utils import file_sha256sum
-from .auth import create_jwt
-
-import aiohttp
-import asyncio
-import logging
-import os.path
-import time
+from .utils import raise_for_ret_code, raise_for_status_with_message
 
 BASE_URL = "https://connect-api.cloud.huawei.com/"
 logger = logging.getLogger(__name__)
@@ -86,9 +88,7 @@ def build_phased_release(rollout_rate, start_time=None):
     https://developer.huawei.com/consumer/en/doc/AppGallery-connect-References/agcapi-app-submit-0000001158245061
     """
     if not 0 < rollout_rate <= 100:
-        raise HuaweiUpdateException(
-            "Rollout percentage must be in (0, 100]. Value given: {}".format(rollout_rate)
-        )
+        raise HuaweiUpdateException("Rollout percentage must be in (0, 100]. Value given: {}".format(rollout_rate))
 
     start_time = start_time or datetime.now(timezone.utc)
     percent = "{:.2f}".format(rollout_rate)
@@ -128,44 +128,42 @@ class HuaweiAppGallery:
         package has to be a full rollout.
         """
         if self._dry_run:
-            logger.warning('No APKs were uploaded since `dry_run` was `True`')
+            logger.warning("No APKs were uploaded since `dry_run` was `True`")
             return
 
         app_id = await self.infer_app_id_from_package_name(package_name)
-        logger.info('Resolved app ID %s for package %s', app_id, package_name)
+        logger.info("Resolved app ID %s for package %s", app_id, package_name)
 
         files = []
         for apk in apks:
             fd, metadata = apk
 
             file_name = build_apk_file_name(metadata)
-            logger.info('Uploading %s...', file_name)
+            logger.info("Uploading %s...", file_name)
             file_dest_url = await self.upload_file(app_id, fd.name, file_name)
             files.append({"fileName": file_name, "fileDestUrl": file_dest_url})
-            logger.info('Uploaded %s', file_name)
+            logger.info("Uploaded %s", file_name)
 
         await self.api.update_app_file_info(app_id, files)
-        logger.info('Bound %s binaries to app %s: %s', len(files), app_id, ", ".join(f["fileName"] for f in files))
+        logger.info("Bound %s binaries to app %s: %s", len(files), app_id, ", ".join(f["fileName"] for f in files))
 
         if not submit:
-            logger.warning(
-                'Binaries were uploaded but NOT submitted for release. Pass `--submit` to release them.'
-            )
+            logger.warning("Binaries were uploaded but NOT submitted for release. Pass `--submit` to release them.")
             return
 
         if rollout_rate is None:
-            logger.info('Submitting app %s for a FULL release to all users...', app_id)
+            logger.info("Submitting app %s for a FULL release to all users...", app_id)
             await self.submit_app(app_id, RELEASE_TYPE_FULL_ROLLOUT)
-            logger.info('Submitted app %s for full release', app_id)
+            logger.info("Submitted app %s for full release", app_id)
         else:
             logger.info(
-                'Submitting app %s for a PHASED release to %s%% of users over %s days...',
-                app_id, rollout_rate, PHASED_ROLLOUT_WINDOW.days,
+                "Submitting app %s for a PHASED release to %s%% of users over %s days...",
+                app_id,
+                rollout_rate,
+                PHASED_ROLLOUT_WINDOW.days,
             )
-            await self.submit_app(
-                app_id, RELEASE_TYPE_PHASED_ROLLOUT, build_phased_release(rollout_rate)
-            )
-            logger.info('Submitted app %s for a phased release to %s%% of users', app_id, rollout_rate)
+            await self.submit_app(app_id, RELEASE_TYPE_PHASED_ROLLOUT, build_phased_release(rollout_rate))
+            logger.info("Submitted app %s for a phased release to %s%% of users", app_id, rollout_rate)
 
     async def submit_app(self, app_id, release_type, phased_release=None):
         """
@@ -182,9 +180,7 @@ class HuaweiAppGallery:
         deadline = time.monotonic() + SUBMIT_RETRY_TIMEOUT
 
         while True:
-            body = await self.api.submit_app(
-                app_id, release_type=release_type, phased_release=phased_release, check_ret=False
-            )
+            body = await self.api.submit_app(app_id, release_type=release_type, phased_release=phased_release, check_ret=False)
             ret = body.get("ret") or {}
 
             if not _is_package_still_processing(ret):
@@ -195,9 +191,7 @@ class HuaweiAppGallery:
                 raise HuaweiUpdateException(
                     "AppGallery was still processing the uploaded package {} seconds after it was bound to the "
                     "release, so it could not be submitted: ret.code={}: {}. The binary is uploaded, so the "
-                    "release can still be submitted from the AppGallery Connect console.".format(
-                        SUBMIT_RETRY_TIMEOUT, ret.get("code"), ret.get("msg")
-                    )
+                    "release can still be submitted from the AppGallery Connect console.".format(SUBMIT_RETRY_TIMEOUT, ret.get("code"), ret.get("msg"))
                 )
 
             logger.info(
@@ -229,9 +223,7 @@ class HuaweiAppGallery:
 
         file_dest_url = file_upload.get("fileDestUlr") or file_upload.get("fileDestUrl")
         if not file_dest_url:
-            raise HuaweiUploadException(
-                "The upload result didn't contain a file destination URL: {}".format(file_upload)
-            )
+            raise HuaweiUploadException("The upload result didn't contain a file destination URL: {}".format(file_upload))
         return file_dest_url
 
     async def infer_app_id_from_package_name(self, package_name):
@@ -247,14 +239,9 @@ class HuaweiAppGallery:
         app_ids = [app["value"] for app in apps]
 
         if len(app_ids) > 1:
-            raise HuaweiUpdateException(
-                f"Found multiple app IDs for the package name {package_name}: {app_ids}. "
-                "Refusing to guess which one to publish to."
-            )
+            raise HuaweiUpdateException(f"Found multiple app IDs for the package name {package_name}: {app_ids}. Refusing to guess which one to publish to.")
         if not app_ids:
-            raise HuaweiUpdateException(
-                f"Couldn't find an app ID for the following package name {package_name}."
-            )
+            raise HuaweiUpdateException(f"Couldn't find an app ID for the following package name {package_name}.")
 
         return app_ids[0]
 
@@ -362,18 +349,14 @@ class HuaweiAppGalleryApi:
 
         result_list = body.get("result", {}).get("UploadFileRsp", {}).get("fileInfoList", [])
         if not result_list:
-            raise HuaweiUploadException(
-                "The upload result didn't contain a fileInfoList entry: {}".format(body)
-            )
+            raise HuaweiUploadException("The upload result didn't contain a fileInfoList entry: {}".format(body))
         result = result_list[0]
 
         # Huawei doesn't return a checksum for the uploaded binary, so the best we
         # can do is validate that the reported size matches what we sent.
         if int(result.get("size", 0)) != original_file_size:
             raise HuaweiUploadException(
-                "The upload result gave a file size different than what was uploaded. Got {}, expected {}".format(
-                    result.get("size"), original_file_size
-                )
+                "The upload result gave a file size different than what was uploaded. Got {}, expected {}".format(result.get("size"), original_file_size)
             )
 
         return result
@@ -429,9 +412,7 @@ class HuaweiAppGalleryApi:
 
         https://developer.huawei.com/consumer/en/doc/AppGallery-connect-References/agcapi-app-info-query-0000001158365045
         """
-        result = await self._request(
-            "GET", "/api/publish/v2/app-info", params={"appId": app_id}
-        )
+        result = await self._request("GET", "/api/publish/v2/app-info", params={"appId": app_id})
 
         return AppContentInfo(result.get("appInfo", {}))
 

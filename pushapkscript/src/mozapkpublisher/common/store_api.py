@@ -6,10 +6,12 @@ and parses a JSON body. The store-specific bits (which header carries the accoun
 id, how the error message is nested in the body, which exceptions to raise) are
 passed in by the caller.
 """
-import aiohttp
+
 import json
 from typing import Any, Awaitable, Callable, Dict, Optional, Type
 from urllib.parse import urljoin
+
+import aiohttp
 
 
 def build_apk_file_name(metadata: Dict[str, Any]) -> str:
@@ -17,9 +19,7 @@ def build_apk_file_name(metadata: Dict[str, Any]) -> str:
     Build a unique upload filename from APK metadata, shared across store
     integrations to avoid the "binary already in use" class of error (Bug 1974870).
     """
-    return "{}-{}-{}.apk".format(
-        metadata["package_name"], metadata["architecture"], metadata["version_name"]
-    )
+    return "{}-{}-{}.apk".format(metadata["package_name"], metadata["architecture"], metadata["version_name"])
 
 
 async def raise_for_status_with_message(
