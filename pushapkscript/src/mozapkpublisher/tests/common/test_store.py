@@ -13,7 +13,7 @@ from mozapkpublisher.common import store
 from mozapkpublisher.common.exceptions import WrongArgumentGiven
 from mozapkpublisher.common.store import add_general_google_play_arguments, \
     GooglePlayEdit, _create_google_edit_resource
-from mozapkpublisher.test import does_not_raise
+from mozapkpublisher.tests import does_not_raise
 
 
 def test_add_general_google_play_arguments():

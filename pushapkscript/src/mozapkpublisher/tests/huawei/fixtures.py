@@ -10,7 +10,7 @@ import mozapkpublisher.huawei_api
 from mozapkpublisher.huawei_api import HuaweiAppGalleryApi
 
 
-# Note: `responses_mock` is provided by `mozapkpublisher.test.sgs.fixtures` which
+# Note: `responses_mock` is provided by `mozapkpublisher.tests.sgs.fixtures` which
 # is also registered as a pytest plugin in `conftest.py`. Don't redeclare it here.
 
 TEST_CREDENTIALS = {
