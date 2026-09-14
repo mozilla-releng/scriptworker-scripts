@@ -2519,24 +2519,6 @@ wheels = [
 ]
 
 [[package]]
-name = "mozapkpublisher"
-version = "12.0.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "aiohttp" },
-    { name = "google-api-python-client" },
-    { name = "google-auth" },
-    { name = "mozilla-version" },
-    { name = "pyaxmlparser" },
-    { name = "pyjwt", extra = ["crypto"] },
-    { name = "requests" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/84/b7/ae15b448f826cc4d66b21540d04e4621a0b163379ac0100adbe18ffe05df/mozapkpublisher-12.0.0.tar.gz", hash = "sha256:20d8a117b40653a517bf994156966ac5aa3bc62e1ed938dbd96b9dd22a337bf8", size = 185839, upload-time = "2026-09-04T16:05:49.559Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/9e/d5/be4f2477047cfea4a719ba1934f6ab5d8c9b9ae5fb9bd2f11079cb731793/mozapkpublisher-12.0.0-py3-none-any.whl", hash = "sha256:b3a1f35760e0ebf22000d9f0d767649b952c0dfc0852f02b7f5e6c4111040f14", size = 94188, upload-time = "2026-09-04T16:05:48.161Z" },
-]
-
-[[package]]
 name = "mozbuild"
 version = "0.2"
 source = { directory = "vendored/mozbuild" }
@@ -3022,32 +3004,52 @@ name = "pushapkscript"
 version = "5.0.0"
 source = { editable = "pushapkscript" }
 dependencies = [
-    { name = "mozapkpublisher" },
+    { name = "aiohttp" },
+    { name = "google-api-python-client" },
+    { name = "google-auth" },
+    { name = "mozilla-version" },
+    { name = "pyaxmlparser" },
+    { name = "pyjwt", extra = ["crypto"] },
+    { name = "requests" },
     { name = "scriptworker" },
 ]
 
 [package.dev-dependencies]
 dev = [
+    { name = "aioresponses" },
     { name = "coverage" },
+    { name = "cryptography" },
+    { name = "mock" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "pytest-cov" },
+    { name = "requests-mock" },
     { name = "tox" },
     { name = "tox-uv" },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "mozapkpublisher", specifier = ">=12.0.0" },
+    { name = "aiohttp" },
+    { name = "google-api-python-client" },
+    { name = "google-auth" },
+    { name = "mozilla-version" },
+    { name = "pyaxmlparser" },
+    { name = "pyjwt", extras = ["crypto"] },
+    { name = "requests" },
     { name = "scriptworker" },
 ]
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "aioresponses" },
     { name = "coverage", specifier = ">=4.2b1" },
+    { name = "cryptography" },
+    { name = "mock" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "pytest-cov" },
+    { name = "requests-mock" },
     { name = "tox" },
     { name = "tox-uv" },
 ]

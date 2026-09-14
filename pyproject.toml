@@ -72,6 +72,7 @@ exclude = [
     # Custom paths below
     "vendored",
     "tests",
+    "pushapkscript/src/mozapkpublisher/test",
     "createprecomplete.py",
 ]
 
