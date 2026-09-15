@@ -1,0 +1,104 @@
+import hashlib
+import logging
+
+import requests
+
+logger = logging.getLogger(__name__)
+
+
+def load_json_url(url):
+    return requests.get(url).json()
+
+
+def file_sha512sum(file_path):
+    bs = 65536
+    hasher = hashlib.sha512()
+    with open(file_path, "rb") as fh:
+        buf = fh.read(bs)
+        while len(buf) > 0:
+            hasher.update(buf)
+            buf = fh.read(bs)
+    return hasher.hexdigest()
+
+
+def file_sha256sum(file_path):
+    bs = 65536
+    hasher = hashlib.sha256()
+    with open(file_path, "rb") as fh:
+        buf = fh.read(bs)
+        while len(buf) > 0:
+            hasher.update(buf)
+            buf = fh.read(bs)
+    return hasher.hexdigest()
+
+
+def filter_out_identical_values(list_):
+    return list(set(list_))
+
+
+def add_push_arguments(parser):
+    parser.add_argument("--store", help="Store on which to upload", choices=["google", "samsung", "huawei"], default="google")
+    parser.add_argument("--secret", help="File that contains google credentials (json). This is only required if the store is google.")
+    parser.add_argument("--sgs-service-account-id", help="The service account ID for the samsung galaxy store. This is only required if the store is samsung")
+    parser.add_argument("--sgs-access-token", help="The access token for the samsung galaxy store. This is only required if the store is samsung")
+    parser.add_argument(
+        "--huawei-credentials",
+        help="File that contains the huawei app gallery service account credentials (json). This is only required if the store is huawei",
+    )
+    parser.add_argument(
+        "--submit",
+        action="store_true",
+        help="After uploading, submit the new binary for release. Has no effect unless the "
+        "store is samsung or huawei. For huawei this calls the submit-for-release "
+        "endpoint; without it the binary is uploaded but left unsubmitted.",
+    )
+    parser.add_argument(
+        "--do-not-contact-server",
+        action="store_false",
+        dest="contact_server",
+        help="""Prevent any request from reaching the store. Use this option if
+you want to run the script without any valid credentials nor valid APKs. --credentials must
+still be provided (you can pass a random file name). This overrides --commit: nothing is
+uploaded on any store.""",
+    )
+    parser.add_argument("track", help="Track on which to upload. This has no effect if the store is not google")
+    parser.add_argument(
+        "--rollout-percentage",
+        type=int,
+        choices=range(0, 101),
+        metavar="[0-100]",
+        default=None,
+        help="The percentage of user who will get the update. Specify only if track is rollout",
+    )
+    parser.add_argument(
+        "--commit",
+        action="store_false",
+        dest="dry_run",
+        help="Actually upload. Required on EVERY store: without it the run stops after the "
+        "APK checks and nothing is sent. On google this commits the new release, which "
+        "cannot be reverted; on samsung and huawei it uploads the binaries, and they are "
+        "additionally submitted for release only if --submit is given.",
+    )
+
+
+def check_push_arguments(parser, config):
+    if config.store == "google":
+        if not config.secret:
+            parser.error("--secret is mandatory when using --store=google")
+    elif config.store == "samsung":
+        if not (config.sgs_service_account_id and config.sgs_access_token):
+            parser.error("--sgs-service-account-id and --sgs-access-token are mandatory when using --store=samsung")
+    elif config.store == "huawei":
+        if not config.huawei_credentials:
+            parser.error("--huawei-credentials is mandatory when using --store=huawei")
+
+
+def metadata_by_package_name(metadata_dict):
+    package_names = {}
+    for file, metadata in metadata_dict.items():
+        package_name = metadata["package_name"]
+        if package_name not in package_names:
+            package_names[package_name] = []
+        package_names[package_name].append((file, metadata))
+
+    return package_names

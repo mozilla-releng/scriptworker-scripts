@@ -13,7 +13,13 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
 ]
 dependencies = [
-    "mozapkpublisher>=12.0.0",
+    "aiohttp",
+    "google-api-python-client",
+    "google-auth",
+    "mozilla-version",
+    "pyaxmlparser",
+    "pyjwt[crypto]",
+    "requests",
     "scriptworker",
 ]
 
@@ -21,10 +27,14 @@ dependencies = [
 dev = [
     "tox",
     "tox-uv",
+    "aioresponses",
     "coverage>=4.2b1",
+    "cryptography",
+    "mock",
     "pytest",
     "pytest-cov",
     "pytest-asyncio",
+    "requests-mock",
 ]
 
 [build-system]

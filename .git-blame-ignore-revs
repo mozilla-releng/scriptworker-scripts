@@ -1,0 +1,6 @@
+# Revisions to skip when running `git blame`.
+# Enable locally with:
+#     git config blame.ignoreRevsFile .git-blame-ignore-revs
+
+# lint(pushapk): apply the repo ruff config to mozapkpublisher
+af5fbde0bf855374062f9e759c82744816ab7701
