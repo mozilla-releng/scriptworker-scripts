@@ -172,6 +172,39 @@ def test_get_build_params(task_payload, expected):
 
 
 @pytest.mark.parametrize(
+    "task_payload",
+    (
+        pytest.param(
+            {"workflow_params": {"wkflw": [{"workflow_id": "release_promotion_promote"}]}},
+            id="workflow_params",
+        ),
+        pytest.param(
+            {"workflow_params": {"wkflw": [{"baz": "qux"}, {"workflow_id": "release_promotion_promote"}]}},
+            id="workflow_params_later_variation",
+        ),
+        pytest.param(
+            {"global_params": {"workflow_id": "release_promotion_promote"}},
+            id="global_params",
+        ),
+        pytest.param(
+            {"global_params": {"workflow_id": "release_promotion_promote"}, "workflow_params": {"wkflw": [{"baz": "qux"}]}},
+            id="global_params_with_workflow_params",
+        ),
+    ),
+)
+def test_get_build_params_rejects_payload_workflow_id(task_payload):
+    """The payload must not be able to run a workflow the task holds no scope for."""
+    with pytest.raises(TaskVerificationError):
+        task_mod.get_build_params({"payload": task_payload}, "wkflw")
+
+
+def test_get_build_params_does_not_mutate_payload():
+    payload = {"global_params": {"foo": "bar"}, "workflow_params": {"wkflw": [{"baz": "qux"}]}}
+    task_mod.get_build_params({"payload": payload}, "wkflw")
+    assert payload == {"global_params": {"foo": "bar"}, "workflow_params": {"wkflw": [{"baz": "qux"}]}}
+
+
+@pytest.mark.parametrize(
     "task, expectation, expected",
     (
         pytest.param({"payload": {}}, does_not_raise(), "work/artifacts", id="no artifact prefix"),
