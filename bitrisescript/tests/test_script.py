@@ -65,6 +65,101 @@ async def test_async_main(mocker, config, task, expectation, expected_num_future
         assert len(args) == expected_num_futures
 
 
+@pytest.mark.asyncio
+async def test_async_main_rejects_payload_workflow_id(mocker, config):
+    """An escalated workflow_id in the payload must not reach the Bitrise API."""
+    client_mock = mocker.Mock()
+    client_mock.configure_mock(
+        **{
+            "close.return_value": Future(),
+            "set_auth.return_value": None,
+            "set_app_prefix.return_value": Future(),
+        }
+    )
+    client_mock.close.return_value.set_result(None)
+    client_mock.set_app_prefix.return_value.set_result(None)
+    mocker.patch("bitrisescript.script.BitriseClient", return_value=client_mock)
+    mocker.patch("bitrisescript.script.get_running_builds", return_value=mocker.AsyncMock())
+    mocker.patch("bitrisescript.script.find_running_build", return_value=None)
+    run_build_mock = mocker.patch("bitrisescript.script.run_build", return_value=mocker.AsyncMock())
+
+    task_def = {
+        "scopes": ["test:prefix:app:bar", "test:prefix:workflow:build_and_test_ios"],
+        "payload": {
+            "workflow_params": {
+                "build_and_test_ios": [{"workflow_id": "release_promotion_promote"}],
+            },
+        },
+    }
+
+    with pytest.raises(TaskVerificationError):
+        await script.async_main(config, task_def)
+
+    run_build_mock.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_async_main_backstops_mismatched_workflow_id(mocker, config):
+    """async_main re-checks workflow_id even if get_build_params stops enforcing it."""
+    client_mock = mocker.Mock()
+    client_mock.configure_mock(
+        **{
+            "close.return_value": Future(),
+            "set_auth.return_value": None,
+            "set_app_prefix.return_value": Future(),
+        }
+    )
+    client_mock.close.return_value.set_result(None)
+    client_mock.set_app_prefix.return_value.set_result(None)
+    mocker.patch("bitrisescript.script.BitriseClient", return_value=client_mock)
+    mocker.patch("bitrisescript.script.get_running_builds", return_value=mocker.AsyncMock())
+    mocker.patch("bitrisescript.script.find_running_build", return_value=None)
+    run_build_mock = mocker.patch("bitrisescript.script.run_build", return_value=mocker.AsyncMock())
+    mocker.patch("bitrisescript.script.get_build_params", return_value=[{"workflow_id": "release_promotion_promote"}])
+
+    task_def = {"scopes": ["test:prefix:app:bar", "test:prefix:workflow:build_and_test_ios"], "payload": {}}
+
+    with pytest.raises(TaskVerificationError):
+        await script.async_main(config, task_def)
+
+    run_build_mock.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_async_main_sends_scope_derived_workflow_id(mocker, config):
+    """run_build is always given the workflow_id derived from the task's scopes."""
+    client_mock = mocker.Mock()
+    client_mock.configure_mock(
+        **{
+            "close.return_value": Future(),
+            "set_auth.return_value": None,
+            "set_app_prefix.return_value": Future(),
+        }
+    )
+    client_mock.close.return_value.set_result(None)
+    client_mock.set_app_prefix.return_value.set_result(None)
+    mocker.patch("bitrisescript.script.BitriseClient", return_value=client_mock)
+    mocker.patch("bitrisescript.script.get_running_builds", return_value=mocker.AsyncMock())
+    mocker.patch("bitrisescript.script.find_running_build", return_value=None)
+    run_build_mock = mocker.patch("bitrisescript.script.run_build", return_value=mocker.AsyncMock())
+    mocker.patch("bitrisescript.script.asyncio.get_event_loop", return_value=mocker.Mock())
+    mock_gather = mocker.patch("bitrisescript.script.asyncio.gather", return_value=Future())
+    mock_gather.return_value.set_result(None)
+
+    task_def = {
+        "scopes": ["test:prefix:app:bar", "test:prefix:workflow:build_and_test_ios"],
+        "payload": {
+            "workflow_params": {
+                "build_and_test_ios": [{"branch": "main"}],
+            },
+        },
+    }
+
+    await script.async_main(config, task_def)
+
+    run_build_mock.assert_called_once_with("work/artifacts", branch="main", workflow_id="build_and_test_ios")
+
+
 def test_get_default_config():
     parent_dir = os.path.dirname(os.getcwd())
     assert script.get_default_config() == {

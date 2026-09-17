@@ -37,6 +37,27 @@ def _deep_merge_dict(source: dict, dest: dict) -> dict:
     return dest
 
 
+# Build params that bitrisescript derives from the task's scopes. Letting the task
+# payload set these would bypass the scope checks these values come from.
+SCOPE_DERIVED_BUILD_PARAMS = ("workflow_id",)
+
+
+def _reject_scope_derived_build_params(params: dict[str, Any], payload_key: str) -> None:
+    """Reject build params that bitrisescript derives from the task's scopes.
+
+    Args:
+        params (dict): Build params supplied by the task payload.
+        payload_key (str): The payload key ``params`` was read from, used in the
+            error message.
+
+    Raises:
+        TaskVerificationError: If ``params`` sets a scope derived build param.
+    """
+    reserved = sorted(set(params) & set(SCOPE_DERIVED_BUILD_PARAMS))
+    if reserved:
+        raise TaskVerificationError(f"Param(s) {reserved} in '{payload_key}' are derived from the task's scopes and cannot be set by the task payload")
+
+
 def _get_allowed_scope_prefixes(config):
     prefixes = config["taskcluster_scope_prefixes"]
     return [prefix if prefix.endswith(":") else "{}:".format(prefix) for prefix in prefixes]
@@ -126,17 +147,26 @@ def get_build_params(task: dict[str, Any], workflow: str = None) -> list[dict[st
         workflow (str): Optional workflow reference used to load workflow_params
 
     Returns:
-        dict: The bitrise build_params to specify. Always adds workflow_id to the returned dict.
+        list: The list of bitrise build_params to specify. Always sets
+            workflow_id to `workflow` on each returned dict.
+
+    Raises:
+        TaskVerificationError: If the task payload sets a scope derived build param.
     """
     global_params = task["payload"].get("global_params", {})
+    _reject_scope_derived_build_params(global_params, "global_params")
+
     workflow_params = task["payload"].get("workflow_params", {}).get(workflow)
-    global_params["workflow_id"] = workflow
     if not workflow_params:
-        return [global_params]
+        return [{**global_params, "workflow_id": workflow}]
+
     build_params = []
     for variation in workflow_params:
-        params = deepcopy(global_params)
-        params = _deep_merge_dict(variation, params)
+        _reject_scope_derived_build_params(variation, f"workflow_params.{workflow}")
+        params = _deep_merge_dict(variation, deepcopy(global_params))
+        # workflow_id comes from the task's scopes, so it is set after the merge
+        # rather than merged over by the payload.
+        params["workflow_id"] = workflow
         build_params.append(params)
     return build_params
 

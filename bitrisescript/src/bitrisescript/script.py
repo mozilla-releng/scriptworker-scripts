@@ -7,6 +7,7 @@ import os
 import signal
 
 from scriptworker_client.client import sync_main
+from scriptworker_client.exceptions import TaskVerificationError
 
 from bitrisescript.bitrise import BitriseClient, find_running_build, get_running_builds, run_build, wait_and_download_workflow_log
 from bitrisescript.task import get_artifact_dir, get_bitrise_app, get_bitrise_workflows, get_build_params
@@ -36,6 +37,13 @@ async def async_main(config, task):
             running_builds = await get_running_builds(workflow, branch=branch)
             build_params_list = get_build_params(task, workflow)
             for build_params in build_params_list:
+                # Backstop: workflow_id is what authorizes this build against the
+                # task's scopes, so re-check it here rather than trusting that
+                # nothing between the scope check and the Bitrise request changed it.
+                requested_workflow = build_params["workflow_id"]
+                if requested_workflow != workflow:
+                    raise TaskVerificationError(f"build_params workflow_id '{requested_workflow}' does not match the scope derived workflow '{workflow}'")
+
                 existing_build_slug = find_running_build(running_builds, build_params)
                 if existing_build_slug:
                     futures.append(wait_and_download_workflow_log(artifact_dir, existing_build_slug))
