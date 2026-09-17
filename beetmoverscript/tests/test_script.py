@@ -8,16 +8,11 @@ import tempfile
 from io import BytesIO
 
 import aiohttp
-import boto3
-from google.cloud.exceptions import GoogleCloudError
-import mock
-import pytest
-from scriptworker.context import Context
-from scriptworker.exceptions import ScriptWorkerRetryException, ScriptWorkerTaskException
-from yarl import URL
-
 import beetmoverscript.gcloud
 import beetmoverscript.script
+import boto3
+import mock
+import pytest
 from beetmoverscript.constants import PARTNER_REPACK_REGEXES
 from beetmoverscript.script import (
     async_main,
@@ -41,6 +36,10 @@ from beetmoverscript.script import (
 )
 from beetmoverscript.task import get_release_props, get_upstream_artifacts
 from beetmoverscript.utils import generate_beetmover_manifest, is_promotion_action
+from google.cloud.exceptions import GoogleCloudError
+from scriptworker.context import Context
+from scriptworker.exceptions import ScriptWorkerRetryException, ScriptWorkerTaskException
+from yarl import URL
 
 from . import get_fake_valid_config, get_fake_valid_task, get_test_jinja_env, noop_async, noop_sync
 from .test_gcloud import FakeClient
@@ -387,13 +386,17 @@ async def test_move_beets(partials, mocker, restore_buildhub_file):
     actual_sources = []
     actual_destinations = []
     actual_expires = []
+    actual_allow_overwrites = []
 
     def sort_manifest(manifest):
         manifest.sort(key=lambda entry: entry.get("blob_suffix", ""))
 
-    async def fake_move_beet(context, source, destinations, locale, update_balrog_manifest, balrog_format, artifact_pretty_name, from_buildid, expiry=None):
+    async def fake_move_beet(
+        context, source, destinations, locale, update_balrog_manifest, balrog_format, artifact_pretty_name, from_buildid, expiry=None, allow_overwrites=True
+    ):
         actual_sources.append(source)
         actual_destinations.append(destinations)
+        actual_allow_overwrites.append(allow_overwrites)
         if expiry:
             actual_expires.append(expiry)
         if update_balrog_manifest:
@@ -414,11 +417,45 @@ async def test_move_beets(partials, mocker, restore_buildhub_file):
     assert sorted(expected_sources) == sorted(actual_sources)
     assert sorted(expected_destinations) == sorted(actual_destinations)
     assert sorted(expected_expires) == sorted(actual_expires)
+    # "nightly" is not a create-only resource, so overwrites stay enabled.
+    assert actual_allow_overwrites and all(actual_allow_overwrites)
 
     # Deal with different-sorted completeInfo
     sort_manifest(context.balrog_manifest)
     sort_manifest(expected_balrog_manifest)
     assert context.balrog_manifest == expected_balrog_manifest
+
+
+# move_beets allow_overwrites {{{1
+@pytest.mark.asyncio
+@pytest.mark.parametrize("resource,expected_allow_overwrites", (("nightly", True), ("integration", False)))
+async def test_move_beets_allow_overwrites(mocker, resource, expected_allow_overwrites, restore_buildhub_file):
+    mocker.patch("beetmoverscript.utils.JINJA_ENV", get_test_jinja_env())
+
+    context = Context()
+    context.config = get_fake_valid_config()
+    context.task = get_fake_valid_task(taskjson="task_artifact_map.json")
+    context.release_props = context.task["payload"]["releaseProperties"]
+    context.release_props["stage_platform"] = context.release_props["platform"]
+    context.resource = resource
+    context.action = "push-to-nightly"
+    context.raw_balrog_manifest = dict()
+    context.balrog_manifest = list()
+    context.artifacts_to_beetmove = get_upstream_artifacts(context)
+    artifact_map = context.task["payload"]["artifactMap"]
+
+    seen = []
+
+    async def fake_move_beet(
+        context, source, destinations, locale, update_balrog_manifest, balrog_format, artifact_pretty_name, from_buildid, expiry=None, allow_overwrites=True
+    ):
+        seen.append(allow_overwrites)
+
+    with mock.patch("beetmoverscript.script.move_beet", fake_move_beet):
+        await move_beets(context, context.artifacts_to_beetmove, artifact_map=artifact_map)
+
+    # Create-only resources (e.g. the integration archive) must never overwrite.
+    assert seen and all(value is expected_allow_overwrites for value in seen)
 
 
 # move_beets {{{1
@@ -498,7 +535,7 @@ async def test_move_beet(update_manifest, action):
     }
     actual_upload_args = []
 
-    async def fake_retry_upload(context, destinations, path, expiry=None):
+    async def fake_retry_upload(context, destinations, path, expiry=None, allow_overwrites=True):
         actual_upload_args.extend([destinations, path])
 
     with mock.patch("beetmoverscript.script.retry_upload", fake_retry_upload):
@@ -1427,6 +1464,8 @@ async def test_upload_translations_artifacts(aioresponses, monkeypatch, context,
             bucket = FakeClient.FakeBucket(FakeClient, "foobucket")
             bucket.blob = mock.MagicMock()
             bucket.blob.return_value = blob
+            # Destination doesn't exist yet, so get_blob returns None.
+            bucket.get_blob = mock.MagicMock(return_value=None)
             monkeypatch.setattr(beetmoverscript.gcloud, "Bucket", lambda client, name: bucket)
 
             context.action = "upload-translations-artifacts"
@@ -1527,6 +1566,9 @@ async def test_upload_translations_artifacts_overwrites(aioresponses, monkeypatc
             bucket = FakeClient.FakeBucket(FakeClient, "foobucket")
             bucket.blob = mock.MagicMock()
             bucket.blob.return_value = blob
+            # When the destination already exists, get_blob returns it (with a
+            # differing md5_hash, so the overwrite-forbidden path raises); else None.
+            bucket.get_blob = mock.MagicMock(return_value=FakeClient.FakeBlob() if exists_upfront else None)
             monkeypatch.setattr(beetmoverscript.gcloud, "Bucket", lambda client, name: bucket)
 
             context.action = "upload-translations-artifacts"

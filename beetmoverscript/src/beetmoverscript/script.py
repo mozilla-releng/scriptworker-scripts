@@ -78,6 +78,7 @@ from beetmoverscript.utils import (
     get_releases_prefix,
     get_size,
     get_url_prefix,
+    is_overwrite_forbidden,
     is_partner_action,
     is_promotion_action,
     is_release_action,
@@ -623,6 +624,11 @@ def cleanup(context):
 async def move_beets(context, artifacts_to_beetmove, artifact_map):
     beets = []
 
+    # Create-only buckets (e.g. the integration archive) must never overwrite;
+    # let upload_to_gcs raise on differing content instead of attempting a
+    # forbidden overwrite (identical content is skipped regardless).
+    allow_overwrites = not is_overwrite_forbidden(context.resource)
+
     for locale in artifacts_to_beetmove:
         installer_artifact = ""
         buildhub_artifact_exists = False
@@ -681,6 +687,7 @@ async def move_beets(context, artifacts_to_beetmove, artifact_map):
                         from_buildid=from_buildid,
                         artifact_pretty_name=artifact_pretty_name,
                         expiry=expiry,
+                        allow_overwrites=allow_overwrites,
                     )
                 )
             )
@@ -711,8 +718,9 @@ async def move_beet(
     from_buildid,
     artifact_pretty_name,
     expiry=None,
+    allow_overwrites=True,
 ):
-    await retry_upload(context=context, destinations=destinations, path=source, expiry=expiry)
+    await retry_upload(context=context, destinations=destinations, path=source, expiry=expiry, allow_overwrites=allow_overwrites)
 
     if context.checksums.get(artifact_pretty_name) is None:
         context.checksums[artifact_pretty_name] = {algo: get_hash(source, algo) for algo in context.config["checksums_digests"]}

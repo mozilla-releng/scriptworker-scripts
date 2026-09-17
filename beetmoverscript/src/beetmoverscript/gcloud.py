@@ -20,6 +20,7 @@ from beetmoverscript.utils import (
     get_candidates_prefix,
     get_credentials,
     get_fail_task_on_error,
+    get_md5_base64,
     get_partner_candidates_prefix,
     get_partner_match,
     get_partner_releases_prefix,
@@ -134,11 +135,24 @@ async def upload_to_gcs(context, target_path, path, expiry=None, fail_on_unknown
     if expiry:
         blob.custom_time = datetime.fromisoformat(expiry)
 
-    if blob.exists():
+    # Fetch the destination's current metadata (md5_hash included) in a single
+    # request; get_blob returns None when the object doesn't exist yet.
+    existing_blob = bucket.get_blob(target_path)
+    if existing_blob is not None:
         if allow_overwrites:
+            # Normal buckets overwrite in place (e.g. nightly *-latest dirs), which
+            # also refreshes metadata such as custom_time/expiry.
             log.warning("upload_to_gcs: Overriding file: %s", target_path)
+        elif existing_blob.md5_hash == get_md5_base64(path):
+            # Create-only buckets (e.g. the autoland integration archive) can't
+            # overwrite -- that needs storage.objects.delete, which they lack. The
+            # identical object is already there, so skip and keep retries idempotent.
+            log.info("upload_to_gcs: %s already exists with identical content, skipping upload.", target_path)
+            return existing_blob
         else:
-            raise ScriptWorkerTaskException(f"Would've overwritten {target_path} without being configured to allow it!")
+            # Create-only bucket and the content differs: fail loudly rather than
+            # attempt a forbidden overwrite (which would surface as a cryptic 403).
+            raise ScriptWorkerTaskException(f"Would've overwritten {target_path} with different content without being configured to allow it!")
     log.info("upload_to_gcs: %s -> Bucket: gs://%s/%s  (custom_time: %s)", path, bucket_name, target_path, expiry)
     """
     In certain cases, such as when handling *-latest directories, we need to overwrite existing file blobs.
