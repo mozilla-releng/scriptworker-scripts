@@ -21,6 +21,7 @@ STORE_NAMES = {
     "google": "Google Play",
     "samsung": "the Samsung Galaxy Store",
     "huawei": "the Huawei AppGallery",
+    "vivo": "the vivo App Store",
 }
 
 

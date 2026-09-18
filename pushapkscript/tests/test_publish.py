@@ -41,6 +41,8 @@ class TestPublish:
             sgs_service_account_id=None,
             sgs_access_token=None,
             huawei_credentials=None,
+            vivo_access_key=None,
+            vivo_access_secret=None,
             submit=False,
         )
 
@@ -59,6 +61,25 @@ class TestPublish:
         assert args["huawei_credentials"] == "/huawei.json"
         assert args["submit"] is True
         # Huawei uses its own credentials file, so the Google Play secret is unset.
+        assert args["secret"] is None
+
+    async def test_publish_vivo_config(self, mock_push_aab, mock_push_apk):
+        publish_config = {
+            "target_store": "vivo",
+            "dry_run": False,
+            "package_names": ["org.mozilla.firefox"],
+            "vivo_access_key": "an-access-key",
+            "vivo_access_secret": "an-access-secret",
+            "submit": True,
+        }
+        await publish({}, publish_config, self.apks, contact_server=True)
+
+        _, args = mock_push_apk.call_args
+        assert args["store"] == "vivo"
+        assert args["vivo_access_key"] == "an-access-key"
+        assert args["vivo_access_secret"] == "an-access-secret"
+        assert args["submit"] is True
+        # vivo uses its own key pair, so the Google Play secret is unset.
         assert args["secret"] is None
 
     async def test_publish_aab_config(self, mock_push_aab, mock_push_apk):

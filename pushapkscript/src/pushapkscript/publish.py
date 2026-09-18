@@ -26,7 +26,9 @@ async def publish(product_config, publish_config, apk_files, contact_server):
             sgs_service_account_id=publish_config.get("sgs_service_account_id"),
             sgs_access_token=publish_config.get("sgs_access_token"),
             huawei_credentials=publish_config.get("huawei_credentials"),
-            # Note that this only has an effect on SGS and Huawei submissions, not google play.
+            vivo_access_key=publish_config.get("vivo_access_key"),
+            vivo_access_secret=publish_config.get("vivo_access_secret"),
+            # Note that this only has an effect on SGS, Huawei and vivo submissions, not google play.
             submit=publish_config.get("submit", False),
         )
 

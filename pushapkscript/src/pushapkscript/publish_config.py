@@ -12,6 +12,10 @@ _NON_GOOGLE_STORE_CREDENTIALS = {
     "huawei": {
         "huawei_credentials": "credentials_file",
     },
+    "vivo": {
+        "vivo_access_key": "access_key",
+        "vivo_access_secret": "access_secret",
+    },
 }
 
 

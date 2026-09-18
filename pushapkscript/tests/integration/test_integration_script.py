@@ -291,6 +291,8 @@ class MainTest(unittest.TestCase):
             sgs_service_account_id=None,
             sgs_access_token=None,
             huawei_credentials=None,
+            vivo_access_key=None,
+            vivo_access_secret=None,
             submit=False,
         )
 
@@ -321,6 +323,8 @@ class MainTest(unittest.TestCase):
             sgs_service_account_id=None,
             sgs_access_token=None,
             huawei_credentials=None,
+            vivo_access_key=None,
+            vivo_access_secret=None,
             submit=False,
         )
 
@@ -351,6 +355,8 @@ class MainTest(unittest.TestCase):
             sgs_service_account_id=None,
             sgs_access_token=None,
             huawei_credentials=None,
+            vivo_access_key=None,
+            vivo_access_secret=None,
             submit=False,
         )
 
@@ -381,6 +387,8 @@ class MainTest(unittest.TestCase):
             sgs_service_account_id=None,
             sgs_access_token=None,
             huawei_credentials=None,
+            vivo_access_key=None,
+            vivo_access_secret=None,
             submit=False,
         )
 
@@ -411,6 +419,8 @@ class MainTest(unittest.TestCase):
             sgs_service_account_id=None,
             sgs_access_token=None,
             huawei_credentials=None,
+            vivo_access_key=None,
+            vivo_access_secret=None,
             submit=False,
         )
 
@@ -442,6 +452,8 @@ class MainTest(unittest.TestCase):
             sgs_service_account_id=None,
             sgs_access_token=None,
             huawei_credentials=None,
+            vivo_access_key=None,
+            vivo_access_secret=None,
             submit=False,
         )
 
@@ -473,6 +485,8 @@ class MainTest(unittest.TestCase):
             sgs_service_account_id="123",
             sgs_access_token="456",
             huawei_credentials=None,
+            vivo_access_key=None,
+            vivo_access_secret=None,
             submit=False,
         )
 
@@ -504,6 +518,8 @@ class MainTest(unittest.TestCase):
             sgs_service_account_id=None,
             sgs_access_token=None,
             huawei_credentials="huawei.json",
+            vivo_access_key=None,
+            vivo_access_secret=None,
             submit=False,
         )
 
