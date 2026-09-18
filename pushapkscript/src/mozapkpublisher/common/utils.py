@@ -10,26 +10,28 @@ def load_json_url(url):
     return requests.get(url).json()
 
 
-def file_sha512sum(file_path):
+def _file_hashsum(hasher, file_path):
     bs = 65536
-    hasher = hashlib.sha512()
     with open(file_path, "rb") as fh:
         buf = fh.read(bs)
         while len(buf) > 0:
             hasher.update(buf)
             buf = fh.read(bs)
     return hasher.hexdigest()
+
+
+def file_sha512sum(file_path):
+    return _file_hashsum(hashlib.sha512(), file_path)
 
 
 def file_sha256sum(file_path):
-    bs = 65536
-    hasher = hashlib.sha256()
-    with open(file_path, "rb") as fh:
-        buf = fh.read(bs)
-        while len(buf) > 0:
-            hasher.update(buf)
-            buf = fh.read(bs)
-    return hasher.hexdigest()
+    return _file_hashsum(hashlib.sha256(), file_path)
+
+
+def file_md5sum(file_path):
+    # vivo's upload interface mandates an MD5; it is an integrity parameter, not a security
+    # control, so `usedforsecurity=False` keeps it working where MD5 is policy-restricted.
+    return _file_hashsum(hashlib.md5(usedforsecurity=False), file_path)
 
 
 def filter_out_identical_values(list_):
