@@ -12,13 +12,14 @@ from mozapkpublisher.common.utils import add_push_arguments, check_push_argument
 from mozapkpublisher.huawei_api import HuaweiAppGallery
 from mozapkpublisher.huawei_api.auth import load_credentials
 from mozapkpublisher.sgs_api import SamsungGalaxyStore
+from mozapkpublisher.vivo_api import VivoAppStore
 
 logger = logging.getLogger(__name__)
 
 
 def _store_dry_run(dry_run, contact_server):
     """
-    Whether the samsung/huawei clients should do nothing.
+    Whether the samsung/huawei/vivo clients should do nothing.
 
     Google keeps `dry_run` and `contact_server` separate: it opens a real edit
     transaction and simply never commits it, and `contact_server=False` additionally
@@ -47,6 +48,9 @@ async def push_apk(
     sgs_service_account_id=None,
     sgs_access_token=None,
     huawei_credentials=None,
+    vivo_access_key=None,
+    vivo_access_secret=None,
+    vivo_basic_info_fallback=None,
 ):
     """
     Args:
@@ -105,8 +109,35 @@ async def push_apk(
         async with HuaweiAppGallery(credentials, dry_run=_store_dry_run(dry_run, contact_server)) as huawei:
             for package_name, apks in apks_by_package_name.items():
                 await huawei.upload_apks(package_name, apks, rollout_percentage, submit=submit)
+    elif store == "vivo":
+        if not (vivo_access_key and vivo_access_secret):
+            raise RuntimeError("You must provide an access key and access secret for the vivo app store")
+
+        async with VivoAppStore(
+            vivo_access_key,
+            vivo_access_secret,
+            dry_run=_store_dry_run(dry_run, contact_server),
+            basic_info_fallback=vivo_basic_info_fallback,
+        ) as vivo:
+            for package_name, apks in apks_by_package_name.items():
+                await vivo.upload_apks(package_name, apks, rollout_percentage, submit=submit)
     else:
         raise WrongArgumentGiven("Unkown target store: {}".format(store))
+
+
+def _vivo_basic_info_fallback(config):
+    """Collect the `--vivo-*` basic-info options that were given, or None if there were none."""
+    fallback = {
+        key: value
+        for key, value in (
+            ("language_codes", config.vivo_language_codes),
+            ("nation_codes", config.vivo_nation_codes),
+            ("email", config.vivo_email),
+        )
+        if value
+    }
+
+    return fallback or None
 
 
 def main():
@@ -134,6 +165,9 @@ def main():
             sgs_service_account_id=config.sgs_service_account_id,
             sgs_access_token=config.sgs_access_token,
             huawei_credentials=config.huawei_credentials,
+            vivo_access_key=config.vivo_access_key,
+            vivo_access_secret=config.vivo_access_secret,
+            vivo_basic_info_fallback=_vivo_basic_info_fallback(config),
         )
     )
 
