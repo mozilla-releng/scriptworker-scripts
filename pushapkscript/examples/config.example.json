@@ -66,11 +66,8 @@
                     "credentials_file": "/fenix-production.json"
                 },
                 "samsung": {
-                    "service_account_id": "0123456",
-                    "access_token": "abcdef"
-                },
-                "huawei": {
-                    "credentials_file": "/huawei.json"
+                    "sgs_service_account_id": "0123456",
+                    "sgs_access_token": "abcdef"
                 }
             }
         }
