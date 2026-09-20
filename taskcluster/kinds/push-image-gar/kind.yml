@@ -1,0 +1,73 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+
+loader: taskgraph.loader.transform:loader
+
+kind-dependencies:
+    - docker-image
+
+transforms:
+    - taskgraph.transforms.task_context
+    - taskgraph.transforms.run
+    - taskgraph.transforms.task
+
+task-defaults:
+    description: Push {name} {docker_tag} docker image to GAR
+    worker-type: images
+    task-context:
+        from-parameters:
+            head_rev: head_rev
+            head_repo: head_repository
+            docker_tag: docker_tag
+            moz_build_date: moz_build_date
+        substitution-fields:
+            - description
+            - dependencies.image
+            - worker.env
+            - run-on-git-branches
+    dependencies:
+        image: docker-image-{name}
+    worker:
+        taskcluster-proxy: true
+        docker-image: {in-tree: skopeo}
+        max-run-time: 1800
+        env:
+            VCS_HEAD_REPOSITORY: "{head_repo}"
+            APP: "{name}"
+            DOCKER_REPO: "{name}"
+            VCS_HEAD_REV: "{head_rev}"
+            DOCKER_TAG: "{docker_tag}"
+    run-on-tasks-for: [github-push]
+    run-on-git-branches:
+        - ^dev$
+        - ^production$
+        - ^dev-{name}$
+        - ^production-{name}$
+    run:
+        using: run-task
+        checkout: false
+        command:
+            - /usr/local/bin/push_image_gar.sh
+    fetches:
+        image:
+            - artifact: image.tar.zst
+              extract: false
+    scopes:
+        - secrets:get:project/releng/scriptworker-scripts/deploy
+
+tasks:
+    addonscript: {}
+    balrogscript: {}
+    bitrisescript: {}
+    beetmoverscript: {}
+    bouncerscript: {}
+    githubscript: {}
+    landoscript: {}
+    pushapkscript: {}
+    pushflatpakscript: {}
+    pushmsixscript: {}
+    shipitscript: {}
+    signingscript: {}
+    treescript: {}
