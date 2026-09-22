@@ -19,6 +19,14 @@ _NON_GOOGLE_STORE_CREDENTIALS = {
 }
 
 
+def _check_store_can_schedule(target_store):
+    """
+    Check if the provided store supports scheduled release time.
+    """
+    if target_store != "vivo":
+        raise ValueError(f"`scheduled_release_date` is not supported by the {target_store} store")
+
+
 def _should_do_dry_run(task):
     # Don't commit anything by default. Committed APKs can't be unpublished,
     # unless you push a newer set of APKs.
@@ -91,7 +99,7 @@ def _get_channel_publish_config(product_config, task):
             raise ValueError(f"`google_play_track` is not allowed on the task if the target store is {target_store}")
 
         credentials = {output_key: store_config[config_key] for output_key, config_key in _NON_GOOGLE_STORE_CREDENTIALS[target_store].items()}
-        return {
+        publish = {
             "target_store": target_store,
             "dry_run": _should_do_dry_run(task),
             "certificate_alias": publish_config.get("certificate_alias"),
@@ -100,6 +108,15 @@ def _get_channel_publish_config(product_config, task):
             "submit": task.get("submit", False),
             **credentials,
         }
+
+        if task.get("scheduled_release_date"):
+            _check_store_can_schedule(target_store)
+            publish["scheduled_release_date"] = task["scheduled_release_date"]
+
+        return publish
+
+    if task.get("scheduled_release_date"):
+        _check_store_can_schedule(target_store)
 
     google_track = task.get("google_play_track", store_config["default_track"])
     google_track = _handle_legacy_google_track(google_track)
@@ -117,6 +134,11 @@ def _get_channel_publish_config(product_config, task):
 
 def get_publish_config(product_config, task, scope_product):
     override_channel_model = product_config.get("override_channel_model")
+
+    # Both override models are Google-only and return before the per-store checks below.
+    if override_channel_model and task.get("scheduled_release_date"):
+        _check_store_can_schedule("google")
+
     if override_channel_model == "single_google_app":
         # reference-browser uses a single Google app - with `channel` refering to the google default track -
         # rather than a separate app-per-channel. So, reference-browser is configured with "single_google_app"

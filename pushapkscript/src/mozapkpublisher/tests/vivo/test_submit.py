@@ -14,6 +14,12 @@ from mozapkpublisher.vivo_api.error import VivoUpdateException
 PACKAGE_NAME = "org.mozilla.firefox"
 
 
+def test_the_online_type_values_are_the_ones_vivo_documents():
+    """Every other assertion compares what was sent against these same constants, so
+    only a literal catches them drifting from the documented wire values."""
+    assert (ONLINE_TYPE_PUBLISH_NOW, ONLINE_TYPE_SCHEDULED) == (1, 2)
+
+
 @pytest.mark.asyncio
 async def test_update_submit_publishes_now_by_default(vivo, responses_mock):
     responses_mock.post(ROUTER_URL, payload=success())

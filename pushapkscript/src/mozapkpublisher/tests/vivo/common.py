@@ -1,3 +1,4 @@
+import hashlib
 from urllib.parse import urljoin
 
 import mozapkpublisher.vivo_api as vivo_api
@@ -85,3 +86,23 @@ def app_detail(**overrides):
 
 def success(data=None):
     return {"data": data, "code": "0", "msg": "success", "subCode": "0", "subMsg": "success", "success": True}
+
+
+def upload_success(apk_path, package_name="org.mozilla.firefox"):
+    """The `app.upload.apk` response for a given file, echoing the MD5 vivo computed."""
+    with open(apk_path, "rb") as fh:
+        file_md5 = hashlib.md5(fh.read()).hexdigest()
+    return success({"packageName": package_name, "fileMd5": file_md5, "serialNumber": "serial-1", "versionCode": 100, "versionName": "116.0"})
+
+
+def register_publish_flow(responses_mock, apk_path, submit=True):
+    """Queue the responses for a full publish: app.detail -> upload -> bind -> submit.
+
+    `app.detail` comes first because the basic-info record is resolved before the upload,
+    so a gap costs a round trip rather than a multi-hundred-megabyte upload.
+    """
+    responses_mock.post(ROUTER_URL, payload=app_detail())
+    responses_mock.post(ROUTER_URL, payload=upload_success(apk_path))
+    responses_mock.post(ROUTER_URL, payload=success())
+    if submit:
+        responses_mock.post(ROUTER_URL, payload=success())

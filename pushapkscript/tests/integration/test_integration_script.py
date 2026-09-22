@@ -293,6 +293,7 @@ class MainTest(unittest.TestCase):
             huawei_credentials=None,
             vivo_access_key=None,
             vivo_access_secret=None,
+            vivo_scheduled_release_date=None,
             submit=False,
         )
 
@@ -325,6 +326,7 @@ class MainTest(unittest.TestCase):
             huawei_credentials=None,
             vivo_access_key=None,
             vivo_access_secret=None,
+            vivo_scheduled_release_date=None,
             submit=False,
         )
 
@@ -357,6 +359,7 @@ class MainTest(unittest.TestCase):
             huawei_credentials=None,
             vivo_access_key=None,
             vivo_access_secret=None,
+            vivo_scheduled_release_date=None,
             submit=False,
         )
 
@@ -389,6 +392,7 @@ class MainTest(unittest.TestCase):
             huawei_credentials=None,
             vivo_access_key=None,
             vivo_access_secret=None,
+            vivo_scheduled_release_date=None,
             submit=False,
         )
 
@@ -421,6 +425,7 @@ class MainTest(unittest.TestCase):
             huawei_credentials=None,
             vivo_access_key=None,
             vivo_access_secret=None,
+            vivo_scheduled_release_date=None,
             submit=False,
         )
 
@@ -454,6 +459,7 @@ class MainTest(unittest.TestCase):
             huawei_credentials=None,
             vivo_access_key=None,
             vivo_access_secret=None,
+            vivo_scheduled_release_date=None,
             submit=False,
         )
 
@@ -487,6 +493,7 @@ class MainTest(unittest.TestCase):
             huawei_credentials=None,
             vivo_access_key=None,
             vivo_access_secret=None,
+            vivo_scheduled_release_date=None,
             submit=False,
         )
 
@@ -520,6 +527,7 @@ class MainTest(unittest.TestCase):
             huawei_credentials="huawei.json",
             vivo_access_key=None,
             vivo_access_secret=None,
+            vivo_scheduled_release_date=None,
             submit=False,
         )
 

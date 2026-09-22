@@ -1,10 +1,9 @@
-import hashlib
 import os
-import tempfile
 
 import pytest
 
-from .common import ROUTER_URL, app_detail, form_fields, recorded_calls, success
+from .common import ROUTER_URL, app_detail, form_fields, recorded_calls, register_publish_flow, success, upload_success
+from .fixtures import apk_metadata
 from mozapkpublisher.common.store_api import build_apk_file_name
 from mozapkpublisher.vivo_api import (
     METHOD_APP_DETAIL,
@@ -21,29 +20,6 @@ ACCESS_KEY = "k"
 ACCESS_SECRET = "s"
 
 
-def _metadata(architecture="arm64-v8a", version_name="116.0"):
-    return {"package_name": PACKAGE_NAME, "architecture": architecture, "version_name": version_name}
-
-
-@pytest.fixture
-def apk():
-    """An open fake APK, shaped like the `(file, metadata)` pairs `push_apk` passes in."""
-    with tempfile.NamedTemporaryFile("wb", suffix=".apk", delete=False) as tmp:
-        tmp.write(b"x" * 10)
-        path = tmp.name
-    with open(path, "rb") as fd:
-        try:
-            yield (fd, _metadata())
-        finally:
-            os.unlink(path)
-
-
-def _upload_success(path):
-    with open(path, "rb") as fh:
-        file_md5 = hashlib.md5(fh.read()).hexdigest()
-    return success({"packageName": PACKAGE_NAME, "fileMd5": file_md5, "serialNumber": "serial-1", "versionCode": 100, "versionName": "116.0"})
-
-
 def _methods_called(responses_mock):
     """The `method` parameter of each request, in order, so the flow can be asserted."""
     methods = []
@@ -56,25 +32,12 @@ def _methods_called(responses_mock):
     return methods
 
 
-def _register_publish(responses_mock, apk_path, submit=True):
-    """Queue the responses for a full publish: app.detail -> upload -> bind -> submit.
-
-    `app.detail` comes first because the basic-info record is resolved before the upload,
-    so a gap costs a round trip rather than a multi-hundred-megabyte upload.
-    """
-    responses_mock.post(ROUTER_URL, payload=app_detail())
-    responses_mock.post(ROUTER_URL, payload=_upload_success(apk_path))
-    responses_mock.post(ROUTER_URL, payload=success())
-    if submit:
-        responses_mock.post(ROUTER_URL, payload=success())
-
-
 @pytest.mark.asyncio
 async def test_upload_apks_binds_the_upload_before_submitting(responses_mock, apk):
     """`app.update.submit` carries no APK reference, so without the `app.update.basic.info`
     bind in between it would submit whatever binary the app was already holding."""
     fd, _metadata_ = apk
-    _register_publish(responses_mock, fd.name)
+    register_publish_flow(responses_mock, fd.name)
 
     async with VivoAppStore(ACCESS_KEY, ACCESS_SECRET) as vivo:
         await vivo.upload_apks(PACKAGE_NAME, [apk], None, submit=True)
@@ -93,7 +56,7 @@ async def test_the_binary_is_uploaded_under_its_release_file_name(responses_mock
     an upload before (Bug 1974870), so it is derived from the APK metadata rather than
     being whatever the temp file on disk happened to be called."""
     fd, metadata = apk
-    _register_publish(responses_mock, fd.name)
+    register_publish_flow(responses_mock, fd.name)
 
     async with VivoAppStore(ACCESS_KEY, ACCESS_SECRET) as vivo:
         await vivo.upload_apks(PACKAGE_NAME, [apk], None)
@@ -109,7 +72,7 @@ async def test_the_bind_carries_the_serial_number_from_the_upload(responses_mock
     """The serial number the upload returned is what gets bound - not a stale one, and
     not dropped on the floor."""
     fd, _metadata_ = apk
-    _register_publish(responses_mock, fd.name)
+    register_publish_flow(responses_mock, fd.name)
 
     async with VivoAppStore(ACCESS_KEY, ACCESS_SECRET) as vivo:
         await vivo.upload_apks(PACKAGE_NAME, [apk], None, submit=True)
@@ -122,7 +85,7 @@ async def test_the_bind_carries_the_serial_number_from_the_upload(responses_mock
 @pytest.mark.asyncio
 async def test_upload_apks_submits_for_immediate_publication(responses_mock, apk):
     fd, _metadata_ = apk
-    _register_publish(responses_mock, fd.name)
+    register_publish_flow(responses_mock, fd.name)
 
     async with VivoAppStore(ACCESS_KEY, ACCESS_SECRET) as vivo:
         await vivo.upload_apks(PACKAGE_NAME, [apk], None, submit=True)
@@ -137,7 +100,7 @@ async def test_upload_apks_without_submit_still_binds(responses_mock, apk):
     genuinely staged because the bind still happens. Uploading alone would leave nothing
     for a human to find in the console."""
     fd, _metadata_ = apk
-    _register_publish(responses_mock, fd.name, submit=False)
+    register_publish_flow(responses_mock, fd.name, submit=False)
 
     async with VivoAppStore(ACCESS_KEY, ACCESS_SECRET) as vivo:
         await vivo.upload_apks(PACKAGE_NAME, [apk], None, submit=False)
@@ -151,7 +114,7 @@ async def test_a_failed_bind_aborts_before_submitting(responses_mock, apk):
     one, so the flow has to stop here."""
     fd, _metadata_ = apk
     responses_mock.post(ROUTER_URL, payload=app_detail())
-    responses_mock.post(ROUTER_URL, payload=_upload_success(fd.name))
+    responses_mock.post(ROUTER_URL, payload=upload_success(fd.name))
     responses_mock.post(ROUTER_URL, payload={"code": "0", "subCode": "A0109", "msg": "success", "subMsg": "The uploaded app file does not exist"})
 
     async with VivoAppStore(ACCESS_KEY, ACCESS_SECRET) as vivo:
@@ -218,7 +181,7 @@ async def test_multiple_apks_are_refused(responses_mock, apk):
     """A vivo app holds one APK per version. Uploading one of a multi-architecture set
     would publish that architecture to every user."""
     fd, metadata = apk
-    second = (fd, _metadata(architecture="x86_64"))
+    second = (fd, apk_metadata(architecture="x86_64"))
 
     async with VivoAppStore(ACCESS_KEY, ACCESS_SECRET) as vivo:
         with pytest.raises(VivoUpdateException) as exc:
@@ -269,7 +232,7 @@ async def test_the_fallback_reaches_the_bind_request(responses_mock, apk):
     the store reports nothing for that field."""
     fd, _metadata_ = apk
     responses_mock.post(ROUTER_URL, payload=app_detail(languageCodes=None))
-    responses_mock.post(ROUTER_URL, payload=_upload_success(fd.name))
+    responses_mock.post(ROUTER_URL, payload=upload_success(fd.name))
     responses_mock.post(ROUTER_URL, payload=success())
 
     async with VivoAppStore(ACCESS_KEY, ACCESS_SECRET, basic_info_fallback={"language_codes": "en_in,ms"}) as vivo:

@@ -62,6 +62,12 @@ def add_push_arguments(parser):
     )
     parser.add_argument("--vivo-email", help="Contact email to use only if the vivo store reports none for the app")
     parser.add_argument(
+        "--vivo-scheduled-release-date",
+        help="ISO 8601 datetime with a UTC offset (e.g. '2026-10-01T09:00:00Z') to publish at, instead of as soon as "
+        "review passes. vivo schedules at most 8 days ahead. Has no effect unless the store is vivo, and requires "
+        "--submit.",
+    )
+    parser.add_argument(
         "--submit",
         action="store_true",
         help="After uploading, submit the new binary for release. Has no effect unless the "

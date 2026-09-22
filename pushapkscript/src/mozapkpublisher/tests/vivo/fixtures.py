@@ -29,3 +29,15 @@ def apk_path():
         yield path
     finally:
         os.unlink(path)
+
+
+def apk_metadata(architecture="arm64-v8a", version_name="116.0"):
+    """Metadata shaped like what `extract_and_check_apks_metadata` hands `push_apk`."""
+    return {"package_name": "org.mozilla.firefox", "architecture": architecture, "version_name": version_name}
+
+
+@pytest.fixture
+def apk(apk_path):
+    """An open fake APK, shaped like the `(file, metadata)` pairs `push_apk` passes in."""
+    with open(apk_path, "rb") as fd:
+        yield (fd, apk_metadata())

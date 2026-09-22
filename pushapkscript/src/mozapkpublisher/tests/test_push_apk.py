@@ -5,6 +5,8 @@ from mock import ANY
 import asyncio
 import copy
 import json
+from datetime import datetime, timezone
+
 import mozapkpublisher
 import os
 import pytest
@@ -19,6 +21,7 @@ from mozapkpublisher.push_apk import (
     push_apk,
     main,
 )
+from mozapkpublisher.vivo_api.error import VivoUpdateException
 from unittest.mock import patch
 
 
@@ -149,7 +152,8 @@ def test_main_google(monkeypatch):
             huawei_credentials=None,
             vivo_access_key=None,
             vivo_access_secret=None,
-            vivo_basic_info_fallback=None
+            vivo_basic_info_fallback=None,
+            vivo_scheduled_release_date=None
         )
 
 
@@ -189,7 +193,8 @@ def test_main_samsung(monkeypatch):
             huawei_credentials=None,
             vivo_access_key=None,
             vivo_access_secret=None,
-            vivo_basic_info_fallback=None
+            vivo_basic_info_fallback=None,
+            vivo_scheduled_release_date=None
         )
 
 
@@ -257,7 +262,8 @@ def test_main_huawei(monkeypatch):
             huawei_credentials='/path/to/creds.json',
             vivo_access_key=None,
             vivo_access_secret=None,
-            vivo_basic_info_fallback=None
+            vivo_basic_info_fallback=None,
+            vivo_scheduled_release_date=None
         )
 
 
@@ -322,7 +328,57 @@ def test_vivo(monkeypatch):
         [(apk_arm, mock_metadata[apk_arm]), (apk_x86, mock_metadata[apk_x86])],
         None,
         submit=True,
+        scheduled_release_date=None,
     )
+
+
+def test_vivo_scheduled_release_date_reaches_the_store_as_a_datetime(monkeypatch):
+    patch_extract_metadata(monkeypatch)
+    vivo_mock = MagicMock()
+    vivo_mock.return_value.__aenter__.return_value = vivo_mock
+    vivo_mock.upload_apks = AsyncMock()
+    monkeypatch.setattr('mozapkpublisher.push_apk.VivoAppStore', vivo_mock)
+
+    asyncio.run(push_apk(
+        APKS, None, [], 'production', store='vivo', contact_server=False, submit=True,
+        vivo_access_key='k', vivo_access_secret='s',
+        vivo_scheduled_release_date='2026-10-01T09:00:00Z',
+    ))
+
+    scheduled = vivo_mock.upload_apks.call_args.kwargs['scheduled_release_date']
+    assert scheduled == datetime(2026, 10, 1, 9, 0, tzinfo=timezone.utc)
+
+
+@pytest.mark.parametrize('value', ('next tuesday', ''))
+def test_vivo_rejects_an_unreadable_scheduled_release_date_value(monkeypatch, value):
+    """An empty string has to reach the parser rather than read as "no schedule asked
+    for" -- the caller passed the option, so a silent full release is the wrong answer."""
+    patch_extract_metadata(monkeypatch)
+    vivo_mock = MagicMock()
+    monkeypatch.setattr('mozapkpublisher.push_apk.VivoAppStore', vivo_mock)
+
+    with pytest.raises(VivoUpdateException, match='ISO 8601'):
+        asyncio.run(push_apk(
+            APKS, None, [], 'production', store='vivo', contact_server=False, submit=True,
+            vivo_access_key='k', vivo_access_secret='s', vivo_scheduled_release_date=value,
+        ))
+
+    vivo_mock.assert_not_called()
+
+
+def test_vivo_rejects_an_unreadable_scheduled_release_date(monkeypatch):
+    """The date is parsed before the store is constructed, so a bad one costs no upload."""
+    patch_extract_metadata(monkeypatch)
+    vivo_mock = MagicMock()
+    monkeypatch.setattr('mozapkpublisher.push_apk.VivoAppStore', vivo_mock)
+
+    with pytest.raises(VivoUpdateException, match='ISO 8601'):
+        asyncio.run(push_apk(
+            APKS, None, [], 'production', store='vivo', contact_server=False, submit=True,
+            vivo_access_key='k', vivo_access_secret='s', vivo_scheduled_release_date='next tuesday',
+        ))
+
+    vivo_mock.assert_not_called()
 
 
 def test_vivo_basic_info_fallback_reaches_the_store(monkeypatch):
@@ -389,8 +445,31 @@ def test_main_vivo(monkeypatch):
             huawei_credentials=None,
             vivo_access_key='an-access-key',
             vivo_access_secret='an-access-secret',
-            vivo_basic_info_fallback=None
+            vivo_basic_info_fallback=None,
+            vivo_scheduled_release_date=None
         )
+
+
+def test_main_vivo_scheduled_release_date(monkeypatch):
+    """argparse forwards the raw ISO string; `push_apk` is what parses it."""
+    file = os.path.join(os.path.dirname(__file__), 'data', 'blob')
+    test_args = [
+        'script',
+        '--store', 'vivo',
+        '--vivo-access-key', 'k',
+        '--vivo-access-secret', 's',
+        '--vivo-scheduled-release-date', '2026-10-01T09:00:00Z',
+        '--submit',
+        'production',
+        file,
+        '--expected-package-name=org.mozilla.fennec_aurora',
+    ]
+
+    with patch.object(mozapkpublisher.push_apk, 'push_apk') as mock_push_apk:
+        monkeypatch.setattr(sys, 'argv', test_args)
+        main()
+
+        assert mock_push_apk.call_args.kwargs['vivo_scheduled_release_date'] == '2026-10-01T09:00:00Z'
 
 
 def test_main_vivo_bad_args(monkeypatch):

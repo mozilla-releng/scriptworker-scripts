@@ -43,6 +43,7 @@ class TestPublish:
             huawei_credentials=None,
             vivo_access_key=None,
             vivo_access_secret=None,
+            vivo_scheduled_release_date=None,
             submit=False,
         )
 
@@ -81,6 +82,21 @@ class TestPublish:
         assert args["submit"] is True
         # vivo uses its own key pair, so the Google Play secret is unset.
         assert args["secret"] is None
+
+    async def test_publish_vivo_scheduled_release_date(self, mock_push_aab, mock_push_apk):
+        publish_config = {
+            "target_store": "vivo",
+            "dry_run": False,
+            "package_names": ["org.mozilla.firefox"],
+            "vivo_access_key": "an-access-key",
+            "vivo_access_secret": "an-access-secret",
+            "submit": True,
+            "scheduled_release_date": "2026-10-01T09:00:00Z",
+        }
+        await publish({}, publish_config, self.apks, contact_server=True)
+
+        _, args = mock_push_apk.call_args
+        assert args["vivo_scheduled_release_date"] == "2026-10-01T09:00:00Z"
 
     async def test_publish_aab_config(self, mock_push_aab, mock_push_apk):
         await publish_aab({}, self.publish_config, self.aabs, contact_server=True)
