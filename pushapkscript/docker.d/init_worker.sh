@@ -75,6 +75,8 @@ case $COT_PRODUCT in
         export SGS_ACCESS_TOKEN_DEP="dummy"
         echo '{"key_id": "dummy", "sub_account": "dummy", "private_key": "dummy"}' > $CONFIG_DIR/huawei_dep.json
         export HUAWEI_CREDENTIALS_DEP_PATH=$CONFIG_DIR/huawei_dep.json
+        export VIVO_ACCESS_KEY_DEP="dummy"
+        export VIVO_ACCESS_SECRET_DEP="dummy"
 
         import_cert fenix $CERT_DIR/fenix_dep.pem
         import_cert focus $CERT_DIR/focus_dep.pem
@@ -88,6 +90,8 @@ case $COT_PRODUCT in
         test_var_set 'SGS_SERVICE_ACCOUNT_ID'
         test_var_set 'SGS_ACCESS_TOKEN'
         test_var_set 'HUAWEI_SERVICE_ACCOUNT'
+        test_var_set 'VIVO_ACCESS_KEY'
+        test_var_set 'VIVO_ACCESS_SECRET'
 
         export GOOGLE_CREDENTIALS_FOCUS_PATH=$CONFIG_DIR/focus.json
         export GOOGLE_CREDENTIALS_FENIX_NIGHTLY_PATH=$CONFIG_DIR/fenix_nightly.json

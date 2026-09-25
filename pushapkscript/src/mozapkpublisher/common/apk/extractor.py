@@ -18,6 +18,11 @@ logger = logging.getLogger(__name__)
 _DIRECTORY_WITH_ARCHITECTURE_METADATA = "lib/"  # For instance: lib/x86/ or lib/armeabi-v7a/
 _ARCHITECTURE_SUBDIRECTORY_INDEX = len(_DIRECTORY_WITH_ARCHITECTURE_METADATA.split("/")) - 1  # Removes last trailing slash
 
+# The `architecture` reported for an APK that ships more than one ABI -- what Android
+# calls a universal (or "fat") APK. The Firefox build produces one per release variant
+# alongside the per-ABI ones, for stores that hold a single binary per app version.
+UNIVERSAL_ARCHITECTURE = "universal"
+
 _LOCALE_LINE_PATTERN = re.compile(r"^locale \S+ (\S+) .+")
 _OMNI_JA_LOCATION = "assets/omni.ja"
 _CHROME_MANIFEST_LOCATION = "chrome/chrome.manifest"
@@ -62,17 +67,22 @@ def _extract_architecture(apk_zip, original_apk_path):
 
 
 def _extract_architecture_from_paths(apk_path, paths):
+    """
+    Report the ABI an APK targets, or UNIVERSAL_ARCHITECTURE when it carries several.
+
+    Refusing a multi-ABI APK is left to the callers that can only publish one.
+    """
     detected_architectures = [path.split("/")[_ARCHITECTURE_SUBDIRECTORY_INDEX] for path in paths]
-    unique_architectures = filter_out_identical_values(detected_architectures)
-    non_empty_unique_architectures = [architecture for architecture in unique_architectures if architecture]
+    non_empty_unique_architectures = sorted(architecture for architecture in filter_out_identical_values(detected_architectures) if architecture)
     number_of_unique_architectures = len(non_empty_unique_architectures)
 
     if number_of_unique_architectures == 0:
         raise BadApk('"{}" does not contain any architecture data under these paths: {}'.format(apk_path, paths))
     elif number_of_unique_architectures > 1:
-        raise BadApk('"{}" contains too many architectures: {}'.format(apk_path, unique_architectures))
+        logger.info('"{}" ships several ABIs ({}), so it is a universal APK'.format(apk_path, ", ".join(non_empty_unique_architectures)))
+        return UNIVERSAL_ARCHITECTURE
 
-    return unique_architectures[0]
+    return non_empty_unique_architectures[0]
 
 
 def _extract_firefox_version(apk_zip):

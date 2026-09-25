@@ -5,6 +5,8 @@ from mock import ANY
 import asyncio
 import copy
 import json
+from datetime import datetime, timezone
+
 import mozapkpublisher
 import os
 import pytest
@@ -19,6 +21,7 @@ from mozapkpublisher.push_apk import (
     push_apk,
     main,
 )
+from mozapkpublisher.vivo_api.error import VivoUpdateException
 from unittest.mock import patch
 
 
@@ -146,7 +149,11 @@ def test_main_google(monkeypatch):
             submit=False,
             sgs_service_account_id=None,
             sgs_access_token=None,
-            huawei_credentials=None
+            huawei_credentials=None,
+            vivo_access_key=None,
+            vivo_access_secret=None,
+            vivo_basic_info_fallback=None,
+            vivo_scheduled_release_date=None
         )
 
 
@@ -183,7 +190,11 @@ def test_main_samsung(monkeypatch):
             submit=True,
             sgs_service_account_id='123',
             sgs_access_token='456',
-            huawei_credentials=None
+            huawei_credentials=None,
+            vivo_access_key=None,
+            vivo_access_secret=None,
+            vivo_basic_info_fallback=None,
+            vivo_scheduled_release_date=None
         )
 
 
@@ -248,7 +259,11 @@ def test_main_huawei(monkeypatch):
             submit=True,
             sgs_service_account_id=None,
             sgs_access_token=None,
-            huawei_credentials='/path/to/creds.json'
+            huawei_credentials='/path/to/creds.json',
+            vivo_access_key=None,
+            vivo_access_secret=None,
+            vivo_basic_info_fallback=None,
+            vivo_scheduled_release_date=None
         )
 
 
@@ -291,3 +306,239 @@ def test_main_samsung_bad_args(monkeypatch):
             main()
 
         assert exception.value.code == 2
+
+
+def test_vivo(monkeypatch):
+    """The vivo branch of `push_apk` hands each package's APKs to
+    `VivoAppStore.upload_apks`."""
+    mock_metadata = patch_extract_metadata(monkeypatch)
+    vivo_mock = MagicMock()
+    vivo_mock.return_value.__aenter__.return_value = vivo_mock
+    vivo_mock.upload_apks = AsyncMock()
+    monkeypatch.setattr('mozapkpublisher.push_apk.VivoAppStore', vivo_mock)
+
+    asyncio.run(push_apk(
+        APKS, None, [], 'production', store='vivo', contact_server=False, submit=True,
+        vivo_access_key='an-access-key', vivo_access_secret='an-access-secret',
+    ))
+
+    vivo_mock.assert_called_once_with('an-access-key', 'an-access-secret', dry_run=True, basic_info_fallback=None)
+    vivo_mock.upload_apks.assert_called_once_with(
+        'org.mozilla.firefox',
+        [(apk_arm, mock_metadata[apk_arm]), (apk_x86, mock_metadata[apk_x86])],
+        None,
+        submit=True,
+        scheduled_release_date=None,
+    )
+
+
+def test_vivo_scheduled_release_date_reaches_the_store_as_a_datetime(monkeypatch):
+    patch_extract_metadata(monkeypatch)
+    vivo_mock = MagicMock()
+    vivo_mock.return_value.__aenter__.return_value = vivo_mock
+    vivo_mock.upload_apks = AsyncMock()
+    monkeypatch.setattr('mozapkpublisher.push_apk.VivoAppStore', vivo_mock)
+
+    asyncio.run(push_apk(
+        APKS, None, [], 'production', store='vivo', contact_server=False, submit=True,
+        vivo_access_key='k', vivo_access_secret='s',
+        vivo_scheduled_release_date='2026-10-01T09:00:00Z',
+    ))
+
+    scheduled = vivo_mock.upload_apks.call_args.kwargs['scheduled_release_date']
+    assert scheduled == datetime(2026, 10, 1, 9, 0, tzinfo=timezone.utc)
+
+
+@pytest.mark.parametrize('value', ('next tuesday', ''))
+def test_vivo_rejects_an_unreadable_scheduled_release_date_value(monkeypatch, value):
+    """An empty string has to reach the parser rather than read as "no schedule asked
+    for" -- the caller passed the option, so a silent full release is the wrong answer."""
+    patch_extract_metadata(monkeypatch)
+    vivo_mock = MagicMock()
+    monkeypatch.setattr('mozapkpublisher.push_apk.VivoAppStore', vivo_mock)
+
+    with pytest.raises(VivoUpdateException, match='ISO 8601'):
+        asyncio.run(push_apk(
+            APKS, None, [], 'production', store='vivo', contact_server=False, submit=True,
+            vivo_access_key='k', vivo_access_secret='s', vivo_scheduled_release_date=value,
+        ))
+
+    vivo_mock.assert_not_called()
+
+
+def test_vivo_rejects_an_unreadable_scheduled_release_date(monkeypatch):
+    """The date is parsed before the store is constructed, so a bad one costs no upload."""
+    patch_extract_metadata(monkeypatch)
+    vivo_mock = MagicMock()
+    monkeypatch.setattr('mozapkpublisher.push_apk.VivoAppStore', vivo_mock)
+
+    with pytest.raises(VivoUpdateException, match='ISO 8601'):
+        asyncio.run(push_apk(
+            APKS, None, [], 'production', store='vivo', contact_server=False, submit=True,
+            vivo_access_key='k', vivo_access_secret='s', vivo_scheduled_release_date='next tuesday',
+        ))
+
+    vivo_mock.assert_not_called()
+
+
+def test_vivo_basic_info_fallback_reaches_the_store(monkeypatch):
+    """The --vivo-* basic-info options are only read on a first-ever publish, so a broken
+    link here would surface as a failed bootstrap rather than as a failing test."""
+    patch_extract_metadata(monkeypatch)
+    vivo_mock = MagicMock()
+    vivo_mock.return_value.__aenter__.return_value = vivo_mock
+    vivo_mock.upload_apks = AsyncMock()
+    monkeypatch.setattr('mozapkpublisher.push_apk.VivoAppStore', vivo_mock)
+
+    fallback = {'language_codes': 'en_in', 'nation_codes': 'in', 'email': 'release@mozilla.com'}
+    asyncio.run(push_apk(
+        APKS, None, [], 'production', store='vivo', contact_server=False,
+        vivo_access_key='k', vivo_access_secret='s', vivo_basic_info_fallback=fallback,
+    ))
+
+    vivo_mock.assert_called_once_with('k', 's', dry_run=True, basic_info_fallback=fallback)
+
+
+def test_vivo_without_credentials(monkeypatch):
+    """Both halves of the key pair are needed; neither alone can sign a request."""
+    patch_extract_metadata(monkeypatch)
+    monkeypatch.setattr('mozapkpublisher.push_apk.VivoAppStore', MagicMock())
+
+    for kwargs in ({}, {'vivo_access_key': 'k'}, {'vivo_access_secret': 's'}):
+        with pytest.raises(RuntimeError, match='access key and access secret'):
+            asyncio.run(push_apk(APKS, None, [], 'production', store='vivo', contact_server=False, **kwargs))
+
+
+def test_main_vivo(monkeypatch):
+    file = os.path.join(os.path.dirname(__file__), 'data', 'blob')
+    test_args = [
+        'script',
+        '--store', 'vivo',
+        '--vivo-access-key', 'an-access-key',
+        '--vivo-access-secret', 'an-access-secret',
+        '--submit',
+        'alpha',
+        file,
+        '--expected-package-name=org.mozilla.fennec_aurora',
+    ]
+
+    with patch.object(mozapkpublisher.push_apk, 'push_apk') as mock_push_apk:
+        monkeypatch.setattr(sys, 'argv', test_args)
+        main()
+
+        mock_push_apk.assert_called_once_with(
+            ANY,
+            None,
+            ['org.mozilla.fennec_aurora'],
+            'alpha',
+            'vivo',
+            None,
+            True,
+            True,
+            False,
+            False,
+            False,
+            False,
+            submit=True,
+            sgs_service_account_id=None,
+            sgs_access_token=None,
+            huawei_credentials=None,
+            vivo_access_key='an-access-key',
+            vivo_access_secret='an-access-secret',
+            vivo_basic_info_fallback=None,
+            vivo_scheduled_release_date=None
+        )
+
+
+def test_main_vivo_scheduled_release_date(monkeypatch):
+    """argparse forwards the raw ISO string; `push_apk` is what parses it."""
+    file = os.path.join(os.path.dirname(__file__), 'data', 'blob')
+    test_args = [
+        'script',
+        '--store', 'vivo',
+        '--vivo-access-key', 'k',
+        '--vivo-access-secret', 's',
+        '--vivo-scheduled-release-date', '2026-10-01T09:00:00Z',
+        '--submit',
+        'production',
+        file,
+        '--expected-package-name=org.mozilla.fennec_aurora',
+    ]
+
+    with patch.object(mozapkpublisher.push_apk, 'push_apk') as mock_push_apk:
+        monkeypatch.setattr(sys, 'argv', test_args)
+        main()
+
+        assert mock_push_apk.call_args.kwargs['vivo_scheduled_release_date'] == '2026-10-01T09:00:00Z'
+
+
+def test_main_vivo_bad_args(monkeypatch):
+    """Both --vivo-access-key and --vivo-access-secret are mandatory for --store=vivo, and
+    argparse must be the one to reject them (exit code 2) rather than push_apk failing
+    later."""
+    file = os.path.join(os.path.dirname(__file__), 'data', 'blob')
+    base_test_args = [
+        'script',
+        '--store', 'vivo',
+        'alpha',
+        file,
+        '--expected-package-name=org.mozilla.fennec_aurora',
+    ]
+
+    for extra in (('--vivo-access-key', 'k'), ('--vivo-access-secret', 's'), ()):
+        test_args = copy.copy(base_test_args)
+        for (pos, extra_arg) in enumerate(extra):
+            test_args.insert(pos + 1, extra_arg)
+
+        monkeypatch.setattr(sys, 'argv', test_args)
+        with pytest.raises(SystemExit) as exception:
+            main()
+
+        assert exception.value.code == 2
+
+
+def test_main_vivo_basic_info_flags(monkeypatch):
+    """The three --vivo-* basic-info options are collected into one fallback dict."""
+    file = os.path.join(os.path.dirname(__file__), 'data', 'blob')
+    test_args = [
+        'script',
+        '--store', 'vivo',
+        '--vivo-access-key', 'k',
+        '--vivo-access-secret', 's',
+        '--vivo-language-codes', 'en_in,ms',
+        '--vivo-nation-codes', 'in,id',
+        '--vivo-email', 'release@mozilla.com',
+        'production',
+        file,
+        '--expected-package-name=org.mozilla.fennec_aurora',
+    ]
+
+    with patch.object(mozapkpublisher.push_apk, 'push_apk') as mock_push_apk:
+        monkeypatch.setattr(sys, 'argv', test_args)
+        main()
+
+        assert mock_push_apk.call_args.kwargs['vivo_basic_info_fallback'] == {
+            'language_codes': 'en_in,ms',
+            'nation_codes': 'in,id',
+            'email': 'release@mozilla.com',
+        }
+
+
+def test_main_vivo_partial_basic_info_flags(monkeypatch):
+    file = os.path.join(os.path.dirname(__file__), 'data', 'blob')
+    test_args = [
+        'script',
+        '--store', 'vivo',
+        '--vivo-access-key', 'k',
+        '--vivo-access-secret', 's',
+        '--vivo-language-codes', 'en_in',
+        'production',
+        file,
+        '--expected-package-name=org.mozilla.fennec_aurora',
+    ]
+
+    with patch.object(mozapkpublisher.push_apk, 'push_apk') as mock_push_apk:
+        monkeypatch.setattr(sys, 'argv', test_args)
+        main()
+
+        assert mock_push_apk.call_args.kwargs['vivo_basic_info_fallback'] == {'language_codes': 'en_in'}

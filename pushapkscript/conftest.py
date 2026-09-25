@@ -3,7 +3,7 @@ from unittest.mock import Mock
 
 import aiohttp
 
-pytest_plugins = ["mozapkpublisher.tests.sgs.fixtures", "mozapkpublisher.tests.huawei.fixtures"]
+pytest_plugins = ["mozapkpublisher.tests.sgs.fixtures", "mozapkpublisher.tests.huawei.fixtures", "mozapkpublisher.tests.vivo.fixtures"]
 
 
 # Fix copied from https://github.com/mozilla-releng/simple-github/commit/2935970b67423f2492ec5e74d95012e39a12b2eb
