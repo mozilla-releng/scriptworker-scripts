@@ -57,7 +57,9 @@ case $COT_PRODUCT in
 
         echo $GOOGLE_SERVICE_ACCOUNT_REFERENCE_BROWSER | base64 -d > $GOOGLE_CREDENTIALS_REFERENCE_BROWSER_PATH
 
-        import_cert reference-browser $CERT_DIR/reference_browser_release.pem
+        # Note: this is the Google Play key for AABs
+        import_cert reference-browser $CERT_DIR/reference_browser_upload.pem
+        # Note: the reference_browser_release.pem isn't currently imported. If we ever want to upload nightly APKs, it should be imported here
         ;;
       *)
         exit 1
