@@ -68,6 +68,8 @@ def test_firefox_fake_prod():
         "SGS_SERVICE_ACCOUNT_ID_DEP": "123456",
         "SGS_ACCESS_TOKEN_DEP": "abcdef",
         "HUAWEI_CREDENTIALS_DEP_PATH": "huawei",
+        "VIVO_ACCESS_KEY_DEP": "vivo-key",
+        "VIVO_ACCESS_SECRET_DEP": "vivo-secret",
     }
     _validate_config(context)
 
@@ -83,5 +85,7 @@ def test_firefox_prod():
         "SGS_SERVICE_ACCOUNT_ID": "123456",
         "SGS_ACCESS_TOKEN": "abcdef",
         "HUAWEI_CREDENTIALS_PATH": "huawei",
+        "VIVO_ACCESS_KEY": "vivo-key",
+        "VIVO_ACCESS_SECRET": "vivo-secret",
     }
     _validate_config(context)

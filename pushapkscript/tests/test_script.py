@@ -187,6 +187,20 @@ def test_get_product_config():
             "huawei",
             "Nothing will be uploaded to the Huawei AppGallery, since this pushapk instance is not allowed to talk to it.",
         ),
+        (
+            True,
+            False,
+            "vivo",
+            "You will publish APKs to the vivo App Store. This action is irreversible, "
+            "if no error is detected either by this script or by the vivo App Store.",
+        ),
+        (True, True, "vivo", "Nothing will be uploaded to the vivo App Store, since this is a dry run."),
+        (
+            False,
+            True,
+            "vivo",
+            "Nothing will be uploaded to the vivo App Store, since this pushapk instance is not allowed to talk to it.",
+        ),
         # An unrecognised store falls back to its raw payload value rather than crashing.
         (True, True, "amazon", "Nothing will be uploaded to amazon, since this is a dry run."),
     ),

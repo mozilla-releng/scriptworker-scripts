@@ -81,6 +81,41 @@ def test_validate_real_life_tasks(context, task):
 
 
 @pytest.mark.parametrize(
+    "scheduled_release_date",
+    (
+        pytest.param("2026-10-01T09:00:00Z", id="zulu"),
+        pytest.param("2026-10-01T09:00:00+00:00", id="explicit_utc"),
+        pytest.param("2026-10-01T17:00:00+08:00", id="other_offset"),
+    ),
+)
+def test_validate_task_accepts_a_scheduled_release_date(context, scheduled_release_date):
+    task = TaskGenerator().generate_task("aurora")
+    task["payload"]["scheduled_release_date"] = scheduled_release_date
+
+    context.task = task
+    validate_task_schema(context)
+
+
+@pytest.mark.parametrize(
+    "scheduled_release_date",
+    (
+        pytest.param("2026-10-01", id="date_only"),
+        # Refused by the schema as well as at parse time.
+        pytest.param("2026-10-01T09:00:00", id="no_offset"),
+        pytest.param("next tuesday", id="prose"),
+        pytest.param(1790845200000, id="epoch_milliseconds"),
+    ),
+)
+def test_validate_task_rejects_a_bad_scheduled_release_date(context, scheduled_release_date):
+    task = TaskGenerator().generate_task("aurora")
+    task["payload"]["scheduled_release_date"] = scheduled_release_date
+
+    context.task = task
+    with pytest.raises(TaskVerificationError):
+        validate_task_schema(context)
+
+
+@pytest.mark.parametrize(
     "prefixes, scopes, raises, expected",
     (
         (["project:releng:googleplay:"], ["project:releng:googleplay:aurora"], False, "aurora"),

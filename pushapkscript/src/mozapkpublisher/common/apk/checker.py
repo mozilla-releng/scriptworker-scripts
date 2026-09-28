@@ -3,6 +3,7 @@ from functools import partial
 
 from mozilla_version.gecko import FennecVersion
 
+from mozapkpublisher.common.apk.extractor import UNIVERSAL_ARCHITECTURE
 from mozapkpublisher.common.apk.history import craft_combos_pretty_names, get_expected_combos
 from mozapkpublisher.common.exceptions import BadApk, BadSetOfApks, NotMultiLocaleApk
 from mozapkpublisher.common.utils import filter_out_identical_values
@@ -98,6 +99,21 @@ def _check_apks_version_codes_are_correctly_ordered(apks_metadata):
     sorted_architectures_per_version_code = tuple(
         [architectures_per_version_code[version_code] for version_code in sorted(architectures_per_version_code.keys())]
     )
+
+    # A universal APK serves every ABI, so it ships on its own and there is nothing to
+    # order -- this ordering exists only to keep x86's version code above arm's (bug
+    # 1338477). Mixed with per-ABI APKs the set is malformed, not partially orderable.
+    universal_count = sorted_architectures_per_version_code.count(UNIVERSAL_ARCHITECTURE)
+    if universal_count:
+        if universal_count != len(sorted_architectures_per_version_code):
+            raise BadSetOfApks(
+                "A universal APK is published on its own, but this set mixes it with per-ABI APKs: {}. APKs metadata: {}".format(
+                    sorted_architectures_per_version_code, apks_metadata
+                )
+            )
+
+        logger.info("APKs are universal, so there is no version code ordering to check: {}".format(architectures_per_version_code))
+        return
 
     previous_index = -1
     for architecture in sorted_architectures_per_version_code:

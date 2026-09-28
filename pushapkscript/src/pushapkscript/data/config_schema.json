@@ -153,6 +153,22 @@
                                             "type": "string"
                                         }
                                     }
+                                },
+                                "vivo": {
+                                    "type": "object",
+                                    "required": [
+                                        "access_key",
+                                        "access_secret"
+                                    ],
+                                    "additionalProperties": false,
+                                    "properties": {
+                                        "access_key": {
+                                            "type": "string"
+                                        },
+                                        "access_secret": {
+                                            "type": "string"
+                                        }
+                                    }
                                 }
                             }
                         }

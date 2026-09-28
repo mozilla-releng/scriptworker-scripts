@@ -7,7 +7,7 @@ from tempfile import NamedTemporaryFile, TemporaryDirectory
 from unittest.mock import MagicMock
 from zipfile import ZipFile
 
-from mozapkpublisher.common.apk.extractor import extract_metadata, _extract_architecture, _extract_architecture_from_paths, \
+from mozapkpublisher.common.apk.extractor import UNIVERSAL_ARCHITECTURE, extract_metadata, _extract_architecture, _extract_architecture_from_paths, \
     _extract_firefox_version, _extract_firefox_build_id, _extract_value_from_application_ini, _extract_locales, \
     _get_unique_locales
 from mozapkpublisher.common.exceptions import NoLocaleFound, BadApk
@@ -157,14 +157,27 @@ def test_bad_get_apk_architecture():
     ['lib/x86/libmozglue.so', 'lib/x86/libplugin-container.so'], 'x86',
 ), (
     ['lib/x86_64/libmozglue.so', 'lib/x86_64/libplugin-container.so'], 'x86_64',
+), (
+    # Zips written with directory entries carry a bare `lib/`, whose path segment is
+    # empty. An empty segment is not an architecture.
+    ['lib/', 'lib/x86/libmozglue.so'], 'x86',
 )))
 def test_extract_architecture_from_paths(paths, expected):
     assert _extract_architecture_from_paths('/path/to/apk', paths) == expected
 
 
 @pytest.mark.parametrize('paths', (
-    ['lib/'],
     ['lib/armeabi-v7a/libmozglue.so', 'lib/x86/libplugin-container.so'],
+    ['lib/arm64-v8a/libmozglue.so', 'lib/armeabi-v7a/libmozglue.so',
+     'lib/x86/libmozglue.so', 'lib/x86_64/libmozglue.so'],
+))
+def test_extract_architecture_from_paths_detects_a_universal_apk(paths):
+    """Several ABIs under lib/ is what a universal APK is, not a malformed one."""
+    assert _extract_architecture_from_paths('/path/to/apk', paths) == UNIVERSAL_ARCHITECTURE
+
+
+@pytest.mark.parametrize('paths', (
+    ['lib/'],
 ))
 def test_bad_extract_architecture_from_paths(paths):
     with pytest.raises(BadApk):

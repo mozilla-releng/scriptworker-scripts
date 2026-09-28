@@ -53,6 +53,9 @@ products:
                 access_token: { "$eval": "SGS_ACCESS_TOKEN" }
               huawei:
                 credentials_file: { "$eval": "HUAWEI_CREDENTIALS_PATH" }
+              vivo:
+                access_key: { "$eval": "VIVO_ACCESS_KEY" }
+                access_secret: { "$eval": "VIVO_ACCESS_SECRET" }
         - product_names: ["focus-android" ]
           digest_algorithm: 'SHA1'
           skip_check_ordered_version_codes: true
@@ -117,6 +120,9 @@ products:
                 access_token: { "$eval": "SGS_ACCESS_TOKEN_DEP" }
               huawei:
                 credentials_file: { "$eval": "HUAWEI_CREDENTIALS_DEP_PATH" }
+              vivo:
+                access_key: { "$eval": "VIVO_ACCESS_KEY_DEP" }
+                access_secret: { "$eval": "VIVO_ACCESS_SECRET_DEP" }
         - product_names: ["focus-android" ]
           digest_algorithm: "SHA1"
           skip_check_ordered_version_codes: true

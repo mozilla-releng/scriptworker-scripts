@@ -31,6 +31,7 @@ FENIX_CONFIG = {
             "google": {"default_track": "internal", "credentials_file": "fenix.json"},
             "samsung": {"service_account_id": "123456", "access_token": "abcdef"},
             "huawei": {"credentials_file": "huawei.json"},
+            "vivo": {"access_key": "an-access-key", "access_secret": "an-access-secret"},
         }
     }
 }
@@ -270,16 +271,99 @@ def test_target_huawei_rejects_google_play_track():
         get_publish_config(FENIX_CONFIG, payload, "fenix")
 
 
+def test_target_vivo():
+    payload = {"channel": "production", "target_store": "vivo"}
+
+    assert get_publish_config(FENIX_CONFIG, payload, "fenix") == {
+        "target_store": "vivo",
+        "dry_run": True,
+        "certificate_alias": "fenix",
+        "vivo_access_key": "an-access-key",
+        "vivo_access_secret": "an-access-secret",
+        "package_names": ["org.mozilla.fenix"],
+        "rollout_percentage": None,
+        "submit": False,
+    }
+
+
+def test_target_vivo_with_commit_and_submit():
+    payload = {"channel": "production", "target_store": "vivo", "commit": True, "submit": True}
+
+    assert get_publish_config(FENIX_CONFIG, payload, "fenix") == {
+        "target_store": "vivo",
+        "dry_run": False,
+        "certificate_alias": "fenix",
+        "vivo_access_key": "an-access-key",
+        "vivo_access_secret": "an-access-secret",
+        "package_names": ["org.mozilla.fenix"],
+        "rollout_percentage": None,
+        "submit": True,
+    }
+
+
+def test_target_vivo_passes_a_rollout_percentage_through():
+    """The vivo client is what refuses a rollout, so this passes it through."""
+    payload = {"channel": "production", "target_store": "vivo", "rollout_percentage": 50}
+
+    assert get_publish_config(FENIX_CONFIG, payload, "fenix")["rollout_percentage"] == 50
+
+
+def test_target_vivo_rejects_google_play_track():
+    payload = {"channel": "production", "target_store": "vivo", "google_play_track": "production"}
+
+    with pytest.raises(ValueError, match="`google_play_track` is not allowed"):
+        get_publish_config(FENIX_CONFIG, payload, "fenix")
+
+
+def test_target_vivo_with_a_scheduled_release_date():
+    payload = {"channel": "production", "target_store": "vivo", "submit": True, "scheduled_release_date": "2026-10-01T09:00:00Z"}
+
+    assert get_publish_config(FENIX_CONFIG, payload, "fenix")["scheduled_release_date"] == "2026-10-01T09:00:00Z"
+
+
+def test_target_vivo_without_a_scheduled_release_date_omits_the_key():
+    """`publish` reads it with `.get`, so an absent key is the same as no schedule."""
+    payload = {"channel": "production", "target_store": "vivo"}
+
+    assert "scheduled_release_date" not in get_publish_config(FENIX_CONFIG, payload, "fenix")
+
+
+@pytest.mark.parametrize(
+    "product_config,payload,scope_product",
+    (
+        pytest.param(FOCUS_CONFIG, {"channel": "production"}, "focus", id="single_google_app"),
+        pytest.param(AURORA_CONFIG, {}, "aurora", id="choose_google_app_with_scope"),
+    ),
+)
+def test_a_scheduled_release_date_is_rejected_by_the_override_channel_models(product_config, payload, scope_product):
+    """Both override models are Google-only and return before the per-store checks, so
+    without their own guard the date is dropped instead of refused."""
+    payload = {**payload, "scheduled_release_date": "2026-10-01T09:00:00Z"}
+
+    with pytest.raises(ValueError, match="`scheduled_release_date` is not supported"):
+        get_publish_config(product_config, payload, scope_product)
+
+
+@pytest.mark.parametrize("target_store", ("google", "samsung", "huawei"))
+def test_a_scheduled_release_date_is_rejected_for_every_other_store(target_store):
+    payload = {"channel": "production", "target_store": target_store, "scheduled_release_date": "2026-10-01T09:00:00Z"}
+
+    with pytest.raises(ValueError, match="`scheduled_release_date` is not supported"):
+        get_publish_config(FENIX_CONFIG, payload, "fenix")
+
+
 def test_certificate_alias_does_not_depend_on_the_target_store():
     # The alias identifies the certificate the incoming artifact was signed with, which is
     # decided by the upstream signing task, so it is the same whichever store it goes to.
     google = get_publish_config(FENIX_CONFIG, {"channel": "production", "target_store": "google"}, "fenix")
     samsung = get_publish_config(FENIX_CONFIG, {"channel": "production", "target_store": "samsung"}, "fenix")
     huawei = get_publish_config(FENIX_CONFIG, {"channel": "production", "target_store": "huawei"}, "fenix")
+    vivo = get_publish_config(FENIX_CONFIG, {"channel": "production", "target_store": "vivo"}, "fenix")
 
     assert google["certificate_alias"] == "fenix"
     assert samsung["certificate_alias"] == "fenix"
     assert huawei["certificate_alias"] == "fenix"
+    assert vivo["certificate_alias"] == "fenix"
 
 
 def test_certificate_alias_is_none_when_nothing_configures_it():

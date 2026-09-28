@@ -840,3 +840,40 @@ def test_check_all_architectures_and_api_levels_are_present(apks_metadata_per_pa
 def test_bad_check_all_architectures_and_api_levels_are_present(apks_metadata_per_paths):
     with pytest.raises(BadSetOfApks):
         _check_all_architectures_and_api_levels_are_present(apks_metadata_per_paths)
+
+
+def test_universal_apk_is_exempt_from_the_version_code_ordering():
+    """The ordering exists only to keep x86's version code above arm's (bug 1338477); a
+    universal APK serves every ABI and has no place in it."""
+    apks_metadata = {
+        'universal': {'version_code': '2015478532', 'architecture': 'universal', 'api_level': 21},
+    }
+
+    _check_apks_version_codes_are_correctly_ordered(apks_metadata)
+
+
+@pytest.mark.parametrize('per_abi_order', (('armeabi-v7a', 'x86'), ('x86', 'armeabi-v7a')))
+def test_a_universal_apk_mixed_with_per_abi_apks_is_refused(per_abi_order):
+    """No task selects both: `only-archs` picks either the universal APK or the splits.
+    A set carrying both is malformed, so it is refused rather than half-checked -- and
+    that holds whichever way round the per-ABI pair is, so a mix cannot sneak a wrongly
+    ordered pair past the check either."""
+    first, second = per_abi_order
+    apks_metadata = {
+        'first': {'version_code': '1', 'architecture': first, 'api_level': 21},
+        'universal': {'version_code': '2', 'architecture': 'universal', 'api_level': 21},
+        'second': {'version_code': '3', 'architecture': second, 'api_level': 21},
+    }
+
+    with pytest.raises(BadSetOfApks, match='published on its own'):
+        _check_apks_version_codes_are_correctly_ordered(apks_metadata)
+
+
+def test_universal_apks_sharing_a_version_code_are_still_rejected():
+    apks_metadata = {
+        'one': {'version_code': '1', 'architecture': 'universal', 'api_level': 21},
+        'two': {'version_code': '1', 'architecture': 'universal', 'api_level': 21},
+    }
+
+    with pytest.raises(BadSetOfApks):
+        _check_apks_version_codes_are_correctly_ordered(apks_metadata)

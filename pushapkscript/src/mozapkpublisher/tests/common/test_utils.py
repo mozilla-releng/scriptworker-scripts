@@ -4,7 +4,7 @@ import tempfile
 from tempfile import NamedTemporaryFile
 from unittest.mock import MagicMock
 
-from mozapkpublisher.common.utils import load_json_url, file_sha512sum, metadata_by_package_name
+from mozapkpublisher.common.utils import load_json_url, file_md5sum, file_sha256sum, file_sha512sum, metadata_by_package_name
 
 apk_x86 = NamedTemporaryFile()
 apk_arm = NamedTemporaryFile()
@@ -25,6 +25,22 @@ def test_file_sha512sum():
 
         assert file_sha512sum(temp_file.name) == '0b1622c08ae1fcffe9f0d1dd17fe273d7e8c96668981c8a38f6bbfa4f757b30af0\
 ed2aabf90f1f8a5983082a0b88194fe81bc850d3019fd9eca9328584227c84'
+
+
+def test_file_sha256sum():
+    with tempfile.NamedTemporaryFile() as temp_file:
+        temp_file.write(b'known sha256')
+        temp_file.seek(0)
+
+        assert file_sha256sum(temp_file.name) == '7214ba3182fbbe9d426d7b94f3f9010d54e40a3e1891963b546956b995560dfe'
+
+
+def test_file_md5sum():
+    with tempfile.NamedTemporaryFile() as temp_file:
+        temp_file.write(b'known md5')
+        temp_file.seek(0)
+
+        assert file_md5sum(temp_file.name) == '7afab38d03b13359e781284c43ce1007'
 
 
 def test_metadata_by_package_name():
