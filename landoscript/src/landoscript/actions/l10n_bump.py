@@ -9,6 +9,7 @@ from typing import Self
 from gql.transport.exceptions import TransportError
 from scriptworker_client.github import extract_github_repo_owner_and_name
 from scriptworker_client.github_client import GithubClient
+from tenacity import RetryError
 
 from landoscript.errors import LandoscriptError
 from landoscript.lando import LandoAction, create_commit_action
@@ -67,7 +68,7 @@ async def run(
             try:
                 log.info(f"fetching bump files from github: {files}")
                 orig_files = await github_client.get_files(files, branch)
-            except TransportError as e:
+            except (TransportError, RetryError) as e:
                 raise LandoscriptError("couldn't retrieve bump files from github") from e
 
             log.debug("fetched file contents are:")

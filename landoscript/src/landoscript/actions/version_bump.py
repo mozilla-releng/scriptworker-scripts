@@ -10,6 +10,7 @@ from mozilla_version.gecko import GeckoVersion
 from mozilla_version.version import BaseVersion
 from scriptworker.exceptions import TaskVerificationError
 from scriptworker_client.github_client import GithubClient
+from tenacity import RetryError
 
 from landoscript.errors import LandoscriptError
 from landoscript.lando import LandoAction, create_commit_action
@@ -78,7 +79,7 @@ async def run(
         try:
             log.info("fetching bump files from github")
             orig_files = await github_client.get_files(version_bump_info.files, branch)
-        except TransportError as e:
+        except (TransportError, RetryError) as e:
             raise LandoscriptError("couldn't retrieve bump files from github") from e
 
         log.info("got files")

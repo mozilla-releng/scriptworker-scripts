@@ -1,4 +1,6 @@
+import gql.client
 import pytest
+import tenacity
 from scriptworker.client import TaskVerificationError
 from simple_github.client import GITHUB_GRAPHQL_ENDPOINT
 from pytest_scriptworker_client import get_files_payload
@@ -324,7 +326,7 @@ async def test_success_without_bumps(aioresponses, github_installation_responses
 
 
 @pytest.mark.asyncio
-async def test_failure_to_fetch_files(aioresponses, github_installation_responses, context):
+async def test_failure_to_fetch_files(aioresponses, github_installation_responses, context, monkeypatch):
     payload = {
         "actions": ["version_bump"],
         "lando_repo": "repo_name",
@@ -339,6 +341,8 @@ async def test_failure_to_fetch_files(aioresponses, github_installation_response
     # just expect it
     for _ in range(5):
         aioresponses.post(GITHUB_GRAPHQL_ENDPOINT, status=500)
+    # don't sleep between gql's retries
+    monkeypatch.setattr(gql.client, "wait_exponential", lambda **kwargs: tenacity.wait_none())
 
     context.task = {"payload": payload, "scopes": scopes}
 
