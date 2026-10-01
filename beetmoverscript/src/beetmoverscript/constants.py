@@ -21,7 +21,6 @@ MIME_MAP = {
     ".pkg": "application/x-newton-compatible-pkg",
     ".pom": "application/xml",
     ".rcc": "application/octet-stream",
-    ".sh": "text/plain",
     ".sha1": "text/plain",
     ".sha256": "text/plain",
     ".sha512": "text/plain",
