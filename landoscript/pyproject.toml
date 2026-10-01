@@ -14,12 +14,13 @@ classifiers = [
 dependencies = [
     "aiohttp",
     "async-timeout",
-    "gql",
+    "gql>=4.4",
     "mozilla-version",
     "moz.l10n",
     "scriptworker",
     "scriptworker-client",
     "taskcluster>=92",
+    "tenacity",
     "yarl",
 ]
 

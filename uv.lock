@@ -2217,6 +2217,7 @@ dependencies = [
     { name = "scriptworker" },
     { name = "scriptworker-client" },
     { name = "taskcluster" },
+    { name = "tenacity" },
     { name = "yarl" },
 ]
 
@@ -2237,12 +2238,13 @@ dev = [
 requires-dist = [
     { name = "aiohttp" },
     { name = "async-timeout" },
-    { name = "gql" },
+    { name = "gql", specifier = ">=4.4" },
     { name = "moz-l10n" },
     { name = "mozilla-version" },
     { name = "scriptworker" },
     { name = "scriptworker-client", editable = "scriptworker_client" },
     { name = "taskcluster", specifier = ">=92" },
+    { name = "tenacity" },
     { name = "yarl" },
 ]
 
