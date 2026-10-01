@@ -13,6 +13,9 @@
         "payload": {
             "type": "object",
             "properties": {
+                "product": {
+                    "type": "string"
+                },
                 "upstreamArtifacts": {
                     "type": "array",
                     "items": {
