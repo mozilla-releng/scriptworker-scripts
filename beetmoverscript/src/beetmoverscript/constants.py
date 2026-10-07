@@ -89,6 +89,13 @@ UPLOAD_DATA_ACTIONS = ("upload-data",)
 
 TRANSLATIONS_ACTIONS = ("upload-translations-artifacts",)
 
+# Resources (task buckets) whose credentials are create-only and therefore must
+# never overwrite existing objects -- overwriting in GCS requires
+# storage.objects.delete, which these intentionally lack. The autoland/mozregression
+# integration archive is immutable per-revision, so uploads of identical content
+# are skipped and differing content raises rather than attempting a forbidden overwrite.
+NO_OVERWRITE_RESOURCES = ("integration",)
+
 # XXX this is a fairly clunky way of specifying which files to copy from
 # candidates to releases -- let's find a nicer way of doing this.
 # XXX if we keep this, let's make it configurable? overridable in config?

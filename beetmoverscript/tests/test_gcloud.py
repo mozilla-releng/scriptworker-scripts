@@ -2,14 +2,13 @@ import os
 from datetime import datetime
 from unittest.mock import MagicMock
 
+import beetmoverscript.gcloud
 import pytest
 from google.api_core.exceptions import Forbidden
 from google.api_core.retry import Retry
 from google.auth.exceptions import DefaultCredentialsError
 from google.cloud.storage.retry import DEFAULT_RETRY_IF_GENERATION_SPECIFIED, ConditionalRetryPolicy
 from scriptworker.exceptions import ScriptWorkerTaskException
-
-import beetmoverscript.gcloud
 
 from . import get_fake_valid_task, noop_sync
 
@@ -147,37 +146,57 @@ def test_setup_gcs_credentials(monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "path,expiry,exists,expected_mimetype,raise_class,fail_on_unknown_mimetype,allow_overwrites",
+    "path,expiry,exists,identical,expected_mimetype,raise_class,fail_on_unknown_mimetype,allow_overwrites",
     (
         # Raise when can't find a mimetype
-        ("foo/nomimetype", None, False, None, ScriptWorkerTaskException, True, False),
+        ("foo/nomimetype", None, False, False, None, ScriptWorkerTaskException, True, False),
         # Don't raise when can't find a mimetype
-        ("foo/nomimetype", None, False, "application/octet-stream", None, False, False),
-        # No expiration given
-        ("foo/target.zip", None, False, "application/zip", None, True, False),
-        # With expiration
-        ("foo/target.zip", datetime.now().isoformat(), False, "application/zip", None, True, False),
-        # With existing file
-        ("foo/target.zip", None, True, "application/zip", None, True, True),
-        # don't allow overwrites
-        ("foo/target.zip", None, True, "application/zip", ScriptWorkerTaskException, True, False),
+        ("foo/nomimetype", None, False, False, "application/octet-stream", None, False, False),
+        # No expiration given, new object
+        ("foo/target.zip", None, False, False, "application/zip", None, True, False),
+        # With expiration, new object
+        ("foo/target.zip", datetime.now().isoformat(), False, False, "application/zip", None, True, False),
+        # Exists, overwrites allowed -> overwrite (md5 not consulted; metadata refreshed)
+        ("foo/target.zip", None, True, False, "application/zip", None, True, True),
+        # Exists with identical content, overwrites allowed -> still overwrite (SA can delete)
+        ("foo/target.zip", None, True, True, "application/zip", None, True, True),
+        # Create-only bucket: identical content already present -> skip (idempotent retry)
+        ("foo/target.zip", None, True, True, "application/zip", None, True, False),
+        # Create-only bucket: content differs -> raise instead of forbidden overwrite
+        ("foo/target.zip", None, True, False, "application/zip", ScriptWorkerTaskException, True, False),
         # don't allow overwrites, doesn't exist yet
-        ("foo/target.zip", None, False, "application/zip", None, True, False),
+        ("foo/target.zip", None, False, False, "application/zip", None, True, False),
     ),
-    ids=["no mimetype", "no mimetype no fail", "no expiry", "with expiry", "with existing file", "no_overwrites", "no_overwrites_doesnt_exist"],
+    ids=[
+        "no mimetype",
+        "no mimetype no fail",
+        "no expiry",
+        "with expiry",
+        "existing overwrites",
+        "existing identical overwrites still uploads",
+        "create_only identical skip",
+        "create_only different content raises",
+        "no_overwrites_doesnt_exist",
+    ],
 )
 @pytest.mark.asyncio
-async def test_upload_to_gcs(context, monkeypatch, path, expiry, exists, expected_mimetype, raise_class, fail_on_unknown_mimetype, allow_overwrites):
+async def test_upload_to_gcs(context, monkeypatch, path, expiry, exists, identical, expected_mimetype, raise_class, fail_on_unknown_mimetype, allow_overwrites):
     context.gcs_client = FakeClient()
     blob = FakeClient.FakeBlob()
-    blob._exists = exists
     blob.upload_from_filename = MagicMock()
+
+    existing_blob = None
+    if exists:
+        existing_blob = FakeClient.FakeBlob()
+        existing_blob.md5_hash = "localmd5" if identical else "differentmd5"
+
     bucket = FakeClient.FakeBucket(FakeClient, "foobucket")
-    bucket.blob = MagicMock()
-    bucket.blob.side_effect = [blob]
+    bucket.blob = MagicMock(side_effect=[blob])
+    bucket.get_blob = MagicMock(return_value=existing_blob)
     log_warn = MagicMock()
 
     monkeypatch.setattr(beetmoverscript.gcloud, "Bucket", lambda client, name: bucket)
+    monkeypatch.setattr(beetmoverscript.gcloud, "get_md5_base64", lambda _path: "localmd5")
     monkeypatch.setattr(beetmoverscript.gcloud.log, "warning", log_warn)
 
     if raise_class:
@@ -190,30 +209,42 @@ async def test_upload_to_gcs(context, monkeypatch, path, expiry, exists, expecte
                 fail_on_unknown_mimetype=fail_on_unknown_mimetype,
                 allow_overwrites=allow_overwrites,
             )
+        return
+
+    result = await beetmoverscript.gcloud.upload_to_gcs(
+        context=context,
+        target_path="path/target",
+        path=path,
+        expiry=expiry,
+        fail_on_unknown_mimetype=fail_on_unknown_mimetype,
+        allow_overwrites=allow_overwrites,
+    )
+
+    # Skip only happens on create-only buckets (allow_overwrites=False) when the
+    # existing object is byte-identical: no upload, no warning, returns the existing blob.
+    skipped = exists and identical and not allow_overwrites
+    if skipped:
+        blob.upload_from_filename.assert_not_called()
+        log_warn.assert_not_called()
+        assert result is existing_blob
+        return
+
+    blob.upload_from_filename.assert_called_once()
+    if expiry:
+        assert isinstance(blob.custom_time, datetime)
     else:
-        await beetmoverscript.gcloud.upload_to_gcs(
-            context=context,
-            target_path="path/target",
-            path=path,
-            expiry=expiry,
-            fail_on_unknown_mimetype=fail_on_unknown_mimetype,
-            allow_overwrites=allow_overwrites,
-        )
+        assert blob.custom_time is None
+    # We only warn when overwriting an existing object (allow_overwrites=True).
+    if exists and allow_overwrites:
+        log_warn.assert_called()
+    else:
+        log_warn.assert_not_called()
+    if allow_overwrites:
+        assert "if_generation_match" not in blob.upload_from_filename.call_args[1]
+    else:
+        assert blob.upload_from_filename.call_args[1]["if_generation_match"] == 0
 
-        if expiry:
-            assert isinstance(blob.custom_time, datetime)
-        else:
-            assert blob.custom_time is None
-        if exists:
-            log_warn.assert_called()
-        else:
-            log_warn.assert_not_called()
-        if allow_overwrites:
-            assert "if_generation_match" not in blob.upload_from_filename.call_args[1]
-        else:
-            assert blob.upload_from_filename.call_args[1]["if_generation_match"] == 0
-
-        assert blob.upload_from_filename.call_args[1].get("content_type") == expected_mimetype
+    assert blob.upload_from_filename.call_args[1].get("content_type") == expected_mimetype
 
 
 @pytest.mark.parametrize(

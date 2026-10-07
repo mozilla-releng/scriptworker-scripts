@@ -2,8 +2,6 @@ import json
 import tempfile
 
 import pytest
-from scriptworker.exceptions import TaskVerificationError
-
 from beetmoverscript.constants import BUILDHUB_ARTIFACT, INSTALLER_ARTIFACTS
 from beetmoverscript.utils import (
     _check_locale_consistency,
@@ -16,6 +14,7 @@ from beetmoverscript.utils import (
     get_candidates_prefix,
     get_credentials,
     get_hash,
+    get_md5_base64,
     get_partials_props,
     get_partner_candidates_prefix,
     get_partner_match,
@@ -23,6 +22,7 @@ from beetmoverscript.utils import (
     get_product_name,
     get_releases_prefix,
     get_url_prefix,
+    is_overwrite_forbidden,
     is_promotion_action,
     is_release_action,
     matches_exclude,
@@ -30,6 +30,7 @@ from beetmoverscript.utils import (
     write_file,
     write_json,
 )
+from scriptworker.exceptions import TaskVerificationError
 
 from . import get_fake_checksums_manifest, get_fake_valid_task, get_test_jinja_env
 
@@ -47,6 +48,32 @@ def test_get_hash():
         sha1digest = get_hash(fp.name, hash_type="sha1")
 
     assert sha1digest == correct_sha1
+
+
+# get_md5_base64 {{{1
+def test_get_md5_base64():
+    import base64
+    import hashlib
+
+    text = b"Hello world from beetmoverscript!"
+    expected = base64.b64encode(hashlib.md5(text).digest()).decode("ascii")
+
+    with tempfile.NamedTemporaryFile(delete=True) as fp:
+        fp.write(text)
+        fp.flush()
+        digest = get_md5_base64(fp.name)
+
+    # Matches the base64 encoding used by GCS blob.md5_hash.
+    assert digest == expected
+
+
+# is_overwrite_forbidden {{{1
+@pytest.mark.parametrize(
+    "resource,forbidden",
+    (("integration", True), ("nightly", False), ("release", False), ("dep", False)),
+)
+def test_is_overwrite_forbidden(resource, forbidden):
+    assert is_overwrite_forbidden(resource) is forbidden
 
 
 # write_json {{{1
