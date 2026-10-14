@@ -86,8 +86,9 @@ def create_locale_submitter(e, extra_suffix, auth0_secrets, config, backend_vers
 def submit_system_addons(task, config, auth0_secrets):
     upstream_artifacts = get_upstream_artifacts(task)
     manifest = get_manifest(config, upstream_artifacts)
+    product = task["payload"].get("product", "SystemAddons")
     release_creator = SystemAddonsReleaseCreator(config["api_root"], auth0_secrets)
-    release_creator.run(manifest)
+    release_creator.run(manifest, product)
 
 
 # submit_locale {{{1

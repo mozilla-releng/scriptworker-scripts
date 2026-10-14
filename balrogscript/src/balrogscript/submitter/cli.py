@@ -582,12 +582,12 @@ class SystemAddonsReleaseCreator(object):
         self.api_root = api_root
         self.url = "{}/{}".format(self.api_root, "releases")
 
-    def run(self, manifest):
+    def run(self, manifest, product="SystemAddons"):
         release_blob = {
             "addons": {},
             "hashFunction": manifest["hashType"],
             "name": manifest["releaseName"],
-            "product": "SystemAddons",
+            "product": product,
             "schema_version": 5000,
         }
         for addon in manifest["addons"]:
@@ -608,7 +608,7 @@ class SystemAddonsReleaseCreator(object):
         request_data = {
             "blob": json.dumps(release_blob),
             "name": manifest["releaseName"],
-            "product": "SystemAddons",
+            "product": product,
         }
         balrog_session = get_balrog_session(self.auth0_secrets)
         balrog_request(balrog_session, "POST", self.url, json=request_data, timeout=5, verify=True)
