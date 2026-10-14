@@ -47,7 +47,7 @@ def parse_scheduled_release_date(value: str) -> datetime:
         # Upper-cased to match the task schema's RFC 3339 check, which accepts a
         # lowercase `t` separator and `z` offset that `fromisoformat` would reject.
         parsed = datetime.fromisoformat(value.upper())
-    except (AttributeError, TypeError, ValueError):
+    except AttributeError, TypeError, ValueError:
         raise VivoUpdateException(
             "Could not read {!r} as a scheduled release date. It has to be an ISO 8601 datetime with a UTC offset, for example '2026-10-01T09:00:00Z'.".format(
                 value
