@@ -145,7 +145,7 @@ async def lockfile(paths, name=None, attempts=10, sleep=30):
                         return
                     finally:
                         rm(path)
-            except (FileExistsError, OSError):
+            except FileExistsError, OSError:
                 continue
         log.debug(wait_msg, sleep)
         if attempt < attempts - 1:

@@ -252,5 +252,5 @@ def get_taskId_from_full_path(full_path_artifact):
         cot_dir_index = split_path.index("cot")
         possible_task_id = split_path[cot_dir_index + 1]
         return utils.validated_task_id(possible_task_id)
-    except (IndexError, ValueError):
+    except IndexError, ValueError:
         raise ScriptWorkerTaskException("taskId unable to be extracted from path {}".format(full_path_artifact))

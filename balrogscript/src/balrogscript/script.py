@@ -227,7 +227,7 @@ def load_config(path=None):
     try:
         with open(path) as fh:
             config = json.load(fh)
-    except (ValueError, OSError, IOError):
+    except ValueError, OSError, IOError:
         log.fatal("Can't read config file %s", path)
         sys.exit(5)
     return config

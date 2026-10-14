@@ -41,7 +41,7 @@ async def raise_for_status_with_message(
 
     try:
         body = await resp.json()
-    except (aiohttp.ContentTypeError, json.JSONDecodeError):
+    except aiohttp.ContentTypeError, json.JSONDecodeError:
         # If the body isn't valid JSON, something went horribly wrong,
         # just defer the error reporting back to aiohttp.
         resp.raise_for_status()

@@ -169,7 +169,7 @@ def copy_to_dir(source, parent_dir, target=None):
             return target_path
         else:
             log.info("Not copying %s to itself" % (source))
-    except (IOError, OSError):
+    except IOError, OSError:
         log.exception("Can't copy %s to %s!", source, target_path)
         raise SigningServerError("Can't copy {} to {}!".format(source, target_path))
 
