@@ -4,8 +4,6 @@ This is designed to be run from scriptworker, but runs perfectly fine as a stand
 
 # Update python dependencies
 
-NOTE: this will stay on python 3.11 until the mac puppet configs are changed.
+NOTE: the python version for iscript should be in sync with the one set in the ronin_puppet repository.
 
- we use the script / requirements files [here](https://github.com/mozilla-platform-ops/ronin_puppet/tree/master/modules/signing_worker/files)
-
- and the scriptworker{,_scripts}_revision [here](https://github.com/mozilla-platform-ops/ronin_puppet/blob/master/data/common.yaml#L125-L143)
+The scriptworker_scripts_revision and python_version used can be found [here](https://github.com/mozilla-platform-ops/ronin_puppet/blob/master/data/common.yaml#L200)
