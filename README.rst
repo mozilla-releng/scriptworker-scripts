@@ -190,8 +190,7 @@ Update python dependencies
 
 ::
 
-  # from scriptworker-scripts/ ; this will run docker for py38 and py311
-  # for all *scripts to update all the dependencies via `pip-compile-multi`
+  # from scriptworker-scripts/ ; this will run uv lock for all scripts
   $ maintenance/pin.sh
 
 ==========================
