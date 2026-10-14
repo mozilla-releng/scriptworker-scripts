@@ -10,7 +10,7 @@ authors = [
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
     "aiohttp_retry >= 2.3",
