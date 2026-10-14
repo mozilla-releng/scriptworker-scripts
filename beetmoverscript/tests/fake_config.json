@@ -7,6 +7,7 @@
     "verbose": true,
     "url_prefix": {
         "nightly": "https://archive.test",
+        "integration": "https://archive.test",
         "fake": "https://archive.test"
     },
     "clouds": {
@@ -17,6 +18,15 @@
                 "credentials": "eyJoZWxsbyI6ICJ3b3JsZCJ9Cg==",
                 "product_buckets": {
                     "devedition": "dummy",
+                    "firefox": "dummy",
+                    "fake": "dummy"
+                }
+            },
+            "integration": {
+                "enabled": true,
+                "fail_task_on_error": true,
+                "credentials": "eyJoZWxsbyI6ICJ3b3JsZCJ9Cg==",
+                "product_buckets": {
                     "firefox": "dummy",
                     "fake": "dummy"
                 }
