@@ -77,7 +77,7 @@
                 "scheduled_release_date": {
                     "type": "string",
                     "format": "date-time",
-                    "description": "ISO 8601 datetime with a UTC offset to publish the release at, instead of as soon as it passes review, at most 8 days ahead. Only the vivo store supports this, and it requires `submit`."
+                    "description": "ISO 8601 datetime with a UTC offset to publish the release at, instead of as soon as it passes review. Supported by the samsung, huawei and vivo stores (vivo at most 8 days ahead). Requires `submit` and cannot be combined with `rollout_percentage`."
                 }
             },
             "required": ["upstreamArtifacts"],

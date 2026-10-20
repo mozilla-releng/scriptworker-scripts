@@ -33,6 +33,7 @@ async def async_main(context):
 
     logging.getLogger("oauth2client").setLevel(logging.WARNING)
     _log_warning_forewords(contact_server, publish_config["dry_run"], publish_config["target_store"])
+    _log_submission(contact_server, publish_config)
 
     log.info("Verifying upstream artifacts...")
     artifacts_per_task_id, failed_artifacts_per_task_id = artifacts.get_upstream_artifacts_full_paths_per_task_id(context)
@@ -110,6 +111,24 @@ def _log_warning_forewords(contact_server, dry_run, target_store):
             log.warning("Nothing will be uploaded to {}, since this is a dry run.".format(store_name))
         else:
             log.warning("Nothing will be uploaded to {}, since this pushapk instance is not allowed to talk to it.".format(store_name))
+
+
+def _log_submission(contact_server, publish_config):
+    # Only samsung, huawei and vivo have a submission step separate from the upload, and
+    # nothing is submitted when nothing is uploaded.
+    if not publish_config.get("submit") or publish_config["dry_run"] or not contact_server:
+        return
+
+    target_store = publish_config["target_store"]
+    store_name = STORE_NAMES.get(target_store, target_store)
+    scheduled_release_date = publish_config.get("scheduled_release_date")
+    if scheduled_release_date:
+        log.info("The upload will be submitted to {} and scheduled to publish at {}.".format(store_name, scheduled_release_date))
+    elif target_store == "samsung":
+        # Without a date, the samsung update is set to manual publication.
+        log.info("The upload will be submitted to {}, and will have to be published manually once it passes review.".format(store_name))
+    else:
+        log.info("The upload will be submitted to {} and published as soon as it passes review.".format(store_name))
 
 
 def get_default_config():

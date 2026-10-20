@@ -3,6 +3,7 @@ import tempfile
 import unittest
 import uuid
 
+from datetime import datetime, timezone
 from contextlib import nullcontext as does_not_raise
 from .common import basic_auth_headers
 from mozapkpublisher.sgs_api.error import (
@@ -220,6 +221,29 @@ async def test_update_content_info(
             },
         )
 
+
+
+@pytest.mark.asyncio
+async def test_update_content_info_with_a_scheduled_release_date(sgs, responses_mock):
+    responses_mock.post("https://devapi.samsungapps.com/seller/contentUpdate", payload={})
+
+    await sgs.update_content_info(AppContentInfo(UPDATE_BASE_PARAMS), scheduled_release_date=datetime(2026, 10, 1, 9, 0, tzinfo=timezone.utc))
+
+    responses_mock.assert_called_with(
+        url="https://devapi.samsungapps.com/seller/contentUpdate",
+        method="POST",
+        headers=basic_auth_headers(),
+        json={
+            "contentId": "foobar",
+            "defaultLanguageCode": "EN",
+            "paid": "N",
+            "publicationType": "02",
+            "startPublicationDate": "2026-10-01 09:00:00",
+            "screenshots": None,
+            "addLanguage": None,
+            "sellCountryList": None,
+        },
+    )
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(

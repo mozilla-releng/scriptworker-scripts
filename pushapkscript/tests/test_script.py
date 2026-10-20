@@ -9,7 +9,7 @@ from scriptworker.exceptions import TaskVerificationError
 import pushapkscript
 from pushapkscript import jarsigner, manifest, publish, task
 from pushapkscript.exceptions import ConfigValidationError
-from pushapkscript.script import _get_product_config, _log_warning_forewords, async_main, get_default_config, main
+from pushapkscript.script import _get_product_config, _log_submission, _log_warning_forewords, async_main, get_default_config, main
 
 from .helpers.mock_file import mock_open
 
@@ -210,6 +210,43 @@ def test_log_warning_forewords(caplog, monkeypatch, is_allowed_to_push, dry_run,
     assert len(caplog.records) == 1
     assert caplog.records[0].levelname == "WARNING"
     assert expected in caplog.text
+
+
+
+@pytest.mark.parametrize(
+    "contact_server,publish_config,expected",
+    (
+        pytest.param(True, {"target_store": "google", "dry_run": False}, None, id="google"),
+        pytest.param(True, {"target_store": "samsung", "dry_run": False, "submit": False}, None, id="no_submit"),
+        pytest.param(True, {"target_store": "huawei", "dry_run": True, "submit": True}, None, id="dry_run"),
+        pytest.param(False, {"target_store": "huawei", "dry_run": False, "submit": True}, None, id="not_allowed_to_contact_server"),
+        pytest.param(
+            True,
+            {"target_store": "huawei", "dry_run": False, "submit": True},
+            "The upload will be submitted to the Huawei AppGallery and published as soon as it passes review.",
+            id="submit",
+        ),
+        pytest.param(
+            True,
+            {"target_store": "samsung", "dry_run": False, "submit": True},
+            "The upload will be submitted to the Samsung Galaxy Store, and will have to be published manually once it passes review.",
+            id="samsung_submit",
+        ),
+        pytest.param(
+            True,
+            {"target_store": "samsung", "dry_run": False, "submit": True, "scheduled_release_date": "2026-10-01T09:00:00Z"},
+            "The upload will be submitted to the Samsung Galaxy Store and scheduled to publish at 2026-10-01T09:00:00Z.",
+            id="scheduled",
+        ),
+    ),
+)
+def test_log_submission(caplog, contact_server, publish_config, expected):
+    caplog.set_level("INFO")
+    _log_submission(contact_server, publish_config)
+    if expected is None:
+        assert caplog.records == []
+    else:
+        assert expected in caplog.text
 
 
 def test_get_default_config():

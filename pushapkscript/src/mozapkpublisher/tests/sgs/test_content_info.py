@@ -1,5 +1,6 @@
 import copy
 import pytest
+from datetime import datetime, timedelta, timezone
 from contextlib import nullcontext as does_not_raise
 
 from .common import basic_auth_headers
@@ -111,3 +112,19 @@ def test_new_content_info_drops_binary_list():
     new_content_info["binaryList"] = [{"fileName": "foo", "binarySeq": "1"}]
     content_info = AppContentInfo(new_content_info)
     assert "binaryList" not in content_info.as_new_data()
+
+
+def test_new_content_info_drops_the_start_publication_date_without_a_schedule():
+    new_content_info = copy.copy(MINIMAL_VALID_CONTENT_INFO)
+    new_content_info["startPublicationDate"] = "2021-03-31 10:00:00"
+    content_info = AppContentInfo(new_content_info)
+    assert "startPublicationDate" not in content_info.as_new_data()
+
+
+def test_new_content_info_publishes_on_the_scheduled_date_in_utc():
+    content_info = AppContentInfo(copy.copy(MINIMAL_VALID_CONTENT_INFO))
+
+    new_data = content_info.as_new_data(scheduled_release_date=datetime(2026, 10, 1, 17, 0, tzinfo=timezone(timedelta(hours=8))))
+
+    assert new_data["publicationType"] == "02"
+    assert new_data["startPublicationDate"] == "2026-10-01 09:00:00"

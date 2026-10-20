@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Optional
 
 import aiohttp
 
+from mozapkpublisher.common.schedule import check_can_schedule, check_not_passed
 from mozapkpublisher.common.store_api import build_apk_file_name, request
 from mozapkpublisher.common.utils import file_sha256sum
 
@@ -34,7 +35,7 @@ RELEASE_TYPE_PHASED_ROLLOUT = 3
 # either, so the length of the window is a policy decision made here.
 PHASED_ROLLOUT_WINDOW = timedelta(days=7)
 
-# Format of `phasedReleaseStartTime`/`phasedReleaseEndTime`, documented as
+# Format of `phasedReleaseStartTime`/`phasedReleaseEndTime` and of `releaseTime`, documented as
 # `yyyy-MM-ddTHH:mm:ssZZ` with the example 2015-01-01T01:01:01+0800. The offset carries no
 # colon, which is why this is spelled out rather than using `datetime.isoformat()` -- that
 # emits +00:00.
@@ -116,7 +117,7 @@ class HuaweiAppGallery:
     async def __aexit__(self, *args: Any) -> None:
         await self.api.__aexit__(*args)
 
-    async def upload_apks(self, package_name, apks, rollout_rate, submit=False):
+    async def upload_apks(self, package_name, apks, rollout_rate, submit=False, scheduled_release_date=None):
         """
         Upload the APKs passed as arguments. The app to be updated will be inferred from
         the package name.
@@ -126,7 +127,12 @@ class HuaweiAppGallery:
         `PHASED_ROLLOUT_WINDOW`. AppGallery only accepts a phased release for an app
         that already has a released version, so the very first submission for a
         package has to be a full rollout.
+
+        `scheduled_release_date` is an aware `datetime` at which a full release goes live
+        instead of as soon as it passes review. It requires `submit`.
         """
+        check_can_schedule(package_name, scheduled_release_date, submit=submit, rollout_rate=rollout_rate)
+
         if self._dry_run:
             logger.warning("No APKs were uploaded since `dry_run` was `True`")
             return
@@ -152,9 +158,10 @@ class HuaweiAppGallery:
             return
 
         if rollout_rate is None:
-            logger.info("Submitting app %s for a FULL release to all users...", app_id)
-            await self.submit_app(app_id, RELEASE_TYPE_FULL_ROLLOUT)
-            logger.info("Submitted app %s for full release", app_id)
+            schedule = " at {}".format(scheduled_release_date.isoformat()) if scheduled_release_date is not None else ""
+            logger.info("Submitting app %s for a FULL release to all users%s...", app_id, schedule)
+            await self.submit_app(app_id, RELEASE_TYPE_FULL_ROLLOUT, release_time=scheduled_release_date)
+            logger.info("Submitted app %s for full release%s", app_id, schedule)
         else:
             logger.info(
                 "Submitting app %s for a PHASED release to %s%% of users over %s days...",
@@ -165,7 +172,7 @@ class HuaweiAppGallery:
             await self.submit_app(app_id, RELEASE_TYPE_PHASED_ROLLOUT, build_phased_release(rollout_rate))
             logger.info("Submitted app %s for a phased release to %s%% of users", app_id, rollout_rate)
 
-    async def submit_app(self, app_id, release_type, phased_release=None):
+    async def submit_app(self, app_id, release_type, phased_release=None, release_time=None):
         """
         Submit the app for release once AppGallery has finished parsing the binary that
         was just bound to it.
@@ -175,12 +182,22 @@ class HuaweiAppGallery:
         ready straight away -- and is then retried every `SUBMIT_RETRY_DELAY` seconds
         until `SUBMIT_RETRY_TIMEOUT`. Any other failure is raised on the first attempt.
 
+        A `release_time` is re-checked before every attempt, since the upload and the
+        retries can outlast it.
+
         https://developer.huawei.com/consumer/en/doc/AppGallery-connect-References/agcapi-app-submit-0000001158245061
         """
         deadline = time.monotonic() + SUBMIT_RETRY_TIMEOUT
 
         while True:
-            body = await self.api.submit_app(app_id, release_type=release_type, phased_release=phased_release, check_ret=False)
+            if release_time is not None:
+                check_not_passed(
+                    "app {}".format(app_id),
+                    release_time,
+                    consequence="the binary was left uploaded but NOT submitted (it can still be submitted from the AppGallery Connect console)",
+                )
+
+            body = await self.api.submit_app(app_id, release_type=release_type, phased_release=phased_release, release_time=release_time, check_ret=False)
             ret = body.get("ret") or {}
 
             if not _is_package_still_processing(ret):
@@ -380,6 +397,7 @@ class HuaweiAppGalleryApi:
         app_id: str,
         release_type: int = RELEASE_TYPE_FULL_ROLLOUT,
         phased_release: Optional[Dict[str, str]] = None,
+        release_time: Optional[datetime] = None,
         check_ret: bool = True,
     ) -> Dict[str, Any]:
         """
@@ -388,6 +406,10 @@ class HuaweiAppGalleryApi:
 
         A full release takes no request body. A phased release requires `phased_release`,
         the body built by `build_phased_release`.
+
+        `release_time` is an aware `datetime` to release at once the app passes review. It is
+        sent in UTC as the `releaseTime` query parameter; without it the app is released as
+        soon as it passes review.
 
         Pass `check_ret=False` to get the raw body back instead of raising on a non-zero
         `ret.code`, so the caller can tell a retryable failure from a terminal one.
@@ -398,10 +420,14 @@ class HuaweiAppGalleryApi:
         if phased_release is not None:
             kwargs["json"] = phased_release
 
+        params = {"appId": app_id, "releaseType": release_type}
+        if release_time is not None:
+            params["releaseTime"] = release_time.astimezone(timezone.utc).strftime(PHASED_ROLLOUT_TIME_FORMAT)
+
         return await self._request(
             "POST",
             "/api/publish/v2/app-submit",
-            params={"appId": app_id, "releaseType": release_type},
+            params=params,
             check_ret=check_ret,
             **kwargs,
         )
