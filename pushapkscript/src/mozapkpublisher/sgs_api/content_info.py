@@ -1,5 +1,6 @@
 import copy
-from typing import Any, Dict
+from datetime import datetime, timezone
+from typing import Any, Dict, Optional
 
 from .error import SgsContentInfoException
 
@@ -11,6 +12,15 @@ MANDATORY_CONTENT_INFO_KEYS = [
     "paid",
     "publicationType",
 ]
+
+# `publicationType` values. See
+# https://developer.samsung.com/galaxy-store/galaxy-store-developer-api/content-publish-api/reference.html
+PUBLICATION_TYPE_ON_DATE = "02"
+PUBLICATION_TYPE_MANUAL = "03"
+
+# Format of `startPublicationDate`. Seller Portal reads publication dates as GMT, so the
+# date is converted to UTC before it is formatted.
+START_PUBLICATION_DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
 class AppContentInfo:
@@ -47,14 +57,16 @@ class AppContentInfo:
         """
         return self._inner["contentStatus"]
 
-    def as_new_data(self) -> Dict[str, Any]:
+    def as_new_data(self, scheduled_release_date: Optional[datetime] = None) -> Dict[str, Any]:
         """
         Return this content info as a dictionary ready to be sent to the `updateContent` API.
         The following transformations are applied:
-            - The `startPublicationDate` field is removed
             - The `binaryList` field is removed as the `contentUpdate` API does not accept it when modified. Binaries are managed through their own API.
             - The `screenshots`, `addLanguage` and `sellCountryList` are nulled out as we don't support updating them and can't send them back verbatim.
-            - The `publicationType` is set to "03" to set the publication time to "manual"
+            - Without `scheduled_release_date`, the `startPublicationDate` field is removed and the `publicationType` is set to "03" to set the
+              publication time to "manual"
+            - With `scheduled_release_date`, the `publicationType` is set to "02" and `startPublicationDate` to that date, so the app goes
+              on sale then, once it has passed review
         """
         self.validate()
 
@@ -76,8 +88,10 @@ class AppContentInfo:
         content["addLanguage"] = None
         content["sellCountryList"] = None
 
-        # Set the publication time to manual
-        # See https://developer.samsung.com/galaxy-store/galaxy-store-developer-api/content-publish-api/reference.html
-        content["publicationType"] = "03"
+        if scheduled_release_date is None:
+            content["publicationType"] = PUBLICATION_TYPE_MANUAL
+        else:
+            content["publicationType"] = PUBLICATION_TYPE_ON_DATE
+            content["startPublicationDate"] = scheduled_release_date.astimezone(timezone.utc).strftime(START_PUBLICATION_DATE_FORMAT)
 
         return content

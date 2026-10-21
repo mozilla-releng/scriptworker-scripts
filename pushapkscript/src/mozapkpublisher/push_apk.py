@@ -7,12 +7,13 @@ import logging
 from mozapkpublisher.common import main_logging
 from mozapkpublisher.common.apk import add_apk_checks_arguments, extract_and_check_apks_metadata
 from mozapkpublisher.common.exceptions import WrongArgumentGiven
+from mozapkpublisher.common.schedule import parse_scheduled_release_date
 from mozapkpublisher.common.store import GooglePlayEdit
 from mozapkpublisher.common.utils import add_push_arguments, check_push_arguments, metadata_by_package_name
 from mozapkpublisher.huawei_api import HuaweiAppGallery
 from mozapkpublisher.huawei_api.auth import load_credentials
 from mozapkpublisher.sgs_api import SamsungGalaxyStore
-from mozapkpublisher.vivo_api import VivoAppStore, parse_scheduled_release_date
+from mozapkpublisher.vivo_api import VivoAppStore
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +52,7 @@ async def push_apk(
     vivo_access_key=None,
     vivo_access_secret=None,
     vivo_basic_info_fallback=None,
-    vivo_scheduled_release_date=None,
+    scheduled_release_date=None,
 ):
     """
     Args:
@@ -70,9 +71,18 @@ async def push_apk(
         skip_check_multiple_locales (bool): skip check to ensure all APKs have more than one locale
         skip_check_ordered_version_codes (bool): skip check to ensure that ensures all APKs have different version codes
             and that the x86 version code > the arm version code
+        submit (bool): submit the new binaries for release. Only has an effect on samsung, huawei and vivo
+        scheduled_release_date (str): ISO 8601 datetime with a UTC offset at which samsung, huawei or vivo
+            publish the submitted release, instead of as soon as it passes review. Requires `submit`
     """
     # We want to tune down some logs, even when push_apk() isn't called from the command line
     main_logging.init()
+
+    if scheduled_release_date is not None:
+        if store == "google":
+            raise WrongArgumentGiven("A scheduled release date is not supported by the google store")
+        # Parsed before the APK checks and the store client, so a bad date costs no upload.
+        scheduled_release_date = parse_scheduled_release_date(scheduled_release_date)
 
     apks_metadata_per_paths = extract_and_check_apks_metadata(
         apks,
@@ -101,7 +111,7 @@ async def push_apk(
 
         async with SamsungGalaxyStore(sgs_service_account_id, sgs_access_token, dry_run=_store_dry_run(dry_run, contact_server)) as sgs:
             for package_name, apks in apks_by_package_name.items():
-                await sgs.upload_apks(package_name, apks, rollout_percentage, submit=submit)
+                await sgs.upload_apks(package_name, apks, rollout_percentage, submit=submit, scheduled_release_date=scheduled_release_date)
     elif store == "huawei":
         if not huawei_credentials:
             raise RuntimeError("You must provide a credentials file for the huawei app gallery")
@@ -109,12 +119,10 @@ async def push_apk(
         credentials = load_credentials(huawei_credentials)
         async with HuaweiAppGallery(credentials, dry_run=_store_dry_run(dry_run, contact_server)) as huawei:
             for package_name, apks in apks_by_package_name.items():
-                await huawei.upload_apks(package_name, apks, rollout_percentage, submit=submit)
+                await huawei.upload_apks(package_name, apks, rollout_percentage, submit=submit, scheduled_release_date=scheduled_release_date)
     elif store == "vivo":
         if not (vivo_access_key and vivo_access_secret):
             raise RuntimeError("You must provide an access key and access secret for the vivo app store")
-
-        scheduled_release_date = parse_scheduled_release_date(vivo_scheduled_release_date) if vivo_scheduled_release_date is not None else None
 
         async with VivoAppStore(
             vivo_access_key,
@@ -171,7 +179,7 @@ def main():
             vivo_access_key=config.vivo_access_key,
             vivo_access_secret=config.vivo_access_secret,
             vivo_basic_info_fallback=_vivo_basic_info_fallback(config),
-            vivo_scheduled_release_date=config.vivo_scheduled_release_date,
+            scheduled_release_date=config.scheduled_release_date,
         )
     )
 

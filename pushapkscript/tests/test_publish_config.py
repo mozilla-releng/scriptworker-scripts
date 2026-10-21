@@ -315,15 +315,17 @@ def test_target_vivo_rejects_google_play_track():
         get_publish_config(FENIX_CONFIG, payload, "fenix")
 
 
-def test_target_vivo_with_a_scheduled_release_date():
-    payload = {"channel": "production", "target_store": "vivo", "submit": True, "scheduled_release_date": "2026-10-01T09:00:00Z"}
+@pytest.mark.parametrize("target_store", ("samsung", "huawei", "vivo"))
+def test_a_scheduled_release_date_is_passed_through_for_non_google_stores(target_store):
+    payload = {"channel": "production", "target_store": target_store, "submit": True, "scheduled_release_date": "2026-10-01T09:00:00Z"}
 
     assert get_publish_config(FENIX_CONFIG, payload, "fenix")["scheduled_release_date"] == "2026-10-01T09:00:00Z"
 
 
-def test_target_vivo_without_a_scheduled_release_date_omits_the_key():
+@pytest.mark.parametrize("target_store", ("samsung", "huawei", "vivo"))
+def test_no_scheduled_release_date_omits_the_key(target_store):
     """`publish` reads it with `.get`, so an absent key is the same as no schedule."""
-    payload = {"channel": "production", "target_store": "vivo"}
+    payload = {"channel": "production", "target_store": target_store}
 
     assert "scheduled_release_date" not in get_publish_config(FENIX_CONFIG, payload, "fenix")
 
@@ -344,9 +346,8 @@ def test_a_scheduled_release_date_is_rejected_by_the_override_channel_models(pro
         get_publish_config(product_config, payload, scope_product)
 
 
-@pytest.mark.parametrize("target_store", ("google", "samsung", "huawei"))
-def test_a_scheduled_release_date_is_rejected_for_every_other_store(target_store):
-    payload = {"channel": "production", "target_store": target_store, "scheduled_release_date": "2026-10-01T09:00:00Z"}
+def test_a_scheduled_release_date_is_rejected_for_google():
+    payload = {"channel": "production", "target_store": "google", "scheduled_release_date": "2026-10-01T09:00:00Z"}
 
     with pytest.raises(ValueError, match="`scheduled_release_date` is not supported"):
         get_publish_config(FENIX_CONFIG, payload, "fenix")

@@ -5,6 +5,7 @@ from urllib.parse import urljoin
 
 import aiohttp
 
+from mozapkpublisher.common.schedule import check_can_schedule, check_not_passed
 from mozapkpublisher.common.store_api import build_apk_file_name, request
 from mozapkpublisher.common.utils import file_md5sum
 
@@ -37,30 +38,6 @@ MAX_SCHEDULE_DAYS_AHEAD = 8
 # `sock_connect=30` gives up if the connection takes more than 30 seconds to establish.
 # `sock_read=600` gives up if the server goes quiet for 10 minutes.
 CLIENT_TIMEOUT = aiohttp.ClientTimeout(total=None, sock_connect=30, sock_read=600)
-
-
-def parse_scheduled_release_date(value: str) -> datetime:
-    """
-    Parse an ISO 8601 release date into an aware `datetime`.
-    """
-    try:
-        # Upper-cased to match the task schema's RFC 3339 check, which accepts a
-        # lowercase `t` separator and `z` offset that `fromisoformat` would reject.
-        parsed = datetime.fromisoformat(value.upper())
-    except AttributeError, TypeError, ValueError:
-        raise VivoUpdateException(
-            "Could not read {!r} as a scheduled release date. It has to be an ISO 8601 datetime with a UTC offset, for example '2026-10-01T09:00:00Z'.".format(
-                value
-            )
-        ) from None
-
-    if parsed.tzinfo is None:
-        raise VivoUpdateException(
-            "The scheduled release date {!r} has no UTC offset, so the time it means depends on "
-            "where it is read. Give one, for example '2026-10-01T09:00:00Z'.".format(value)
-        )
-
-    return parsed
 
 
 def latest_schedulable_release_date(now: datetime) -> datetime:
@@ -111,24 +88,12 @@ def check_can_publish(
             "uploaded.".format(len(apks), package_name, ", ".join(fd.name for fd, _ in apks))
         )
 
+    # Any rollout was already refused above.
+    check_can_schedule(package_name, scheduled_release_date, submit=submit, rollout_rate=None)
     if scheduled_release_date is None:
         return
 
-    if not submit:
-        raise VivoUpdateException(
-            "A scheduled release date ({}) was given for {} without `submit`. vivo only applies the schedule "
-            "when the release is submitted with `{}`, so the date would be dropped and the APK left "
-            "unsubmitted. Set `submit` to schedule it.".format(scheduled_release_date.isoformat(), package_name, METHOD_UPDATE_SUBMIT)
-        )
-
     now = datetime.now(timezone.utc)
-    if scheduled_release_date <= now:
-        raise VivoUpdateException(
-            "The scheduled release date {} for {} has already passed (it is now {}). vivo cannot publish at a "
-            "time that has gone, and submitting anyway would publish immediately, so nothing was "
-            "uploaded.".format(scheduled_release_date.isoformat(), package_name, now.isoformat(timespec="seconds"))
-        )
-
     latest = latest_schedulable_release_date(now)
     if scheduled_release_date > latest:
         raise VivoUpdateException(
@@ -210,16 +175,7 @@ class VivoAppStore:
             logger.info("Submitting %s for verification and immediate publication to all users...", package_name)
             await self.api.update_submit(package_name, ONLINE_TYPE_PUBLISH_NOW)
         else:
-            now = datetime.now(timezone.utc)
-            if scheduled_release_date <= now:
-                raise VivoUpdateException(
-                    "The scheduled release date {} for {} passed while the APK was uploading (it is now {}). Submitting now "
-                    "would publish immediately, so the APK was left uploaded and bound but NOT submitted. Re-run with a later "
-                    "date, or submit it in the vivo Developers console.".format(
-                        scheduled_release_date.isoformat(), package_name, now.isoformat(timespec="seconds")
-                    )
-                )
-
+            check_not_passed(package_name, scheduled_release_date, consequence="the APK was left uploaded and bound but NOT submitted")
             logger.info("Submitting %s for verification and publication at %s...", package_name, scheduled_release_date.isoformat())
             await self.api.update_submit(package_name, ONLINE_TYPE_SCHEDULED, online_time=_as_online_time(scheduled_release_date))
 

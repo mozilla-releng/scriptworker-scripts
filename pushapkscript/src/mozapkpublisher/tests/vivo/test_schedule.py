@@ -3,7 +3,9 @@ from datetime import datetime, timedelta, timezone
 import pytest
 
 from .common import recorded_calls, register_publish_flow
+import mozapkpublisher.common.schedule as schedule
 import mozapkpublisher.vivo_api as vivo_api
+from mozapkpublisher.common.schedule import ScheduledReleaseException
 from mozapkpublisher.vivo_api import (
     MAX_SCHEDULE_DAYS_AHEAD,
     METHOD_UPDATE_SUBMIT,
@@ -11,7 +13,6 @@ from mozapkpublisher.vivo_api import (
     ONLINE_TYPE_SCHEDULED,
     VivoAppStore,
     latest_schedulable_release_date,
-    parse_scheduled_release_date,
 )
 from mozapkpublisher.vivo_api import VivoAppStoreApi
 from mozapkpublisher.vivo_api.error import VivoUpdateException
@@ -33,45 +34,9 @@ PACKAGE_NAME = "org.mozilla.firefox"
 ACCESS_KEY = "k"
 ACCESS_SECRET = "s"
 
-A_DATE = "2026-10-01T09:00:00Z"
-A_DATE_MS = 1790845200000
-
 
 def _soon():
     return datetime.now(timezone.utc) + timedelta(days=7)
-
-
-@pytest.mark.parametrize(
-    "value,expected_ms",
-    (
-        pytest.param(A_DATE, A_DATE_MS, id="zulu"),
-        pytest.param("2026-10-01T09:00:00+00:00", A_DATE_MS, id="explicit_utc"),
-        pytest.param("2026-10-01T17:00:00+08:00", A_DATE_MS, id="other_offset"),
-    ),
-)
-def test_a_release_date_converts_to_the_millisecond_epoch_vivo_wants(value, expected_ms):
-    parsed = parse_scheduled_release_date(value)
-
-    assert int(parsed.timestamp() * 1000) == expected_ms
-
-
-@pytest.mark.parametrize("value", ("2026-10-01t09:00:00z", "2026-10-01T09:00:00z", "2026-10-01t09:00:00Z"))
-def test_a_lowercase_rfc_3339_release_date_is_accepted(value):
-    """The task schema's `date-time` check is case-insensitive on the `t` separator and
-    the `z` offset, so refusing them here would fail a payload the schema let through --
-    after the APKs had already been downloaded."""
-    assert int(parse_scheduled_release_date(value).timestamp() * 1000) == A_DATE_MS
-
-
-def test_a_release_date_without_an_offset_is_refused():
-    with pytest.raises(VivoUpdateException, match="no UTC offset"):
-        parse_scheduled_release_date("2026-10-01T09:00:00")
-
-
-@pytest.mark.parametrize("value", ("", "tomorrow", "2026-13-45T99:00:00Z", None))
-def test_an_unreadable_release_date_is_refused(value):
-    with pytest.raises(VivoUpdateException, match="ISO 8601"):
-        parse_scheduled_release_date(value)
 
 
 @pytest.mark.parametrize(
@@ -95,6 +60,7 @@ async def test_a_date_at_the_limit_is_accepted(responses_mock, apk, monkeypatch)
     register_publish_flow(responses_mock, fd.name)
     now = datetime(2026, 9, 22, 10, 30, tzinfo=timezone.utc)
     monkeypatch.setattr(vivo_api, "datetime", _clock_at(now))
+    monkeypatch.setattr(schedule, "datetime", _clock_at(now))
     when = latest_schedulable_release_date(now)
 
     async with VivoAppStore(ACCESS_KEY, ACCESS_SECRET) as vivo:
@@ -109,6 +75,7 @@ async def test_a_date_past_the_limit_is_refused_before_uploading(responses_mock,
     a rounded-off day count."""
     now = datetime(2026, 9, 22, 10, 30, tzinfo=timezone.utc)
     monkeypatch.setattr(vivo_api, "datetime", _clock_at(now))
+    monkeypatch.setattr(schedule, "datetime", _clock_at(now))
     when = latest_schedulable_release_date(now) + timedelta(minutes=1)
 
     async with VivoAppStore(ACCESS_KEY, ACCESS_SECRET) as vivo:
@@ -149,7 +116,7 @@ async def test_no_date_still_publishes_as_soon_as_review_passes(responses_mock, 
 @pytest.mark.asyncio
 async def test_a_date_without_submit_is_refused_before_uploading(responses_mock, apk):
     async with VivoAppStore(ACCESS_KEY, ACCESS_SECRET) as vivo:
-        with pytest.raises(VivoUpdateException, match="without `submit`"):
+        with pytest.raises(ScheduledReleaseException, match="without `submit`"):
             await vivo.upload_apks(PACKAGE_NAME, [apk], None, submit=False, scheduled_release_date=_soon())
 
     assert recorded_calls(responses_mock) == []
@@ -159,7 +126,7 @@ async def test_a_date_without_submit_is_refused_before_uploading(responses_mock,
 async def test_a_date_in_the_past_is_refused_before_uploading(responses_mock, apk):
     """Submitting a stale schedule publishes immediately."""
     async with VivoAppStore(ACCESS_KEY, ACCESS_SECRET) as vivo:
-        with pytest.raises(VivoUpdateException, match="already passed"):
+        with pytest.raises(ScheduledReleaseException, match="has passed .*, so nothing was uploaded"):
             await vivo.upload_apks(PACKAGE_NAME, [apk], None, submit=True, scheduled_release_date=datetime.now(timezone.utc) - timedelta(seconds=1))
 
     assert recorded_calls(responses_mock) == []
@@ -178,13 +145,13 @@ async def test_a_date_that_goes_stale_during_the_upload_is_not_submitted(respons
     async def slow_upload(self, *args, **kwargs):
         # Stand in for the upload taking longer than the schedule had left.
         result = await real_update_basic_info(self, *args, **kwargs)
-        monkeypatch.setattr(vivo_api, "datetime", _clock_at(when + timedelta(seconds=1)))
+        monkeypatch.setattr(schedule, "datetime", _clock_at(when + timedelta(seconds=1)))
         return result
 
     monkeypatch.setattr(VivoAppStoreApi, "update_basic_info", slow_upload)
 
     async with VivoAppStore(ACCESS_KEY, ACCESS_SECRET) as vivo:
-        with pytest.raises(VivoUpdateException, match="passed while the APK was uploading"):
+        with pytest.raises(ScheduledReleaseException, match="has passed .*, so the APK was left uploaded and bound but NOT submitted"):
             await vivo.upload_apks(PACKAGE_NAME, [apk], None, submit=True, scheduled_release_date=when)
 
     # Uploaded and bound, but never submitted.
@@ -194,5 +161,5 @@ async def test_a_date_that_goes_stale_during_the_upload_is_not_submitted(respons
 @pytest.mark.asyncio
 async def test_a_scheduled_dry_run_still_refuses_an_impossible_request(responses_mock, apk):
     async with VivoAppStore(ACCESS_KEY, ACCESS_SECRET, dry_run=True) as vivo:
-        with pytest.raises(VivoUpdateException, match="without `submit`"):
+        with pytest.raises(ScheduledReleaseException, match="without `submit`"):
             await vivo.upload_apks(PACKAGE_NAME, [apk], None, submit=False, scheduled_release_date=_soon())

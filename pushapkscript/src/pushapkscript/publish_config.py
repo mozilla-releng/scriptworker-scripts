@@ -19,11 +19,15 @@ _NON_GOOGLE_STORE_CREDENTIALS = {
 }
 
 
+# Stores that can publish a submitted release at a scheduled time.
+_SCHEDULABLE_STORES = {"samsung", "huawei", "vivo"}
+
+
 def _check_store_can_schedule(target_store):
     """
     Check if the provided store supports scheduled release time.
     """
-    if target_store != "vivo":
+    if target_store not in _SCHEDULABLE_STORES:
         raise ValueError(f"`scheduled_release_date` is not supported by the {target_store} store")
 
 

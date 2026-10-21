@@ -1,9 +1,11 @@
 import logging
 import os.path
-from typing import Any, Dict, List
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 import aiohttp
 
+from mozapkpublisher.common.schedule import check_can_schedule, check_not_passed
 from mozapkpublisher.common.store_api import build_apk_file_name, request
 
 from .content_info import AppContentInfo
@@ -31,13 +33,18 @@ class SamsungGalaxyStore:
     async def __aexit__(self, *args: Any) -> None:
         await self.api.__aexit__(*args)
 
-    async def upload_apks(self, package_name, apks, rollout_rate, submit=False):
+    async def upload_apks(self, package_name, apks, rollout_rate, submit=False, scheduled_release_date=None):
         """
         Upload the APKs passed as arguments. The app to be updated will be infered from the package name.
         If the rollout_rate is not None, all new apks will be added to a staged rollout with that rate.
 
+        `scheduled_release_date` is an aware `datetime` at which the submitted update goes on sale
+        instead of being left for a manual publication. It requires `submit`.
+
         Notes: The app needs to be in the `FOR_SALE` status and needs to not be in the middle of an update.
         """
+        check_can_schedule(package_name, scheduled_release_date, submit=submit, rollout_rate=rollout_rate)
+
         if self._dry_run:
             logger.warning("No APKs were uploaded since `dry_run` was `True`")
             return
@@ -59,7 +66,7 @@ class SamsungGalaxyStore:
         gms = last_binary["gms"]
 
         # Transition the app to `REGISTERING`
-        await self.api.update_content_info(current_info)
+        await self.api.update_content_info(current_info, scheduled_release_date=scheduled_release_date)
 
         binaries_oldest_first = sorted(existing_binaries, key=lambda binary: int(binary["binarySeq"]))
 
@@ -83,6 +90,12 @@ class SamsungGalaxyStore:
             await self.api.enable_staged_rollout(content_id, rollout_rate)
 
         if submit:
+            if scheduled_release_date is not None:
+                check_not_passed(
+                    package_name,
+                    scheduled_release_date,
+                    consequence="the update was left in Seller Portal with its binaries added but NOT submitted",
+                )
             await self.api.submit_app(content_id)
 
     async def upload_file(self, file, name):
@@ -224,13 +237,14 @@ class SamsungGalaxyApi:
 
         return [AppContentInfo(content) for content in result]
 
-    async def update_content_info(self, new_content_info: AppContentInfo) -> Dict[str, Any]:
+    async def update_content_info(self, new_content_info: AppContentInfo, scheduled_release_date: Optional[datetime] = None) -> Dict[str, Any]:
         """
-        Modify app information. Use `get_content_info`, modify the object and pass it into this function
+        Modify app information. Use `get_content_info`, modify the object and pass it into this function.
+        `scheduled_release_date` sets when the app goes on sale; see `AppContentInfo.as_new_data`.
 
         https://developer.samsung.com/galaxy-store/galaxy-store-developer-api/content-publish-api/modify-app-data.html
         """
-        return await self._request("POST", "/seller/contentUpdate", json=new_content_info.as_new_data())
+        return await self._request("POST", "/seller/contentUpdate", json=new_content_info.as_new_data(scheduled_release_date=scheduled_release_date))
 
     async def add_binary(
         self,

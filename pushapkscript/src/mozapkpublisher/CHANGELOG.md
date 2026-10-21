@@ -7,7 +7,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 * Added support for pushing APKs to the vivo app store, via `--store vivo`, authenticated with `--vivo-access-key` and `--vivo-access-secret`. The store has no staged rollout and holds one APK per app version, so a `--rollout-percentage` and a multi-APK push are both refused.
-* `--store vivo` can schedule the release instead of publishing as soon as review passes, with `--vivo-scheduled-release-date` (an ISO 8601 datetime with a UTC offset, at most 8 days ahead). It requires `--submit`, because vivo only applies the schedule on the submit call.
+* `--store samsung`, `--store huawei` and `--store vivo` can schedule the release instead of publishing as soon as review passes, with `--scheduled-release-date` (an ISO 8601 datetime with a UTC offset). It requires `--submit` and cannot be combined with `--rollout-percentage`. vivo schedules at most 8 days ahead. On samsung the date is sent as `startPublicationDate` (in UTC) with `publicationType` 02; on huawei as the `releaseTime` of a full release.
 
 ## [12.0.0] - 2026-09-03
 

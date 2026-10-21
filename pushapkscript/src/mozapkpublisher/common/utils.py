@@ -62,10 +62,10 @@ def add_push_arguments(parser):
     )
     parser.add_argument("--vivo-email", help="Contact email to use only if the vivo store reports none for the app")
     parser.add_argument(
-        "--vivo-scheduled-release-date",
+        "--scheduled-release-date",
         help="ISO 8601 datetime with a UTC offset (e.g. '2026-10-01T09:00:00Z') to publish at, instead of as soon as "
-        "review passes. vivo schedules at most 8 days ahead. Has no effect unless the store is vivo, and requires "
-        "--submit.",
+        "review passes. Supported by samsung, huawei and vivo; vivo schedules at most 8 days ahead. Requires "
+        "--submit, and cannot be combined with --rollout-percentage.",
     )
     parser.add_argument(
         "--submit",

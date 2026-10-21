@@ -1,8 +1,10 @@
+from datetime import datetime, timedelta, timezone
 from unittest import mock
 
 import pytest
 
 import mozapkpublisher.huawei_api
+from mozapkpublisher.common.schedule import ScheduledReleaseException
 from mozapkpublisher.huawei_api import (
     RELEASE_TYPE_FULL_ROLLOUT,
     SUBMIT_MINIMUM_RETRY_DELAY,
@@ -78,6 +80,42 @@ async def test_submit_retries_while_the_package_is_processed(responses_mock, moc
         assert await huawei.submit_app("appid-1", RELEASE_TYPE_FULL_ROLLOUT) == SUCCESS
 
     assert len(recorded_calls(responses_mock, "POST", APP_SUBMIT_URL)) == 3
+
+
+# Spelled with the query sorted, as `responses_mock` records it.
+SCHEDULED_APP_SUBMIT_URL = (
+    "https://connect-api.cloud.huawei.com/api/publish/v2/app-submit?appId=appid-1&releaseTime=2026-10-01T09:00:00%2B0000&releaseType=1"
+)
+RELEASE_TIME = datetime(2026, 10, 1, 9, 0, tzinfo=timezone.utc)
+
+
+@pytest.mark.asyncio
+async def test_every_retry_keeps_the_scheduled_release_time(responses_mock, mock_jwt, no_retry_delay):
+    """Dropping `releaseTime` on a retry would release the app as soon as it passes review."""
+    responses_mock.post(SCHEDULED_APP_SUBMIT_URL, payload=STILL_PROCESSING)
+    responses_mock.post(SCHEDULED_APP_SUBMIT_URL, payload=SUCCESS)
+
+    with mock.patch("mozapkpublisher.common.schedule.datetime") as schedule_datetime:
+        schedule_datetime.now.return_value = RELEASE_TIME - timedelta(days=1)
+        async with HuaweiAppGallery(CREDENTIALS) as huawei:
+            await huawei.submit_app("appid-1", RELEASE_TYPE_FULL_ROLLOUT, release_time=RELEASE_TIME)
+
+    assert len(recorded_calls(responses_mock, "POST", SCHEDULED_APP_SUBMIT_URL)) == 2
+
+
+@pytest.mark.asyncio
+async def test_a_release_time_that_passes_during_the_retries_is_not_submitted(responses_mock, mock_jwt, no_retry_delay):
+    """Submitting a `releaseTime` that has gone would release the app as soon as it
+    passes review, so the date is re-checked before every attempt."""
+    responses_mock.post(SCHEDULED_APP_SUBMIT_URL, payload=STILL_PROCESSING)
+
+    with mock.patch("mozapkpublisher.common.schedule.datetime") as schedule_datetime:
+        schedule_datetime.now.side_effect = [RELEASE_TIME - timedelta(seconds=1), RELEASE_TIME + timedelta(seconds=1)]
+        async with HuaweiAppGallery(CREDENTIALS) as huawei:
+            with pytest.raises(ScheduledReleaseException, match="has passed .*, so the binary was left uploaded but NOT submitted"):
+                await huawei.submit_app("appid-1", RELEASE_TYPE_FULL_ROLLOUT, release_time=RELEASE_TIME)
+
+    assert len(recorded_calls(responses_mock, "POST", SCHEDULED_APP_SUBMIT_URL)) == 1
 
 
 @pytest.mark.asyncio

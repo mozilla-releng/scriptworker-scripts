@@ -1,11 +1,12 @@
 import hashlib
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from unittest import mock
 
 import pytest
 
 import mozapkpublisher.huawei_api
+from mozapkpublisher.common.schedule import ScheduledReleaseException
 from mozapkpublisher.huawei_api import (
     HuaweiAppGallery,
     PHASED_ROLLOUT_WINDOW,
@@ -128,6 +129,47 @@ async def test_submit_uses_full_or_phased_release_type(
         headers=basic_auth_headers(),
         **expected_body,
     )
+
+
+@pytest.mark.asyncio
+async def test_a_scheduled_full_release_sends_the_release_time_in_utc(responses_mock, apk_path, mock_jwt):
+    _register_upload_chain(responses_mock, _sha256(apk_path))
+    responses_mock.post(
+        f"https://connect-api.cloud.huawei.com/api/publish/v2/app-submit?appId={APP_ID}&releaseType={RELEASE_TYPE_FULL_ROLLOUT}"
+        "&releaseTime=2026-10-01T09:00:00%2B0000",
+        payload={"ret": {"code": 0, "msg": "ok"}},
+    )
+    # Given at +08:00 to show the time is converted to UTC before it is sent.
+    when = datetime(2026, 10, 1, 17, 0, tzinfo=timezone(timedelta(hours=8)))
+
+    with mock.patch("mozapkpublisher.common.schedule.datetime") as schedule_datetime:
+        schedule_datetime.now.return_value = datetime(2026, 9, 25, tzinfo=timezone.utc)
+        async with HuaweiAppGallery(CREDENTIALS) as huawei:
+            await huawei.upload_apks(
+                PACKAGE_NAME, [(_FileDescriptor(apk_path), _apk_metadata())], None, submit=True, scheduled_release_date=when
+            )
+
+    responses_mock.assert_called_with(
+        url="https://connect-api.cloud.huawei.com/api/publish/v2/app-submit",
+        method="POST",
+        params={"appId": APP_ID, "releaseType": RELEASE_TYPE_FULL_ROLLOUT, "releaseTime": "2026-10-01T09:00:00+0000"},
+        headers=basic_auth_headers(),
+    )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("dry_run", (True, False))
+async def test_a_schedule_without_submit_is_refused_before_contacting_the_store(responses_mock, dry_run):
+    """Having the `responses_mock` fixture makes any real request fail the test."""
+    async with HuaweiAppGallery(CREDENTIALS, dry_run=dry_run) as huawei:
+        with pytest.raises(ScheduledReleaseException, match="without `submit`"):
+            await huawei.upload_apks(
+                PACKAGE_NAME,
+                [(_FileDescriptor("/tmp/fenix.apk"), _apk_metadata())],
+                None,
+                submit=False,
+                scheduled_release_date=datetime.now(timezone.utc) + timedelta(days=7),
+            )
 
 
 @pytest.mark.asyncio
