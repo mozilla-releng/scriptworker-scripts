@@ -1,3 +1,4 @@
+import base64
 import hashlib
 import json
 import logging
@@ -21,6 +22,7 @@ from beetmoverscript.constants import (
     ARTIFACT_REGISTRY_ACTIONS,
     DIRECT_RELEASE_ACTIONS,
     MAVEN_ACTIONS,
+    NO_OVERWRITE_RESOURCES,
     NORMALIZED_FILENAME_PLATFORMS,
     PARTNER_REPACK_ACTIONS,
     PRODUCT_TO_PATH,
@@ -42,6 +44,16 @@ def get_hash(filepath, hash_type="sha512"):
     with open(filepath, "rb") as fobj:
         digest = hashlib.file_digest(fobj, hash_type)
     return digest.hexdigest()
+
+
+def get_md5_base64(filepath):
+    """Return the base64-encoded MD5 digest of a file.
+
+    This matches the encoding used by Google Cloud Storage's ``blob.md5_hash``
+    so the two can be compared directly to detect byte-identical content."""
+    with open(filepath, "rb") as fobj:
+        digest = hashlib.file_digest(fobj, "md5")
+    return base64.b64encode(digest.digest()).decode("ascii")
 
 
 def get_size(filepath):
@@ -145,6 +157,12 @@ def is_upload_data_action(action):
 
 def is_upload_translations_artifacts_action(action):
     return action in TRANSLATIONS_ACTIONS
+
+
+def is_overwrite_forbidden(resource):
+    """Return True if the resource's (task bucket's) credentials are create-only
+    and must never overwrite existing objects (e.g. the integration archive)."""
+    return resource in NO_OVERWRITE_RESOURCES
 
 
 def get_product_name(task, config, lowercase_app_name=True):
