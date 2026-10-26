@@ -1056,7 +1056,12 @@ async def sign_with_autograph(session, server, input_, fmt, autograph_method, ke
 
     log.debug(f"sign_with_autograph: url: {url}, keyid: {keyid}, client_id: {server.client_id}")
     sign_resp = await retry_async(
-        call_autograph, args=(session, url, server.client_id, server.access_key, sign_req), attempts=3, sleeptime_kwargs={"delay_factor": 2.0}
+        call_autograph,
+        args=(session, url, server.client_id, server.access_key, sign_req),
+        attempts=3,
+        # Backoff of 40-80s then 80-160s gives Autograph time to scale up (~3.5 minutes)
+        # and spreads retries out to avoid a thundering herd.
+        sleeptime_kwargs={"delay_factor": 20.0, "randomization_factor": 1.0, "max_delay": 180},
     )
 
     if autograph_method == "file":
