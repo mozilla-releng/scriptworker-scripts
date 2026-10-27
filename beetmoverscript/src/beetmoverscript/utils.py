@@ -291,8 +291,26 @@ def get_releases_prefix(product, version):
     return "{}releases/{}/".format(PRODUCT_TO_PATH[product], version)
 
 
-def get_partner_candidates_prefix(prefix, partner):
-    return "{}partner-repacks/{}/v1/".format(prefix, partner)
+def get_partner_candidates_prefix(prefix, partner, partner_build_number):
+    return "{}partner-repacks/{}/v{}/".format(prefix, partner, partner_build_number)
+
+
+def get_partner_build_numbers(payload):
+    """Map each partner in a push-to-releases payload to its partner build number.
+
+    Partners missing from the optional `partner_build_numbers` payload field
+    default to partner build number 1.
+    """
+    partners = payload.get("partners", [])
+    requested_build_numbers = payload.get("partner_build_numbers", {})
+    unknown_partners = sorted(set(requested_build_numbers) - set(partners))
+    if unknown_partners:
+        log.warning("Ignoring partner_build_numbers for partners not listed in partners: {}".format(", ".join(unknown_partners)))
+    # The schema accepts integral floats such as 1.0, which must not become a "v1.0" prefix
+    partner_build_numbers = {partner: int(requested_build_numbers.get(partner, 1)) for partner in partners}
+    for partner, partner_build_number in partner_build_numbers.items():
+        log.info("Using partner build number {} for partner {}".format(partner_build_number, partner))
+    return partner_build_numbers
 
 
 def get_partner_releases_prefix(product, version, partner):
@@ -306,11 +324,19 @@ def matches_exclude(keyname, excludes):
     return False
 
 
-def get_partner_match(keyname, candidates_prefix, partners):
-    for partner in partners:
-        if keyname.startswith(get_partner_candidates_prefix(candidates_prefix, partner)):
+def get_partner_match(keyname, candidates_prefix, partner_build_numbers):
+    for partner, partner_build_number in partner_build_numbers.items():
+        if keyname.startswith(get_partner_candidates_prefix(candidates_prefix, partner, partner_build_number)):
             return partner
     return None
+
+
+def warn_unmatched_partners(candidates_prefix, partner_build_numbers, matched_partners):
+    for partner, partner_build_number in partner_build_numbers.items():
+        if partner not in matched_partners:
+            log.warning(
+                "No files found under {} for partner {}".format(get_partner_candidates_prefix(candidates_prefix, partner, partner_build_number), partner)
+            )
 
 
 def get_bucket_name(context, product, cloud):
