@@ -11,7 +11,15 @@ from scriptworker.exceptions import ScriptWorkerTaskException
 
 import beetmoverscript.gcloud
 
-from . import get_fake_valid_task, noop_sync
+from . import (
+    PARTNER_PUSH_CANDIDATES,
+    PARTNER_PUSH_CANDIDATES_PREFIX,
+    PARTNER_PUSH_CASES,
+    get_fake_valid_task,
+    get_partner_push_expected_moves,
+    get_partner_push_task,
+    noop_sync,
+)
 
 
 class FakeClient:
@@ -224,7 +232,7 @@ async def test_upload_to_gcs(context, monkeypatch, path, expiry, exists, expecte
         ({"foo/path": "md5hash"}, {}, None, False),
         ({"foo/tests/foo": "md5hash"}, {}, None, False),
         ({"foo/partner-repacks/bar": "md5hash"}, {}, None, False),
-        ({"foo/partner-repacks/bar": "md5hash"}, {}, True, False),
+        ({"foo/partner-repacks/bar": "md5hash"}, {}, "acer/acer-002", False),
         ({}, {}, None, True),
     ],
 )
@@ -247,6 +255,34 @@ async def test_push_to_releases_gcs_no_moves(context, monkeypatch, candidate_blo
             await beetmoverscript.gcloud.push_to_releases_gcs(context)
     else:
         await beetmoverscript.gcloud.push_to_releases_gcs(context)
+
+
+@pytest.mark.parametrize("partner_build_numbers,expected,unmatched", PARTNER_PUSH_CASES)
+@pytest.mark.asyncio
+async def test_push_to_releases_gcs_partner_build_numbers(context, monkeypatch, partner_build_numbers, expected, unmatched, caplog):
+    def fake_list_bucket_objects_gcs(client, bucket, prefix):
+        if prefix == PARTNER_PUSH_CANDIDATES_PREFIX:
+            return {f"{prefix}{key}": "md5hash" for key in PARTNER_PUSH_CANDIDATES}
+        return {}
+
+    moved = {}
+
+    def fake_move_artifacts(client, bucket_name, blobs_to_copy, candidates_blobs, releases_blobs):
+        moved.update(blobs_to_copy)
+
+    context.gcs_client = FakeClient()
+    context.task = get_partner_push_task(partner_build_numbers)
+    monkeypatch.setattr(beetmoverscript.gcloud, "list_bucket_objects_gcs", fake_list_bucket_objects_gcs)
+    monkeypatch.setattr(beetmoverscript.gcloud, "move_artifacts", fake_move_artifacts)
+
+    await beetmoverscript.gcloud.push_to_releases_gcs(context)
+
+    assert moved == get_partner_push_expected_moves(expected)
+    warnings = [r.getMessage() for r in caplog.records if r.levelname == "WARNING" and r.getMessage().startswith("No files found under")]
+    assert warnings == [
+        "No files found under {}partner-repacks/{}/v{}/ for partner {}".format(PARTNER_PUSH_CANDIDATES_PREFIX, partner, partner_build_numbers[partner], partner)
+        for partner in unmatched
+    ]
 
 
 def test_list_bucket_objects_gcs():
