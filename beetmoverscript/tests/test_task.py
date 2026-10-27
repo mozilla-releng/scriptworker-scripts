@@ -96,6 +96,53 @@ def test_validate_task(context):
     validate_task_schema(context)
 
 
+def _repack_config(entry):
+    return {"release-partner-repack": {"p1": {"s1": entry}}}
+
+
+def _attribution_config(entry):
+    return {"release-partner-attribution": {"defaults": {}, "configs": [entry]}}
+
+
+@pytest.mark.parametrize(
+    "partner_config,raises",
+    (
+        (None, False),
+        ({}, False),
+        (_repack_config({}), False),
+        (_repack_config({"build_number": 1}), False),
+        (_repack_config({"build_number": 202501231439, "platforms": ["win64"], "locales": ["en-US"], "publish_to_releases": True}), False),
+        (_attribution_config({"campaign": "p1", "content": "s1"}), False),
+        (_attribution_config({"campaign": "p1", "content": "s1", "build_number": 202501231439, "platforms": ["win64"]}), False),
+        ({"release-eme-free-repack": {"mozilla-EME-free": {"mozilla-EME-free": {"build_number": 1}}}}, False),
+        (_repack_config({"build_number": 0}), True),
+        (_repack_config({"build_number": -1}), True),
+        (_repack_config({"build_number": 1.5}), True),
+        (_repack_config({"build_number": "2"}), True),
+        (_repack_config({"build_number": True}), True),
+        (_repack_config({"build_number": None}), True),
+        (_attribution_config({"campaign": "p1", "content": "s1", "build_number": 0}), True),
+        (_attribution_config({"campaign": "p1", "content": "s1", "build_number": "v2"}), True),
+        (_attribution_config({"campaign": "p1"}), True),
+        ({"release-partner-repack": {"p1": ["s1"]}}, True),
+        ({"release-partner-repack": {"p1": {"s1": 2}}}, True),
+        (["p1/s1"], True),
+        (2, True),
+    ),
+)
+def test_validate_task_partner_config(context, partner_config, raises):
+    context.task["scopes"] = ["project:releng:beetmover:action:push-to-releases"]
+    context.task["payload"] = {"product": "firefox", "build_number": 1, "version": "134.0", "partners": ["p1/s1", "p1/s2"]}
+    if partner_config is not None:
+        context.task["payload"]["partner_config"] = partner_config
+
+    if raises:
+        with pytest.raises(ScriptWorkerTaskException):
+            validate_task_schema(context)
+    else:
+        validate_task_schema(context)
+
+
 def test_validate_task_invalid(context):
     context.task = get_fake_valid_task(taskjson="task_artifact_map.json")
     context.task["scopes"] = ["project:releng:beetmover:action:direct-push-to-bucket"]

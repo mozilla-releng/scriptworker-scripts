@@ -20,6 +20,7 @@ from beetmoverscript.utils import (
     get_candidates_prefix,
     get_credentials,
     get_fail_task_on_error,
+    get_partner_build_numbers,
     get_partner_candidates_prefix,
     get_partner_match,
     get_partner_releases_prefix,
@@ -29,6 +30,7 @@ from beetmoverscript.utils import (
     get_resource_name,
     get_resource_project,
     matches_exclude,
+    warn_unmatched_partners,
 )
 
 log = logging.getLogger(__name__)
@@ -235,14 +237,17 @@ async def push_to_releases_gcs(context):
     blobs_to_copy = {}
 
     # Weed out RELEASE_EXCLUDE matches, but allow partners specified in the payload
-    push_partners = context.task["payload"].get("partners", [])
+    # map of "partner/subpartner" to the partner build number to push from
+    push_partners = get_partner_build_numbers(context.task["payload"])
+    matched_partners = set()
 
     for blob_path in candidates_blobs.keys():
         if "/partner-repacks/" in blob_path:
             partner_match = get_partner_match(blob_path, candidates_prefix, push_partners)
             if partner_match:
+                matched_partners.add(partner_match)
                 blobs_to_copy[blob_path] = blob_path.replace(
-                    get_partner_candidates_prefix(candidates_prefix, partner_match),
+                    get_partner_candidates_prefix(candidates_prefix, partner_match, push_partners[partner_match]),
                     get_partner_releases_prefix(product, version, partner_match),
                 )
             else:
@@ -251,6 +256,8 @@ async def push_to_releases_gcs(context):
             blobs_to_copy[blob_path] = blob_path.replace(candidates_prefix, releases_prefix)
         else:
             log.debug("Excluding {}".format(blob_path))
+
+    warn_unmatched_partners(candidates_prefix, push_partners, matched_partners)
 
     move_artifacts(client, bucket_name, blobs_to_copy, candidates_blobs, releases_blobs)
 
