@@ -17,6 +17,7 @@ from beetmoverscript.utils import (
     get_credentials,
     get_hash,
     get_partials_props,
+    get_partner_build_numbers,
     get_partner_candidates_prefix,
     get_partner_match,
     get_partner_releases_prefix,
@@ -27,6 +28,7 @@ from beetmoverscript.utils import (
     is_release_action,
     matches_exclude,
     validated_task_id,
+    warn_unmatched_partners,
     write_file,
     write_json,
 )
@@ -273,8 +275,48 @@ def test_get_releases_prefix(product, version, expected):
 
 
 # get_partner_candidates_prefix {{{1
-def test_get_partner_candidates_prefix():
-    assert get_partner_candidates_prefix("foo/", "p1/s2") == "foo/partner-repacks/p1/s2/v1/"
+@pytest.mark.parametrize(
+    "partner_build_number,expected",
+    (
+        (1, "foo/partner-repacks/p1/s2/v1/"),
+        (10, "foo/partner-repacks/p1/s2/v10/"),
+        (202501231439, "foo/partner-repacks/p1/s2/v202501231439/"),
+    ),
+)
+def test_get_partner_candidates_prefix(partner_build_number, expected):
+    assert get_partner_candidates_prefix("foo/", "p1/s2", partner_build_number) == expected
+
+
+# get_partner_build_numbers {{{1
+@pytest.mark.parametrize(
+    "payload,expected",
+    (
+        ({}, {}),
+        ({"partners": []}, {}),
+        ({"partners": ["p1/s1", "p1/s2"]}, {"p1/s1": 1, "p1/s2": 1}),
+        ({"partners": ["p1/s1", "p1/s2"], "partner_build_numbers": {}}, {"p1/s1": 1, "p1/s2": 1}),
+        (
+            {"partners": ["p1/s1", "p1/s2", "p2/s3"], "partner_build_numbers": {"p1/s2": 202501231439}},
+            {"p1/s1": 1, "p1/s2": 202501231439, "p2/s3": 1},
+        ),
+        ({"partners": ["p1/s1"], "partner_build_numbers": {"p1/s1": 1.0}}, {"p1/s1": 1}),
+        ({"partners": ["p1/s1"], "partner_build_numbers": {"p1/s1": 2, "p9/s9": 3}}, {"p1/s1": 2}),
+    ),
+)
+def test_get_partner_build_numbers(payload, expected):
+    partner_build_numbers = get_partner_build_numbers(payload)
+    assert partner_build_numbers == expected
+    assert all(type(partner_build_number) is int for partner_build_number in partner_build_numbers.values())
+
+
+def test_get_partner_build_numbers_logging(caplog):
+    caplog.set_level("INFO", logger="beetmoverscript.utils")
+    get_partner_build_numbers({"partners": ["p1/s1", "p1/s2"], "partner_build_numbers": {"p1/s2": 202501231439, "p9/s9": 3}})
+    info_messages = [r.getMessage() for r in caplog.records if r.levelname == "INFO"]
+    warning_messages = [r.getMessage() for r in caplog.records if r.levelname == "WARNING"]
+    assert "Using partner build number 1 for partner p1/s1" in info_messages
+    assert "Using partner build number 202501231439 for partner p1/s2" in info_messages
+    assert warning_messages == ["Ignoring partner_build_numbers for partners not listed in partners: p9/s9"]
 
 
 # get_partner_releases_prefix {{{1
@@ -292,17 +334,34 @@ def test_matches_exclude(keyname, expected):
 
 # get_partner_match {{{1
 @pytest.mark.parametrize(
-    "keyname,partners,expected",
+    "keyname,partner_build_numbers,expected",
     (
-        ("blah.excludeme", [], None),
-        ("foo/partner-repacks/p1/s1/v1/baz/biz.buzz", ["p1/s1"], "p1/s1"),
-        ("foo/partner-repacks/p1/s1/v1/baz/biz.buzz", ["p1/s1", "p1/s2"], "p1/s1"),
-        ("foo/partner-repacks/p1/s2/v1/baz/biz.buzz", ["p1/s1", "p1/s2"], "p1/s2"),
-        ("foo/partner-repacks/p2/s3/v1/baz/biz.buzz", ["p1/s1", "p1/s2"], None),
+        ("blah.excludeme", {}, None),
+        ("foo/partner-repacks/p1/s1/v1/baz/biz.buzz", {"p1/s1": 1}, "p1/s1"),
+        ("foo/partner-repacks/p1/s1/v1/baz/biz.buzz", {"p1/s1": 1, "p1/s2": 1}, "p1/s1"),
+        ("foo/partner-repacks/p1/s2/v1/baz/biz.buzz", {"p1/s1": 1, "p1/s2": 1}, "p1/s2"),
+        ("foo/partner-repacks/p2/s3/v1/baz/biz.buzz", {"p1/s1": 1, "p1/s2": 1}, None),
+        # v1/ must not match v10/ or v12/, and vice versa
+        ("foo/partner-repacks/p1/s1/v10/baz/biz.buzz", {"p1/s1": 1}, None),
+        ("foo/partner-repacks/p1/s1/v12/baz/biz.buzz", {"p1/s1": 1}, None),
+        ("foo/partner-repacks/p1/s1/v1/baz/biz.buzz", {"p1/s1": 10}, None),
+        ("foo/partner-repacks/p1/s1/v10/baz/biz.buzz", {"p1/s1": 10}, "p1/s1"),
+        # a timestamp partner build number only matches its own directory
+        ("foo/partner-repacks/p1/s1/v202501231439/baz/biz.buzz", {"p1/s1": 202501231439, "p1/s2": 1}, "p1/s1"),
+        ("foo/partner-repacks/p1/s1/v1/baz/biz.buzz", {"p1/s1": 202501231439, "p1/s2": 1}, None),
+        ("foo/partner-repacks/p1/s2/v1/baz/biz.buzz", {"p1/s1": 202501231439, "p1/s2": 1}, "p1/s2"),
+        ("foo/partner-repacks/p1/s2/v202501231439/baz/biz.buzz", {"p1/s1": 202501231439, "p1/s2": 1}, None),
     ),
 )
-def test_get_partner_match(keyname, partners, expected):
-    assert get_partner_match(keyname, "foo/", partners) == expected
+def test_get_partner_match(keyname, partner_build_numbers, expected):
+    assert get_partner_match(keyname, "foo/", partner_build_numbers) == expected
+
+
+# warn_unmatched_partners {{{1
+def test_warn_unmatched_partners(caplog):
+    caplog.set_level("WARNING", logger="beetmoverscript.utils")
+    warn_unmatched_partners("foo/", {"p1/s1": 202501231439, "p1/s2": 1}, {"p1/s2"})
+    assert [r.getMessage() for r in caplog.records] == ["No files found under foo/partner-repacks/p1/s1/v202501231439/ for partner p1/s1"]
 
 
 # product_name {{{1

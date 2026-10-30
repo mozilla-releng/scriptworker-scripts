@@ -42,7 +42,18 @@ from beetmoverscript.script import (
 from beetmoverscript.task import get_release_props, get_upstream_artifacts
 from beetmoverscript.utils import generate_beetmover_manifest, is_promotion_action
 
-from . import get_fake_valid_config, get_fake_valid_task, get_test_jinja_env, noop_async, noop_sync
+from . import (
+    PARTNER_PUSH_CANDIDATES,
+    PARTNER_PUSH_CANDIDATES_PREFIX,
+    PARTNER_PUSH_CASES,
+    get_fake_valid_config,
+    get_fake_valid_task,
+    get_partner_push_expected_moves,
+    get_partner_push_task,
+    get_test_jinja_env,
+    noop_async,
+    noop_sync,
+)
 from .test_gcloud import FakeClient
 
 
@@ -80,6 +91,30 @@ async def test_push_to_releases_s3(context, mocker, candidates_keys, releases_ke
             await push_to_releases_s3(context)
     else:
         await push_to_releases_s3(context)
+
+
+@pytest.mark.parametrize("partner_build_numbers,expected,unmatched", PARTNER_PUSH_CASES)
+@pytest.mark.asyncio
+async def test_push_to_releases_s3_partner_build_numbers(context, mocker, partner_build_numbers, expected, unmatched, caplog):
+    context.task = get_partner_push_task(partner_build_numbers)
+
+    def fake_list(context, s3_resource, prefix):
+        if prefix == PARTNER_PUSH_CANDIDATES_PREFIX:
+            return {f"{prefix}{key}": "etag" for key in PARTNER_PUSH_CANDIDATES}
+        return {}
+
+    mocker.patch.object(boto3, "resource")
+    mocker.patch.object(beetmoverscript.script, "list_bucket_objects", new=fake_list)
+    mocker.patch.object(beetmoverscript.script, "copy_beets", new=noop_sync)
+
+    await push_to_releases_s3(context)
+
+    assert context.artifacts_to_beetmove == get_partner_push_expected_moves(expected)
+    warnings = [r.getMessage() for r in caplog.records if r.levelname == "WARNING" and r.getMessage().startswith("No files found under")]
+    assert warnings == [
+        "No files found under {}partner-repacks/{}/v{}/ for partner {}".format(PARTNER_PUSH_CANDIDATES_PREFIX, partner, partner_build_numbers[partner], partner)
+        for partner in unmatched
+    ]
 
 
 # copy_beets {{{1

@@ -60,6 +60,13 @@
                     "items": {
                         "type": "string"
                     }
+                },
+                "partner_build_numbers": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer",
+                        "minimum": 1
+                    }
                 }
             },
             "required": ["product", "build_number", "version"]
