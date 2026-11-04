@@ -6,7 +6,7 @@ lando_token: { "$eval": "LANDO_TOKEN" }
 # treestatus prod is used for dev and prod landoscript because all landoscript
 # deployments want real tree status information for whichever repos they make
 # changes to. (in dev, these are non-production repositories.)
-treestatus_url: https://treestatus.prod.lando.prod.cloudops.mozgcp.net
+treestatus_url: https://lando.moz.tools/api/treestatus
 github_config:
   app_id:
     # prod means L3 only. (the "prod" env in helm sets the "ENV" environment variable for L1
