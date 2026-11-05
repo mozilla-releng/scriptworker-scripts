@@ -3,4 +3,3 @@ branch = True
 omit =
     tests/*
     .tox/*
-    treescript/py2/robustcheckout.py

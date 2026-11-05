@@ -1,35 +1,10 @@
----
 work_dir: {"$eval": "WORK_DIR"}
 artifact_dir: {"$eval": "ARTIFACTS_DIR"}
 trust_domain: {"$eval": "TRUST_DOMAIN"}
 verbose: {"$eval": "VERBOSE == 'true'"}
-treestatus_base_url: https://treestatus.mozilla-releng.net
-hg: 'hg'
-hg_share_base_dir:
-  $if: 'NEEDS_HG == "1"'
-  then: {"$eval": "HG_SHARE_BASE_DIR"}
-  else: ""
-upstream_repo: {"$eval": "UPSTREAM_REPO"}
-merge_day_clobber_file: {"$eval": "MERGE_DAY_CLOBBER_FILE"}
-hg_ssh_config:
-  $if: 'NEEDS_HG == "1"'
-  then:
-    $merge:
-      - default:
-          user: {"$eval": "SSH_USER"}
-          keyfile: {"$eval": "SSH_KEY_PATH"}
-      - $if: 'SSH_MERGE_KEY_PATH != "" && SSH_MERGE_USER != ""'
-        then:
-          merge_user:
-            user: {"$eval": "SSH_MERGE_USER"}
-            keyfile: {"$eval": "SSH_MERGE_KEY_PATH"}
-  else: {}
 github_config:
-  $if: 'NEEDS_GIT == "1"'
-  then:
-    app_id:
-      $if: 'ENV == "prod"'
-      then: 390757  # https://github.com/apps/releng-treescript
-      else: 909547  # https://github.com/apps/releng-treescript-dev
-    privkey_file: {"$eval": "GITHUB_PRIVKEY_FILE"}
-  else: {}
+  app_id:
+    $if: 'ENV == "prod"'
+    then: 390757  # https://github.com/apps/releng-treescript
+    else: 909547  # https://github.com/apps/releng-treescript-dev
+  privkey_file: {"$eval": "GITHUB_PRIVKEY_FILE"}

@@ -3,7 +3,6 @@ import os
 
 import jsone
 import jsonschema
-import pytest
 import yaml
 
 
@@ -28,48 +27,14 @@ def _validate_config(context):
     jsonschema.validate(config, schema)
 
 
-@pytest.mark.parametrize(
-    "needs_hg,needs_git",
-    (
-        pytest.param(
-            "1",
-            "0",
-            id="hg_only",
-        ),
-        pytest.param(
-            "0",
-            "1",
-            id="git_only",
-        ),
-        pytest.param(
-            "1",
-            "1",
-            id="hg_and_git",
-        ),
-    ),
-)
-def test_config(needs_hg, needs_git):
+def test_config():
     context = {
         "WORK_DIR": "",
         "ARTIFACTS_DIR": "",
         "VERBOSE": "true",
-        "UPSTREAM_REPO": "",
-        "MERGE_DAY_CLOBBER_FILE": "",
-        "COT_PRODUCT": "firefox",
-        "TRUST_DOMAIN": "gecko",
-        "NEEDS_HG": needs_hg,
-        "NEEDS_GIT": needs_git,
+        "TRUST_DOMAIN": "mobile",
         "ENV": "prod",
+        "GITHUB_PRIVKEY_FILE": "",
     }
-
-    if needs_hg == "1":
-        context["HG_SHARE_BASE_DIR"] = ""
-        context["SSH_KEY_PATH"] = ""
-        context["SSH_USER"] = ""
-        context["SSH_MERGE_KEY_PATH"] = ""
-        context["SSH_MERGE_USER"] = ""
-
-    if needs_git == "1":
-        context["GITHUB_PRIVKEY_FILE"] = ""
 
     _validate_config(context)
