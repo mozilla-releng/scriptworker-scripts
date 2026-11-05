@@ -104,7 +104,7 @@ RELEASE_EXCLUDE = (
     r"^.*/partner-repacks.*$",
     r"^.*.checksums(\.asc)?$",
     r"^.*/logs/.*$",
-    r"^.*json$",
+    r"^(?!.*/[^/]*\.sbom(-[^/]*)?\.json$).*json$",
     r"^.*/host.*$",
     r"^.*/mar-tools/.*$",
     r"^.*contrib.*",
