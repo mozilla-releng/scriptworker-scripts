@@ -7,7 +7,7 @@ import mock
 import pytest
 from scriptworker_client.exceptions import TaskError
 
-from treescript import gecko, github, script
+from treescript import github, script
 from treescript.exceptions import TaskVerificationError, TreeScriptError
 
 try:
@@ -55,27 +55,21 @@ async def die_async(*args, **kwargs):
     "task,expected",
     (
         ({"payload": {"source_repo": "https://github.com/foo/bar"}}, "github"),
-        ({"payload": {"source_repo": "https://hg.mozilla.org/foo"}}, "gecko"),
+        ({"payload": {"source_repo": "https://hg.mozilla.org/foo"}}, TaskVerificationError),
         ({"payload": {}}, TaskVerificationError),
     ),
 )
 async def test_async_main(mocker, task, expected):
-    gecko_mock = AsyncMock()
     github_mock = AsyncMock()
-    mocker.patch.object(gecko, "do_actions", new=gecko_mock)
     mocker.patch.object(github, "do_actions", new=github_mock)
     config = mock.MagicMock()
     if inspect.isclass(expected) and issubclass(expected, Exception):
         with pytest.raises(expected):
             await script.async_main(config, task)
+        assert not github_mock.called
     else:
         await script.async_main(config, task)
-        if expected == "github":
-            github_mock.assert_called_with(config, task)
-            assert not gecko_mock.called
-        elif expected == "gecko":
-            gecko_mock.assert_called_with(config, task)
-            assert not github_mock.called
+        github_mock.assert_called_with(config, task)
 
 
 # get_default_config {{{1
