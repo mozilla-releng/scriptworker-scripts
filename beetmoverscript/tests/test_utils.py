@@ -4,7 +4,7 @@ import tempfile
 import pytest
 from scriptworker.exceptions import TaskVerificationError
 
-from beetmoverscript.constants import BUILDHUB_ARTIFACT, INSTALLER_ARTIFACTS
+from beetmoverscript.constants import BUILDHUB_ARTIFACT, INSTALLER_ARTIFACTS, RELEASE_EXCLUDE
 from beetmoverscript.utils import (
     _check_locale_consistency,
     exists_or_endswith,
@@ -289,6 +289,23 @@ def test_matches_exclude(keyname, expected):
     excludes = [r"^.*.excludeme$", r"^.*/metoo/.*$"]
     assert matches_exclude(keyname, excludes) == expected
 
+
+
+@pytest.mark.parametrize(
+    "keyname,expected",
+    (
+        ("pub/firefox/candidates/160.0-candidates/build1/linux-x86_64/en-US/firefox-160.0.sbom.json", False),
+        ("pub/firefox/candidates/160.0-candidates/build1/linux-x86_64/en-US/firefox-160.0.sbom-build-tooling.json", False),
+        ("pub/firefox/candidates/160.0-candidates/build1/mac/en-US/firefox-160.0.sbom-x86_64.json", False),
+        ("pub/firefox/candidates/160.0-candidates/build1/mac/en-US/firefox-160.0.sbom-build-tooling-aarch64.json", False),
+        ("pub/firefox/candidates/160.0-candidates/build1/linux-x86_64/en-US/firefox-160.0.mozinfo.json", True),
+        ("pub/firefox/candidates/160.0-candidates/build1/linux-x86_64/en-US/buildhub.json", True),
+        ("pub/firefox/candidates/160.0-candidates/build1/sbom.json/firefox-160.0.json", True),
+        ("pub/firefox/candidates/160.0-candidates/build1/linux-x86_64/en-US/firefox-160.0.tar.xz", False),
+    ),
+)
+def test_release_exclude(keyname, expected):
+    assert matches_exclude(keyname, RELEASE_EXCLUDE) == expected
 
 # get_partner_match {{{1
 @pytest.mark.parametrize(
