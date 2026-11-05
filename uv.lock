@@ -1662,6 +1662,9 @@ name = "iniparse"
 version = "0.5.2"
 source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/9a/5b/f8b3a923142f9e4cfeafce9b8f7343ead2feb71929365486ce96b5372335/iniparse-0.5.2.tar.gz", hash = "sha256:4f4fd009d49e4290a721e9bc5716719e9a767c9c7fdc3d7ebc403ef3379d6129", size = 51507, upload-time = "2026-10-30T12:13:14.342Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/2f/08/295159455c7f9191b01d936c3a164189230d144c3ad9c459528134f0c095/iniparse-0.5.2-py3-none-any.whl", hash = "sha256:4c3b092e73bcb33447124eb1d5297c9502a97a1a07221bb609cd9abafc493011", size = 31099, upload-time = "2026-11-03T15:29:43.781Z" },
+]
 
 [[package]]
 name = "ipaddress"
@@ -3403,7 +3406,7 @@ wheels = [
 
 [[package]]
 name = "scriptworker"
-version = "63.7.1"
+version = "64.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
@@ -3418,9 +3421,9 @@ dependencies = [
     { name = "taskcluster" },
     { name = "taskcluster-taskgraph" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/fe/89/e4798fa1691b9b2e6568edf8802e3cef94fdf29304e72496b61a9119a090/scriptworker-63.7.1.tar.gz", hash = "sha256:b2da6d4d62e697d4463c230d8efe42159b59461475ba582c83e6baa7470625da", size = 105061, upload-time = "2026-10-27T09:58:47.64Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/83/9f/3b0a777d57e3965c02bd575c6a82295572953727ab7d53bb21a30bb48922/scriptworker-64.0.0.tar.gz", hash = "sha256:901ac0714d1c3afcfc8835d4aac28ba2d3c2fae7de1a12fb4eb24aa696edc1e2", size = 107139, upload-time = "2026-11-05T14:55:02.934Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e6/fd/bb009c9fb5e5dbfa30fc846a9f9ab790506a29024c2d9f7b2d206c88b4ce/scriptworker-63.7.1-py3-none-any.whl", hash = "sha256:b155344077722e994335ac97e8223c44f457b343cd7df4a61ad0c871db6f93d5", size = 84317, upload-time = "2026-10-27T09:58:45.964Z" },
+    { url = "https://files.pythonhosted.org/packages/a6/7d/de09245984249b6978b613774d25a99fc0aa6dd4ec42cd1ee141c3a6d082/scriptworker-64.0.0-py3-none-any.whl", hash = "sha256:281d6d6d15a450b91d61dcb89e72da087b6b37aca6689977330d1c67b8e41a91", size = 85450, upload-time = "2026-11-05T14:55:01.12Z" },
 ]
 
 [[package]]
