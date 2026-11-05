@@ -104,7 +104,8 @@ RELEASE_EXCLUDE = (
     r"^.*/partner-repacks.*$",
     r"^.*.checksums(\.asc)?$",
     r"^.*/logs/.*$",
-    r"^.*json$",
+    # Exclude all *json files, except SBOMs (*.sbom.json and *.sbom-<variant>.json)
+    r"^(?!.*/[^/]*\.sbom(-[^/]*)?\.json$).*json$",
     r"^.*/host.*$",
     r"^.*/mar-tools/.*$",
     r"^.*contrib.*",
