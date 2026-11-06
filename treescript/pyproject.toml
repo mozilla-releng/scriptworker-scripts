@@ -13,8 +13,6 @@ classifiers = [
     "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
-    "compare-locales",
-    "mercurial",
     "mozilla-version",
     "scriptworker",  # required for docker, even if treescript doesn't import it
     "scriptworker-client",
@@ -26,7 +24,6 @@ dev = [
     "tox",
     "tox-uv",
     "coverage>=4.2",
-    "hglib",
     "json-e",
     "mock",
     "mypy",
