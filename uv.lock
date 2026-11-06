@@ -59,7 +59,7 @@ requires-dist = [
     { name = "aiohttp" },
     { name = "async-timeout" },
     { name = "pyjwt" },
-    { name = "scriptworker" },
+    { name = "scriptworker", git = "https://github.com/mozilla-releng/scriptworker?rev=refs%2Fpull%2F860%2Fhead" },
     { name = "taskcluster" },
 ]
 
@@ -479,7 +479,7 @@ requires-dist = [
     { name = "python-dateutil" },
     { name = "redo" },
     { name = "requests" },
-    { name = "scriptworker" },
+    { name = "scriptworker", git = "https://github.com/mozilla-releng/scriptworker?rev=refs%2Fpull%2F860%2Fhead" },
     { name = "scriptworker-client", editable = "scriptworker_client" },
     { name = "taskcluster" },
 ]
@@ -536,7 +536,7 @@ requires-dist = [
     { name = "jinja2" },
     { name = "mozilla-version" },
     { name = "redo" },
-    { name = "scriptworker" },
+    { name = "scriptworker", git = "https://github.com/mozilla-releng/scriptworker?rev=refs%2Fpull%2F860%2Fhead" },
     { name = "taskcluster" },
 ]
 
@@ -589,7 +589,7 @@ dev = [
 requires-dist = [
     { name = "aiohttp" },
     { name = "aiohttp-retry", specifier = ">=2.3" },
-    { name = "scriptworker" },
+    { name = "scriptworker", git = "https://github.com/mozilla-releng/scriptworker?rev=refs%2Fpull%2F860%2Fhead" },
     { name = "scriptworker-client", editable = "scriptworker_client" },
 ]
 
@@ -658,7 +658,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "mozilla-version" },
-    { name = "scriptworker" },
+    { name = "scriptworker", git = "https://github.com/mozilla-releng/scriptworker?rev=refs%2Fpull%2F860%2Fhead" },
     { name = "taskcluster" },
 ]
 
@@ -1316,7 +1316,7 @@ dev = [
 requires-dist = [
     { name = "aiohttp-retry", specifier = ">=2.3" },
     { name = "github3-py" },
-    { name = "scriptworker" },
+    { name = "scriptworker", git = "https://github.com/mozilla-releng/scriptworker?rev=refs%2Fpull%2F860%2Fhead" },
     { name = "scriptworker-client", editable = "scriptworker_client" },
     { name = "taskcluster" },
 ]
@@ -1717,7 +1717,7 @@ requires-dist = [
     { name = "pexpect" },
     { name = "requests" },
     { name = "requests-hawk" },
-    { name = "scriptworker", marker = "extra == 'scriptworker'" },
+    { name = "scriptworker", marker = "extra == 'scriptworker'", git = "https://github.com/mozilla-releng/scriptworker?rev=refs%2Fpull%2F860%2Fhead" },
     { name = "scriptworker-client", editable = "scriptworker_client" },
     { name = "six" },
 ]
@@ -1880,7 +1880,7 @@ requires-dist = [
     { name = "gql", specifier = ">=4.4" },
     { name = "moz-l10n" },
     { name = "mozilla-version" },
-    { name = "scriptworker" },
+    { name = "scriptworker", git = "https://github.com/mozilla-releng/scriptworker?rev=refs%2Fpull%2F860%2Fhead" },
     { name = "scriptworker-client", editable = "scriptworker_client" },
     { name = "taskcluster", specifier = ">=92" },
     { name = "tenacity" },
@@ -2713,7 +2713,7 @@ requires-dist = [
     { name = "pyaxmlparser" },
     { name = "pyjwt", extras = ["crypto"] },
     { name = "requests" },
-    { name = "scriptworker" },
+    { name = "scriptworker", git = "https://github.com/mozilla-releng/scriptworker?rev=refs%2Fpull%2F860%2Fhead" },
 ]
 
 [package.metadata.requires-dev]
@@ -2752,7 +2752,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "scriptworker" },
+    { name = "scriptworker", git = "https://github.com/mozilla-releng/scriptworker?rev=refs%2Fpull%2F860%2Fhead" },
     { name = "taskcluster" },
 ]
 
@@ -2794,7 +2794,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "azure-storage-blob" },
-    { name = "scriptworker" },
+    { name = "scriptworker", git = "https://github.com/mozilla-releng/scriptworker?rev=refs%2Fpull%2F860%2Fhead" },
     { name = "scriptworker-client", editable = "scriptworker_client" },
     { name = "taskcluster" },
 ]
@@ -3407,7 +3407,7 @@ wheels = [
 [[package]]
 name = "scriptworker"
 version = "64.0.1"
-source = { registry = "https://pypi.org/simple" }
+source = { git = "https://github.com/mozilla-releng/scriptworker?rev=refs%2Fpull%2F860%2Fhead#f69accbbcc0b039698257d288ede117463ade8be" }
 dependencies = [
     { name = "aiohttp" },
     { name = "arrow" },
@@ -3420,10 +3420,6 @@ dependencies = [
     { name = "pyyaml" },
     { name = "taskcluster" },
     { name = "taskcluster-taskgraph" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/fc/8b/c570606e05204b637c6077556c2f315db490dc3b0af7185b3222639bbb82/scriptworker-64.0.1.tar.gz", hash = "sha256:c1ac7f04aee229d7dd2297249ed6169c6db61923909eec28a6f6c629664ddd70", size = 107431, upload-time = "2026-11-05T20:52:04.998Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/5a/6b/3f231597e2f2dbc182c64f69e6814c0cd7567ffbe281331db09ed4ebac12/scriptworker-64.0.1-py3-none-any.whl", hash = "sha256:d41f3a1ee9dda4397a5c981a62d861c7f90d511efd844bc86b6aa35c656c1ec6", size = 85734, upload-time = "2026-11-05T20:52:03.522Z" },
 ]
 
 [[package]]
@@ -3550,7 +3546,7 @@ dev = [
 requires-dist = [
     { name = "mozilla-repo-urls" },
     { name = "redo" },
-    { name = "scriptworker" },
+    { name = "scriptworker", git = "https://github.com/mozilla-releng/scriptworker?rev=refs%2Fpull%2F860%2Fhead" },
     { name = "taskcluster" },
 ]
 
@@ -3606,7 +3602,7 @@ requires-dist = [
     { name = "mohawk", specifier = ">=1.0.0" },
     { name = "mozbuild", directory = "vendored/mozbuild" },
     { name = "packaging" },
-    { name = "scriptworker" },
+    { name = "scriptworker", git = "https://github.com/mozilla-releng/scriptworker?rev=refs%2Fpull%2F860%2Fhead" },
     { name = "six" },
     { name = "taskcluster" },
     { name = "winsign" },
@@ -3943,7 +3939,7 @@ requires-dist = [
     { name = "compare-locales" },
     { name = "mercurial" },
     { name = "mozilla-version" },
-    { name = "scriptworker" },
+    { name = "scriptworker", git = "https://github.com/mozilla-releng/scriptworker?rev=refs%2Fpull%2F860%2Fhead" },
     { name = "scriptworker-client", editable = "scriptworker_client" },
     { name = "taskcluster" },
 ]
