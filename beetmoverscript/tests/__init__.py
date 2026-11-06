@@ -36,3 +36,71 @@ def get_fake_checksums_manifest():
 
 def get_test_jinja_env():
     return jinja2.Environment(loader=jinja2.PackageLoader("tests"), undefined=jinja2.StrictUndefined)
+
+
+PARTNER_PUSH_CANDIDATES_PREFIX = "pub/firefox/candidates/134.0-candidates/build2/"
+PARTNER_PUSH_RELEASES_PREFIX = "pub/firefox/releases/134.0/"
+PARTNER_PUSH_PARTNER_RELEASES_PREFIX = "pub/firefox/releases/partners/"
+PARTNER_PUSH_CANDIDATES = (
+    "linux-x86_64/en-US/firefox-134.0.tar.xz",
+    "partner-repacks/p1/s1/v1/win64/en-US/setup.exe",
+    "partner-repacks/p1/s1/v202501231439/win64/en-US/setup.exe",
+    "partner-repacks/p1/s2/v1/win64/en-US/setup.exe",
+    "partner-repacks/p1/s2/v10/win64/en-US/setup.exe",
+    "partner-repacks/p2/s3/v1/win64/en-US/setup.exe",
+)
+# (partner_build_numbers payload field or None if absent, expected {source: destination} relative to the prefixes above, unmatched partners)
+PARTNER_PUSH_CASES = (
+    (
+        None,
+        {
+            "linux-x86_64/en-US/firefox-134.0.tar.xz": "linux-x86_64/en-US/firefox-134.0.tar.xz",
+            "partner-repacks/p1/s1/v1/win64/en-US/setup.exe": "p1/s1/134.0/win64/en-US/setup.exe",
+            "partner-repacks/p1/s2/v1/win64/en-US/setup.exe": "p1/s2/134.0/win64/en-US/setup.exe",
+        },
+        [],
+    ),
+    (
+        {"p1/s1": 202501231439},
+        {
+            "linux-x86_64/en-US/firefox-134.0.tar.xz": "linux-x86_64/en-US/firefox-134.0.tar.xz",
+            "partner-repacks/p1/s1/v202501231439/win64/en-US/setup.exe": "p1/s1/134.0/win64/en-US/setup.exe",
+            "partner-repacks/p1/s2/v1/win64/en-US/setup.exe": "p1/s2/134.0/win64/en-US/setup.exe",
+        },
+        [],
+    ),
+    (
+        {"p1/s2": 10},
+        {
+            "linux-x86_64/en-US/firefox-134.0.tar.xz": "linux-x86_64/en-US/firefox-134.0.tar.xz",
+            "partner-repacks/p1/s1/v1/win64/en-US/setup.exe": "p1/s1/134.0/win64/en-US/setup.exe",
+            "partner-repacks/p1/s2/v10/win64/en-US/setup.exe": "p1/s2/134.0/win64/en-US/setup.exe",
+        },
+        [],
+    ),
+    (
+        {"p1/s1": 202501231440},
+        {
+            "linux-x86_64/en-US/firefox-134.0.tar.xz": "linux-x86_64/en-US/firefox-134.0.tar.xz",
+            "partner-repacks/p1/s2/v1/win64/en-US/setup.exe": "p1/s2/134.0/win64/en-US/setup.exe",
+        },
+        ["p1/s1"],
+    ),
+)
+
+
+def get_partner_push_task(partner_build_numbers):
+    payload = {"product": "firefox", "build_number": 2, "version": "134.0", "partners": ["p1/s1", "p1/s2"]}
+    if partner_build_numbers is not None:
+        payload["partner_build_numbers"] = partner_build_numbers
+    return {"payload": payload}
+
+
+def get_partner_push_expected_moves(expected):
+    moves = {}
+    for source, destination in expected.items():
+        if source.startswith("partner-repacks/"):
+            moves[PARTNER_PUSH_CANDIDATES_PREFIX + source] = PARTNER_PUSH_PARTNER_RELEASES_PREFIX + destination
+        else:
+            moves[PARTNER_PUSH_CANDIDATES_PREFIX + source] = PARTNER_PUSH_RELEASES_PREFIX + destination
+    return moves

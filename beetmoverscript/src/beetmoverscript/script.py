@@ -71,6 +71,7 @@ from beetmoverscript.utils import (
     get_credentials,
     get_hash,
     get_partials_props,
+    get_partner_build_numbers,
     get_partner_candidates_prefix,
     get_partner_match,
     get_partner_releases_prefix,
@@ -82,6 +83,7 @@ from beetmoverscript.utils import (
     is_promotion_action,
     is_release_action,
     matches_exclude,
+    warn_unmatched_partners,
     write_json,
 )
 
@@ -234,13 +236,16 @@ async def push_to_releases_s3(context):
         log.warning("Destination {} already exists with {} keys".format(releases_prefix, len(releases_keys_checksums)))
 
     # Weed out RELEASE_EXCLUDE matches, but allow partners specified in the payload
-    push_partners = context.task["payload"].get("partners", [])
+    # map of "partner/subpartner" to the partner build number to push from
+    push_partners = get_partner_build_numbers(context.task["payload"])
+    matched_partners = set()
     for k in candidates_keys_checksums.keys():
         if "/partner-repacks/" in k:
             partner_match = get_partner_match(k, candidates_prefix, push_partners)
             if partner_match:
+                matched_partners.add(partner_match)
                 context.artifacts_to_beetmove[k] = k.replace(
-                    get_partner_candidates_prefix(candidates_prefix, partner_match),
+                    get_partner_candidates_prefix(candidates_prefix, partner_match, push_partners[partner_match]),
                     get_partner_releases_prefix(product, version, partner_match),
                 )
             else:
@@ -249,6 +254,8 @@ async def push_to_releases_s3(context):
             context.artifacts_to_beetmove[k] = k.replace(candidates_prefix, releases_prefix)
         else:
             log.debug("Excluding {}".format(k))
+
+    warn_unmatched_partners(candidates_prefix, push_partners, matched_partners)
 
     copy_beets(context, candidates_keys_checksums, releases_keys_checksums)
 
