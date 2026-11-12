@@ -1,5 +1,5 @@
 version = 1
-revision = 5
+revision = 3
 requires-python = ">=3.14"
 resolution-markers = [
     "python_full_version >= '3.15'",
@@ -929,20 +929,6 @@ wheels = [
 ]
 
 [[package]]
-name = "compare-locales"
-version = "9.0.5"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "fluent-syntax" },
-    { name = "six" },
-    { name = "toml" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/99/d6/1437ec990438908eb8766cc4cb68a4e8e0a0fa3cec9a73861e7b383de706/compare_locales-9.0.5.tar.gz", hash = "sha256:82f2177552666d0f7af1ccc2940a8d562f345ce3a2e64f1b67853d457ea8ae33", size = 59092, upload-time = "2026-05-30T06:21:42.865Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/ce/22/299da0a35e0acca9164db72cb811a7dd8827b86e9cb890cbee8807799268/compare_locales-9.0.5-py3-none-any.whl", hash = "sha256:40eaa40fe9290996f5972fa83bc4f9f1e580a6e2ea06087e636e77378d8ed168", size = 76275, upload-time = "2026-05-30T06:21:41.519Z" },
-]
-
-[[package]]
 name = "configloader"
 version = "0.0.1"
 source = { editable = "configloader" }
@@ -1601,15 +1587,6 @@ wheels = [
 ]
 
 [[package]]
-name = "hglib"
-version = "2.6.2"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/87/29/ae7dbf62b0eff6d66adb71a2774a1689184d4bbdbd06ea73d32dd1049eb5/hglib-2.6.2.tar.gz", hash = "sha256:3f7e3a8a1a334aee8eeda10003dd6b0c8a1487b0adb052b1243c28b75bf1539e", size = 23177, upload-time = "2022-05-05T12:26:19.147Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/4b/bf/2fbde85c9f4d3447473655b647ace50abe922e540b35d0cf48e786cf16dd/hglib-2.6.2-py3-none-any.whl", hash = "sha256:651e63d037dc48e812b00ca3eb9a50c057d07d4897de69c914a57dce547079a2", size = 24194, upload-time = "2022-05-05T12:26:17.401Z" },
-]
-
-[[package]]
 name = "httplib2"
 version = "0.32.1"
 source = { registry = "https://pypi.org/simple" }
@@ -2186,22 +2163,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/d6/54/cfe61301667036ec958cb99bd3efefba235e65cdeb9c84d24a8293ba1d90/mdurl-0.1.2.tar.gz", hash = "sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba", size = 8729, upload-time = "2022-08-14T12:40:10.846Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b3/38/89ba8ad64ae25be8de66a6d463314cf1eb366222074cfda9ee839c56a4b4/mdurl-0.1.2-py3-none-any.whl", hash = "sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8", size = 9979, upload-time = "2022-08-14T12:40:09.779Z" },
-]
-
-[[package]]
-name = "mercurial"
-version = "7.2.4"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/de/41/e6fc64d51a04d430dfd1aa1f1643b3c831787c00d3a3431fca5492b1bc29/mercurial-7.2.4.tar.gz", hash = "sha256:85839e0f39e6cb893a88932aa36ef661759f3c5c5de4551ad26bd9df53cb71a2", size = 9304061, upload-time = "2026-08-11T12:38:28.667Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/f5/6c/e930fb9dfb9150b8852f53e3ebba7b442d083ba72ed4c43fd9e63a246e6c/mercurial-7.2.4-cp314-cp314-macosx_10_15_universal2.whl", hash = "sha256:179bf53de0d47aec08891c733c677f6dea0d0244289386acbc42dcb7331c56f9", size = 5424167, upload-time = "2026-08-11T12:37:57.491Z" },
-    { url = "https://files.pythonhosted.org/packages/e1/21/fe7e9230f0e8b43e2c897d38067ea8c6baf1dd54f10775784b019dcf59de/mercurial-7.2.4-cp314-cp314-manylinux_2_17_x86_64.manylinux2014_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:d7e8c8028a5d74de926e26b5d073786f3e3178fcc56f5cd075e0da11c014bf2a", size = 7587621, upload-time = "2026-08-11T12:37:59.285Z" },
-    { url = "https://files.pythonhosted.org/packages/f8/46/91668e8addecdb18b1b8cb969bd25b274d254e1bf8bb588579dd149c09e6/mercurial-7.2.4-cp314-cp314-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:a5cf97266b1893e36a24f14d1d732880336eef743cd9c2582552a871398be86b", size = 7281134, upload-time = "2026-08-11T12:38:01.062Z" },
-    { url = "https://files.pythonhosted.org/packages/46/45/2da84c2fd6c3580de1450ae1abc1a39830459ba7039bcf9a4551f6a919a9/mercurial-7.2.4-cp314-cp314-musllinux_1_2_i686.whl", hash = "sha256:5d7b92ffa9a4af239ed6df3d1a84855cb6ca119389d50c6b9556da61e0706215", size = 7250247, upload-time = "2026-08-11T12:38:02.826Z" },
-    { url = "https://files.pythonhosted.org/packages/ab/9e/90d7552fbdee8006305ea87b8dc6ac23eea772ea3782153064a4b8934973/mercurial-7.2.4-cp314-cp314-musllinux_1_2_x86_64.whl", hash = "sha256:87b716cbb571815dfb5b7b3092929d50d32e017929a5b6b948f3da5ab6e9d348", size = 7474111, upload-time = "2026-08-11T12:38:04.709Z" },
-    { url = "https://files.pythonhosted.org/packages/45/e0/1e819279e0c0e294ed30279bdae1744c6c9dc407588143882974fc8d16a5/mercurial-7.2.4-cp314-cp314-win32.whl", hash = "sha256:58f452398c1698466d4aaa1103a423d0ae4a740bd303e2f2b39ae03167a41aa6", size = 7179066, upload-time = "2026-08-11T12:38:06.501Z" },
-    { url = "https://files.pythonhosted.org/packages/91/5e/175602e135298797827b39300dec2d229959d2dea913a9f78de29f133d3d/mercurial-7.2.4-cp314-cp314-win_amd64.whl", hash = "sha256:a62f5c3cb987e4dca8167804685a80425fb1ad275afb25de2076600b4647ab80", size = 7656366, upload-time = "2026-08-11T12:38:08.364Z" },
-    { url = "https://files.pythonhosted.org/packages/e4/da/b8eb2ff108d7043fe9abe86a859acd8324aad3918c5c79b36dfd56aad1c8/mercurial-7.2.4-cp314-cp314-win_arm64.whl", hash = "sha256:71886fab24aa4a56d54657c28a3bc14d751d8021a374ff3b7cfa98635633791b", size = 7623325, upload-time = "2026-08-11T12:38:10.564Z" },
 ]
 
 [[package]]
@@ -3844,15 +3805,6 @@ wheels = [
 ]
 
 [[package]]
-name = "toml"
-version = "0.10.2"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/be/ba/1f744cdc819428fc6b5084ec34d9b30660f6f9daaf70eead706e3203ec3c/toml-0.10.2.tar.gz", hash = "sha256:b3bda1d108d5dd99f4a20d24d9c348e91c4db7ab1b749200bded2f839ccbe68f", size = 22253, upload-time = "2020-11-01T01:40:22.204Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/44/6f/7120676b6d73228c96e17f1f794d8ab046fc910d781c8d151120c3f1569e/toml-0.10.2-py2.py3-none-any.whl", hash = "sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b", size = 16588, upload-time = "2020-11-01T01:40:20.672Z" },
-]
-
-[[package]]
 name = "tomli-w"
 version = "1.2.0"
 source = { registry = "https://pypi.org/simple" }
@@ -3912,8 +3864,6 @@ name = "treescript"
 version = "2.1.0"
 source = { editable = "treescript" }
 dependencies = [
-    { name = "compare-locales" },
-    { name = "mercurial" },
     { name = "mozilla-version" },
     { name = "scriptworker" },
     { name = "scriptworker-client" },
@@ -3923,7 +3873,6 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "coverage" },
-    { name = "hglib" },
     { name = "json-e" },
     { name = "mock" },
     { name = "mypy" },
@@ -3940,8 +3889,6 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "compare-locales" },
-    { name = "mercurial" },
     { name = "mozilla-version" },
     { name = "scriptworker" },
     { name = "scriptworker-client", editable = "scriptworker_client" },
@@ -3951,7 +3898,6 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "coverage", specifier = ">=4.2" },
-    { name = "hglib" },
     { name = "json-e" },
     { name = "mock" },
     { name = "mypy" },

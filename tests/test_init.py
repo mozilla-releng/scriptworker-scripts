@@ -165,8 +165,6 @@ CONTEXT = {
         "AUTOGRAPH_XPI_USERNAME": "1",
     },
     re.compile(r"tree:.*"): {
-        "SSH_KEY": "Zm9vYmFyCg==",
-        "SSH_USER": "user",
         "GITHUB_PRIVKEY": "Zm9vYmFyCg==",
     },
 }
@@ -244,7 +242,7 @@ def get_expected_return_code(app, product, env):
         if product not in ("adhoc", "app-services", "firefox", "mobile", "mozillavpn", "thunderbird", "xpi"):
             return 1
     elif app == "tree":
-        if product not in ("firefox", "mobile", "thunderbird"):
+        if product not in ("mobile",):
             return 1
     return 0
 

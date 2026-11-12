@@ -1,11 +1,7 @@
 import inspect
-import os
 from unittest.mock import Mock
 
 import aiohttp
-import pytest
-
-from treescript.gecko.mercurial import HGRCPATH
 
 pytest_plugins = ("pytest-scriptworker-client",)
 
@@ -28,12 +24,3 @@ if "stream_writer" in inspect.signature(_response_init).parameters:
 
     aiohttp.ClientResponse.__init__ = _patched_response_init
 
-
-ROBUSTCHECKOUT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "vendored", "robustcheckout.py"))
-HGRC_ROBUSTCHECKOUT = os.path.abspath(os.path.join(os.path.dirname(__file__), "robustcheckout.hgrc"))
-
-
-@pytest.fixture(autouse=True)
-def set_hgrc(monkeypatch):
-    monkeypatch.setenv("HGRCPATH", os.path.pathsep.join([HGRCPATH, HGRC_ROBUSTCHECKOUT]))
-    monkeypatch.setenv("ROBUSTCHECKOUT", ROBUSTCHECKOUT_PATH)
