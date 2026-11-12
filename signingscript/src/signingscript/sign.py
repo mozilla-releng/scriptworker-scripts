@@ -193,21 +193,20 @@ async def sign_file(context, from_, fmt, to=None, **kwargs):
 async def sign_macapp(context, from_, fmt, **kwargs):
     """Sign a macapp.
 
-    If given a dmg, convert to a tar.gz file first, then sign the internals.
-
     Args:
         context (Context): the signing context
         from_ (str): the source file to sign
         fmt (str): the format to sign with
 
+    Raises:
+        SigningScriptError: if given a dmg, which is no longer supported.
+
     Returns:
         str: the path to the signed file
 
     """
-    file_base, file_extension = os.path.splitext(from_)
-    if file_extension == ".dmg":
-        await _convert_dmg_to_tar_gz(context, from_)
-        from_ = "{}.tar.gz".format(file_base)
+    if os.path.splitext(from_)[1].lower() == ".dmg":
+        raise SigningScriptError("dmg files are not supported: {}".format(from_))
     await sign_file(context, from_, fmt)
     return from_
 
@@ -257,11 +256,6 @@ async def sign_widevine(context, orig_path, fmt, **kwargs):
         str: the path to the signed archive
 
     """
-    file_base, file_extension = os.path.splitext(orig_path)
-    # Convert dmg to tarball
-    if file_extension == ".dmg":
-        await _convert_dmg_to_tar_gz(context, orig_path)
-        orig_path = "{}.tar.gz".format(file_base)
     ext_to_fn = {
         ".zip": sign_widevine_zip,
         ".tar.bz2": sign_widevine_tar,
@@ -395,11 +389,6 @@ async def sign_omnija(context, orig_path, fmt, **kwargs):
         str: the path to the signed archive
 
     """
-    file_base, file_extension = os.path.splitext(orig_path)
-    # Convert dmg to tarball
-    if file_extension == ".dmg":
-        await _convert_dmg_to_tar_gz(context, orig_path)
-        orig_path = "{}.tar.gz".format(file_base)
     ext_to_fn = {
         ".zip": sign_omnija_zip,
         ".tar.bz2": sign_omnija_tar,
@@ -675,31 +664,6 @@ def remove_extra_files(top_dir, file_list):
     return extra_files
 
 
-# _convert_dmg_to_tar_gz {{{1
-@time_async_function
-async def _convert_dmg_to_tar_gz(context, from_):
-    """Explode a dmg and tar up its contents. Return the relative tarball path."""
-    work_dir = context.config["work_dir"]
-    abs_from = os.path.join(work_dir, from_)
-    # replace .dmg suffix with .tar.gz (case insensitive)
-    to = re.sub(r"\.dmg$", ".tar.gz", from_, flags=re.I)
-    abs_to = os.path.join(work_dir, to)
-    dmg_executable_location = context.config["dmg"]
-    hfsplus_executable_location = context.config["hfsplus"]
-
-    with tempfile.TemporaryDirectory() as temp_dir:
-        app_dir = os.path.join(temp_dir, "app")
-        utils.mkdir(app_dir)
-        undmg_cmd = [dmg_executable_location, "extract", abs_from, "tmp.hfs"]
-        await utils.execute_subprocess(undmg_cmd, cwd=temp_dir, log_level=logging.DEBUG)
-        hfsplus_cmd = [hfsplus_executable_location, "tmp.hfs", "extractall", "/", app_dir]
-        await utils.execute_subprocess(hfsplus_cmd, cwd=temp_dir, log_level=logging.DEBUG)
-        tar_cmd = ["tar", "czf", abs_to, "."]
-        await utils.execute_subprocess(tar_cmd, cwd=app_dir)
-
-    return to
-
-
 # _validate_archive_member_names {{{1
 def _validate_archive_member_names(names):
     """Ensure every archive member name is a plain relative path.
@@ -709,8 +673,7 @@ def _validate_archive_member_names(names):
     relying on the extractor to silently normalize it (bug 2065193).
 
     A leading `./` (and a `.` component in general) is allowed: tarballs created
-    with `tar cf <archive> .` -- including the ones this module creates in
-    `_convert_dmg_to_tar_gz` -- name their members that way.
+    with `tar cf <archive> .` name their members that way.
 
     Args:
         names (iterable): the archive member names to validate

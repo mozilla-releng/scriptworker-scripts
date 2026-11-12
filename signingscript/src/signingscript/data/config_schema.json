@@ -23,12 +23,6 @@
         "token_duration_seconds": {
             "type": "number"
         },
-        "dmg": {
-            "type": "string"
-        },
-        "hfsplus": {
-            "type": "string"
-        },
         "gpg_pubkey": {
             "type": "string"
         },
