@@ -1,11 +1,13 @@
 import json
 import tempfile
+import zipfile
 
 import pytest
 from scriptworker.exceptions import TaskVerificationError
 
 from beetmoverscript.constants import BUILDHUB_ARTIFACT, INSTALLER_ARTIFACTS, RELEASE_EXCLUDE
 from beetmoverscript.utils import (
+    BadXPIFile,
     _check_locale_consistency,
     exists_or_endswith,
     extract_file_config_from_artifact_map,
@@ -445,3 +447,39 @@ def test_get_addon_data():
     addon_data = get_addon_data("tests/fixtures/dummy.xpi")
     assert addon_data["name"] == "@some-test-xpi"
     assert addon_data["version"] == "1.0.0"
+
+
+INSTALL_RDF = """<?xml version="1.0"?>
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+  <Description about="urn:mozilla:install-manifest">
+    <em:id>@some-rdf-xpi</em:id>
+    <em:version>2.0.0</em:version>
+  </Description>
+</RDF>
+"""
+
+
+def test_get_addon_data_install_rdf(tmp_path):
+    xpi = tmp_path / "rdf.xpi"
+    with zipfile.ZipFile(xpi, "w") as zf:
+        zf.writestr("install.rdf", INSTALL_RDF)
+        zf.writestr("manifest.json", json.dumps({"version": "ignored"}))
+    assert get_addon_data(str(xpi)) == {"name": "@some-rdf-xpi", "version": "2.0.0"}
+
+
+@pytest.mark.parametrize(
+    "members",
+    (
+        {},
+        {"other.json": "{}"},
+        {"sub/manifest.json": json.dumps({"version": "1.0", "applications": {"gecko": {"id": "@x"}}})},
+        {"manifest.json": json.dumps({"version": "1.0"})},
+    ),
+)
+def test_get_addon_data_bad_xpi(tmp_path, members):
+    xpi = tmp_path / "bad.xpi"
+    with zipfile.ZipFile(xpi, "w") as zf:
+        for name, data in members.items():
+            zf.writestr(name, data)
+    with pytest.raises(BadXPIFile):
+        get_addon_data(str(xpi))

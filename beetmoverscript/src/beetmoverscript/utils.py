@@ -4,7 +4,6 @@ import logging
 import os
 import pprint
 import re
-import tempfile
 import zipfile
 from xml.etree import ElementTree
 
@@ -57,26 +56,24 @@ class BadXPIFile(Exception):
 def get_addon_data(filepath):
     name = None
     version = None
-    tmpdir = tempfile.mkdtemp()
     with zipfile.ZipFile(filepath, "r") as zf:
-        zf.extractall(tmpdir)
-    rdf_path = os.path.join(tmpdir, "install.rdf")
-    manifest_path = os.path.join(tmpdir, "manifest.json")
-    if os.path.exists(rdf_path):
-        rdf = ElementTree.parse(rdf_path)
-        description = rdf.getroot()[0]
-        for child in description:
-            if child.tag.endswith("id"):
-                name = child.text
-            if child.tag.endswith("version"):
-                version = child.text
-    elif os.path.exists(manifest_path):
-        with open(manifest_path) as f:
-            manifest = json.loads(f.read())
+        members = zf.namelist()
+        if "install.rdf" in members:
+            with zf.open("install.rdf") as f:
+                rdf = ElementTree.parse(f)
+            description = rdf.getroot()[0]
+            for child in description:
+                if child.tag.endswith("id"):
+                    name = child.text
+                if child.tag.endswith("version"):
+                    version = child.text
+        elif "manifest.json" in members:
+            with zf.open("manifest.json") as f:
+                manifest = json.load(f)
             name = manifest.get("browser_specific_settings", manifest.get("applications", {})).get("gecko", {}).get("id")
             version = manifest.get("version")
-    else:
-        raise BadXPIFile(filepath)
+        else:
+            raise BadXPIFile(filepath)
     if not name or not version:
         raise BadXPIFile(filepath)
     return {"name": name, "version": version}
