@@ -164,8 +164,6 @@ def get_default_config(base_dir=None):
         "artifact_dir": os.path.join(base_dir, "/src/signing/artifact_dir"),
         "schema_file": os.path.join(os.path.dirname(__file__), "data", "signing_task_schema.json"),
         "verbose": True,
-        "dmg": "dmg",
-        "hfsplus": "hfsplus",
         "gpg_pubkey": None,
         "widevine_cert": None,
     }

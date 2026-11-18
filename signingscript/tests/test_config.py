@@ -14,8 +14,6 @@ COMMON_CONTEXT = {
     "MAR_CHANNELS_PATH": "",
     "SSL_CERT_PATH": "",
     "SIGNTOOL_PATH": "",
-    "DMG_PATH": "",
-    "HFSPLUS_PATH": "",
     "ZIPALIGN_PATH": "",
     "GPG_PUBKEY_PATH": "",
     "WIDEVINE_CERT_PATH": "",

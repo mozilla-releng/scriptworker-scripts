@@ -444,11 +444,14 @@ async def test_sign_mar384_with_autograph_hash_channel(context, mocker, channel,
 
 # sign_macapp {{{1
 @pytest.mark.asyncio
-@pytest.mark.parametrize("filename,expected", (("foo.dmg", "foo.tar.gz"), ("foo.tar.bz2", "foo.tar.bz2")))
-async def test_sign_macapp(context, mocker, filename, expected):
-    mocker.patch.object(sign, "_convert_dmg_to_tar_gz", new=noop_async)
+@pytest.mark.parametrize("filename,raises", (("foo.tar.bz2", False), ("foo.dmg", True), ("foo.DMG", True)))
+async def test_sign_macapp(context, mocker, filename, raises):
     mocker.patch.object(sign, "sign_file", new=noop_async)
-    assert await sign.sign_macapp(context, filename, "blah") == expected
+    if raises:
+        with pytest.raises(SigningScriptError):
+            await sign.sign_macapp(context, filename, "blah")
+    else:
+        assert await sign.sign_macapp(context, filename, "blah") == filename
 
 
 # sign_xpi {{{1
@@ -509,18 +512,18 @@ async def test_sign_xpi(context, mocker, filename, id, raises):
         ("foo.tar.gz", "widevine", False, True, None),
         ("foo.zip", "widevine_blessed", False, True, None),
         (
-            "foo.dmg",
+            "foo.tar.gz",
             "widevine",
             False,
             True,
             ["foo.app/Contents/MacOS/firefox", "foo.app/Contents/MacOS/bar.app/Contents/MacOS/plugin-container", "foo.app/ignore"],
         ),
         ("foo.unknown", "widevine", True, False, None),
+        ("foo.dmg", "widevine", True, False, None),
         ("foo.zip", "widevine", False, False, None),
-        ("foo.dmg", "widevine", False, False, None),
         ("foo.tar.bz2", "widevine", False, False, None),
         ("foo.zip", "autograph_widevine", False, True, None),
-        ("foo.dmg", "autograph_widevine", False, True, None),
+        ("foo.dmg", "autograph_widevine", True, True, None),
         ("foo.tar.bz2", "autograph_widevine", False, True, None),
     ),
 )
@@ -541,9 +544,6 @@ async def test_sign_widevine(context, mocker, filename, fmt, raises, should_sign
         assert f.endswith(".tar.{}".format(comp.lstrip(".")))
         return files
 
-    async def fake_undmg(_, f):
-        assert f.endswith(".dmg")
-
     async def fake_sign(_, f, fmt, **kwargs):
         if f.endswith("firefox"):
             assert fmt == "widevine"
@@ -561,7 +561,6 @@ async def test_sign_widevine(context, mocker, filename, fmt, raises, should_sign
     mocker.patch.object(sign, "_extract_tarfile", new=fake_untar)
     mocker.patch.object(sign, "_get_zipfile_files", new=fake_filelist)
     mocker.patch.object(sign, "_extract_zipfile", new=fake_unzip)
-    mocker.patch.object(sign, "_convert_dmg_to_tar_gz", new=fake_undmg)
     mocker.patch.object(sign, "sign_file", new=noop_async)
     mocker.patch.object(sign, "sign_widevine_with_autograph", new=noop_async)
     mocker.patch.object(sign, "makedirs", new=noop_sync)
@@ -660,31 +659,6 @@ def test_remove_extra_files(context):
         assert not os.path.exists(path)
     for f in good:
         assert os.path.exists(os.path.join(work_dir, f))
-
-
-# _convert_dmg_to_tar_gz {{{1
-@pytest.mark.asyncio
-async def test_convert_dmg_to_tar_gz(context, monkeypatch, tmpdir):
-    dmg_path = "path/to/foo.dmg"
-    abs_dmg_path = os.path.join(context.config["work_dir"], dmg_path)
-    tarball_path = "path/to/foo.tar.gz"
-    abs_tarball_path = os.path.join(context.config["work_dir"], tarball_path)
-
-    async def execute_subprocess_mock(command, **kwargs):
-        assert command in (
-            ["dmg", "extract", abs_dmg_path, "tmp.hfs"],
-            ["hfsplus", "tmp.hfs", "extractall", "/", "{}/app".format(tmpdir)],
-            ["tar", "czf", abs_tarball_path, "."],
-        )
-
-    @contextmanager
-    def fake_tmpdir():
-        yield tmpdir
-
-    monkeypatch.setattr("signingscript.utils.execute_subprocess", execute_subprocess_mock)
-    monkeypatch.setattr("tempfile.TemporaryDirectory", fake_tmpdir)
-
-    await sign._convert_dmg_to_tar_gz(context, dmg_path)
 
 
 # _extract_zipfile _create_zipfile {{{1
@@ -1182,11 +1156,10 @@ async def test_gpg_autograph(context, mocker, tmp_path):
     "filename,raises,nofiles",
     (
         ("foo.unknown", True, False),
+        ("foo.dmg", True, False),
         ("foo.zip", False, False),
-        ("foo.dmg", False, False),
         ("foo.tar.bz2", False, False),
         ("foo.zip", False, True),
-        ("foo.dmg", False, True),
         ("foo.tar.bz2", False, True),
     ),
 )
@@ -1208,9 +1181,6 @@ async def test_sign_omnija(context, mocker, filename, raises, nofiles):
         assert f.endswith(".tar.{}".format(comp.lstrip(".")))
         return files
 
-    async def fake_undmg(_, f):
-        assert f.endswith(".dmg")
-
     def fake_isfile(path):
         return "isdir" not in path
 
@@ -1218,7 +1188,6 @@ async def test_sign_omnija(context, mocker, filename, raises, nofiles):
     mocker.patch.object(sign, "_extract_tarfile", new=fake_untar)
     mocker.patch.object(sign, "_get_zipfile_files", new=fake_filelist)
     mocker.patch.object(sign, "_extract_zipfile", new=fake_unzip)
-    mocker.patch.object(sign, "_convert_dmg_to_tar_gz", new=fake_undmg)
     mocker.patch.object(sign, "sign_omnija_with_autograph", new=noop_async)
     mocker.patch.object(sign, "_create_tarfile", new=noop_async)
     mocker.patch.object(sign, "_create_zipfile", new=noop_async)

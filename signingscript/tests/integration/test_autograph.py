@@ -39,8 +39,6 @@ DEFAULT_CONFIG = {
     "schema_file": os.path.join(DATA_DIR, "signing_task_schema.json"),
     "taskcluster_scope_prefixes": ["project:releng:signing:"],
     "verbose": True,
-    "dmg": "dmg",
-    "hfsplus": "hfsplus",
 }
 
 
