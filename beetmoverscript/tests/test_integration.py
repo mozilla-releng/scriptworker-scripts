@@ -275,3 +275,36 @@ def test_main_push_to_releases(tmp_path, boto3_client_mock, boto3_resource_mock,
         CopySource={"Bucket": "dummy", "Key": "pub/firefox/candidates/82.0.2-candidates/build1/partner-repacks/mailru/okru/v1/"},
         Key="pub/firefox/releases/partners/mailru/okru/82.0.2/",
     )
+
+
+def test_main_push_to_releases_partner_build_numbers(tmp_path, boto3_client_mock, boto3_resource_mock, gcloud_client_mock):
+    task_name = "firefox_release"
+    scope_prefix = "project:releng:beetmover:"
+    config = get_config(scope_prefix)
+    task = get_test_task(task_name)
+    task["payload"]["partner_build_numbers"] = {"mailru/okru": 202501231439}
+    scriptworker_config = prepare_scriptworker_config(tmp_path, config, task)
+
+    candidates_prefix = "pub/firefox/candidates/82.0.2-candidates/build1/"
+    candidates_keys = (
+        "partner-repacks/mailru/okru/v1/win64/ru/setup.exe",
+        "partner-repacks/mailru/okru/v202501231439/win64/ru/setup.exe",
+        "partner-repacks/mailru/mailru/v1/win64/ru/setup.exe",
+        "partner-repacks/mailru/mailru/v10/win64/ru/setup.exe",
+    )
+
+    def fake_bucket_objects_filter(**kwargs):
+        prefix = kwargs["Prefix"]
+        if prefix == candidates_prefix:
+            return [Mock(key=f"{prefix}{key}", e_tag="dummy_etag") for key in candidates_keys]
+        return []
+
+    boto3_resource_mock.Bucket.return_value.objects.filter = fake_bucket_objects_filter
+
+    main(config_path=scriptworker_config)
+
+    copied = {call.kwargs["CopySource"]["Key"]: call.kwargs["Key"] for call in boto3_client_mock.copy_object.call_args_list}
+    assert copied == {
+        f"{candidates_prefix}partner-repacks/mailru/okru/v202501231439/win64/ru/setup.exe": "pub/firefox/releases/partners/mailru/okru/82.0.2/win64/ru/setup.exe",
+        f"{candidates_prefix}partner-repacks/mailru/mailru/v1/win64/ru/setup.exe": "pub/firefox/releases/partners/mailru/mailru/82.0.2/win64/ru/setup.exe",
+    }

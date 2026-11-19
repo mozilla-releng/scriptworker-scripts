@@ -96,6 +96,37 @@ def test_validate_task(context):
     validate_task_schema(context)
 
 
+@pytest.mark.parametrize(
+    "partner_build_numbers,raises",
+    (
+        (None, False),
+        ({}, False),
+        ({"p1/s1": 1}, False),
+        ({"p1/s1": 202501231439, "p1/s2": 1}, False),
+        ({"p1/s1": 0}, True),
+        ({"p1/s1": -1}, True),
+        ({"p1/s1": 1.5}, True),
+        ({"p1/s1": "2"}, True),
+        ({"p1/s1": "v2"}, True),
+        ({"p1/s1": True}, True),
+        ({"p1/s1": None}, True),
+        (["p1/s1"], True),
+        (2, True),
+    ),
+)
+def test_validate_task_partner_build_numbers(context, partner_build_numbers, raises):
+    context.task["scopes"] = ["project:releng:beetmover:action:push-to-releases"]
+    context.task["payload"] = {"product": "firefox", "build_number": 1, "version": "134.0", "partners": ["p1/s1", "p1/s2"]}
+    if partner_build_numbers is not None:
+        context.task["payload"]["partner_build_numbers"] = partner_build_numbers
+
+    if raises:
+        with pytest.raises(ScriptWorkerTaskException):
+            validate_task_schema(context)
+    else:
+        validate_task_schema(context)
+
+
 def test_validate_task_invalid(context):
     context.task = get_fake_valid_task(taskjson="task_artifact_map.json")
     context.task["scopes"] = ["project:releng:beetmover:action:direct-push-to-bucket"]
