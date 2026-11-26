@@ -3,8 +3,59 @@
   "extends": [
     "github>mozilla-releng/reps:renovate-preset.json5"
   ],
-  "schedule": ["* * 1,15 * *"],
+  "schedule": [
+    "* * 1,15 * *"
+  ],
   "lockFileMaintenance": {
-    "schedule": ["* * 1,15 * *"]
-  }
+    "schedule": [
+      "* * 1,15 * *"
+    ]
+  },
+  "customManagers": [
+    {
+      "description": "Python docker images, e.g. `- &py314 \"3.14.3-slim-trixie@sha256:...\"`",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^taskcluster/kinds/docker-image/kind\\.yml$/"
+      ],
+      "matchStrings": [
+        "- &py\\d+ \"(?<currentValue>\\d+\\.\\d+\\.\\d+-slim-[a-z]+)@(?<currentDigest>sha256:[a-f0-9]+)\""
+      ],
+      "depNameTemplate": "python",
+      "datasourceTemplate": "docker"
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "Docker versioning, so the -slim-<debian> suffix is kept (the preset's python versioning can't parse it); offer patch updates separately from minor ones",
+      "matchManagers": [
+        "custom.regex"
+      ],
+      "matchFileNames": [
+        "taskcluster/kinds/docker-image/kind.yml"
+      ],
+      "matchPackageNames": [
+        "python"
+      ],
+      "versioning": "docker",
+      "separateMinorPatch": true
+    },
+    {
+      "description": "Patch updates only: each anchor names its minor version (py314)",
+      "matchManagers": [
+        "custom.regex"
+      ],
+      "matchFileNames": [
+        "taskcluster/kinds/docker-image/kind.yml"
+      ],
+      "matchPackageNames": [
+        "python"
+      ],
+      "matchUpdateTypes": [
+        "major",
+        "minor"
+      ],
+      "enabled": false
+    }
+  ]
 }
