@@ -11,7 +11,7 @@ transforms:
     - taskgraph.transforms.task:transforms
 
 meta:
-    - &py314 "3.14.3-slim-trixie"
+    - &py314 "3.14.3-slim-trixie@sha256:5e59aae31ff0e87511226be8e2b94d78c58f05216efda3b07dbbed938ec8583b"
     - &uv_version "0.7.15"
 
 tasks:
@@ -78,8 +78,8 @@ tasks:
         args:
             SCRIPT_NAME: pushmsixscript
     signingscript:
-        # python:3.14.3-slim-trixie docker image contains osslsigncode 2.9.
-        # if the image changes, verify version of osslsigncode and make sure winsign works as well
+        # debian trixie has osslsigncode 2.9.
+        # if the debian release changes, verify version of osslsigncode and make sure winsign works as well
         parent: base
     treescript:
         definition: script
