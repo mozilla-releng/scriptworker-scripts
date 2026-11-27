@@ -11,7 +11,7 @@ transforms:
     - taskgraph.transforms.task:transforms
 
 meta:
-    - &py314 "3.14.3-slim-trixie@sha256:5e59aae31ff0e87511226be8e2b94d78c58f05216efda3b07dbbed938ec8583b"
+    - &py314 "3.14.10-slim-trixie@sha256:22eafb370920ad8b429e0aec3fff433e0669968519f5d60469d83729c138b28b"
     - &uv_version "0.7.15"
 
 tasks:
