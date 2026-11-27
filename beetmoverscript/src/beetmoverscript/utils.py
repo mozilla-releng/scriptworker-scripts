@@ -288,8 +288,48 @@ def get_releases_prefix(product, version):
     return "{}releases/{}/".format(PRODUCT_TO_PATH[product], version)
 
 
-def get_partner_candidates_prefix(prefix, partner):
-    return "{}partner-repacks/{}/v1/".format(prefix, partner)
+def get_partner_candidates_prefix(prefix, partner, partner_build_number):
+    return "{}partner-repacks/{}/v{}/".format(prefix, partner, partner_build_number)
+
+
+def get_partner_config_entries(partner_config):
+    """Yield the "partner/subpartner" name and entry of each partner repack and attribution
+    in a release promotion partner config."""
+    for partner, subpartners in partner_config.get("release-partner-repack", {}).items():
+        for subpartner, entry in subpartners.items():
+            yield "{}/{}".format(partner, subpartner), entry
+    for entry in partner_config.get("release-partner-attribution", {}).get("configs", []):
+        yield "{}/{}".format(entry["campaign"], entry["content"]), entry
+
+
+def get_partner_build_numbers(payload):
+    """Map each partner in a push-to-releases payload to its partner build number.
+
+    Build numbers come from the optional `partner_config` payload field, which has the
+    same structure as the `release_partner_config` of the release promotion action.
+    Payloads without the field, partners missing from it and entries without a
+    `build_number` use partner build number 1.
+    """
+    partners = payload.get("partners", [])
+    partner_config = payload.get("partner_config")
+    configured_build_numbers = {}
+    if partner_config is not None:
+        for partner, entry in get_partner_config_entries(partner_config):
+            if partner not in partners:
+                continue
+            # The schema accepts integral floats such as 1.0, which must not become a "v1.0" prefix
+            partner_build_number = int(entry.get("build_number", 1))
+            if configured_build_numbers.setdefault(partner, partner_build_number) != partner_build_number:
+                raise TaskVerificationError(
+                    "Conflicting partner build numbers for {}: {} and {}".format(partner, configured_build_numbers[partner], partner_build_number)
+                )
+        missing_partners = [partner for partner in partners if partner not in configured_build_numbers]
+        if missing_partners:
+            log.warning("Using partner build number 1 for partners not found in partner_config: {}".format(", ".join(missing_partners)))
+    partner_build_numbers = {partner: configured_build_numbers.get(partner, 1) for partner in partners}
+    for partner, partner_build_number in partner_build_numbers.items():
+        log.info("Using partner build number {} for partner {}".format(partner_build_number, partner))
+    return partner_build_numbers
 
 
 def get_partner_releases_prefix(product, version, partner):
@@ -303,11 +343,19 @@ def matches_exclude(keyname, excludes):
     return False
 
 
-def get_partner_match(keyname, candidates_prefix, partners):
-    for partner in partners:
-        if keyname.startswith(get_partner_candidates_prefix(candidates_prefix, partner)):
+def get_partner_match(keyname, candidates_prefix, partner_build_numbers):
+    for partner, partner_build_number in partner_build_numbers.items():
+        if keyname.startswith(get_partner_candidates_prefix(candidates_prefix, partner, partner_build_number)):
             return partner
     return None
+
+
+def warn_unmatched_partners(candidates_prefix, partner_build_numbers, matched_partners):
+    for partner, partner_build_number in partner_build_numbers.items():
+        if partner not in matched_partners:
+            log.warning(
+                "No files found under {} for partner {}".format(get_partner_candidates_prefix(candidates_prefix, partner, partner_build_number), partner)
+            )
 
 
 def get_bucket_name(context, product, cloud):

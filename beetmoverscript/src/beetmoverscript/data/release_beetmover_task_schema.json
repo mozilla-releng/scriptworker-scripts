@@ -60,6 +60,53 @@
                     "items": {
                         "type": "string"
                     }
+                },
+                "partner_config": {
+                    "type": "object",
+                    "properties": {
+                        "release-partner-attribution": {
+                            "type": "object",
+                            "properties": {
+                                "defaults": {
+                                    "type": "object"
+                                },
+                                "configs": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "campaign": {
+                                                "type": "string"
+                                            },
+                                            "content": {
+                                                "type": "string"
+                                            },
+                                            "build_number": {
+                                                "type": "integer",
+                                                "minimum": 1
+                                            }
+                                        },
+                                        "required": ["campaign", "content"]
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "additionalProperties": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "object",
+                                "properties": {
+                                    "build_number": {
+                                        "type": "integer",
+                                        "minimum": 1
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             },
             "required": ["product", "build_number", "version"]
